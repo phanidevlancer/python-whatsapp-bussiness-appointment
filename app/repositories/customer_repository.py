@@ -5,8 +5,21 @@ from app.models.customer import Customer
 from app.models.appointment import Appointment
 
 
+def normalize_phone(phone: str) -> str:
+    """Normalize phone number by removing + prefix and leading zeros."""
+    return phone.lstrip('+').lstrip('0')
+
+
 async def get_by_phone(db: AsyncSession, phone: str) -> Customer | None:
-    result = await db.execute(select(Customer).where(Customer.phone == phone))
+    normalized = normalize_phone(phone)
+    result = await db.execute(
+        select(Customer).where(
+            or_(
+                Customer.phone == normalized,
+                Customer.phone == '+' + normalized,
+            )
+        )
+    )
     return result.scalar_one_or_none()
 
 
@@ -19,7 +32,8 @@ async def get_or_create_by_phone(db: AsyncSession, phone: str) -> tuple[Customer
     customer = await get_by_phone(db, phone)
     if customer:
         return customer, False
-    customer = Customer(phone=phone)
+    # Store phone in normalized format (without +)
+    customer = Customer(phone=normalize_phone(phone))
     db.add(customer)
     await db.flush()
     return customer, True

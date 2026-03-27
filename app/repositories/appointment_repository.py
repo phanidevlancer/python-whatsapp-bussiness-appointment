@@ -20,8 +20,10 @@ async def create_appointment(
     flush() writes to DB within the current transaction without committing —
     the commit happens in get_db() when the request completes successfully.
     """
+    # Normalize phone number: remove '+' prefix for consistency
+    normalized_phone = user_phone.lstrip('+').lstrip('0')
     appointment = Appointment(
-        user_phone=user_phone,
+        user_phone=normalized_phone,
         service_id=service_id,
         slot_id=slot_id,
         status=AppointmentStatus.CONFIRMED,
@@ -41,13 +43,20 @@ async def get_upcoming_appointments(
     """
     from app.models.time_slot import TimeSlot  # local import to avoid circular
 
+    # Normalize phone number: remove '+' prefix and leading zeros for consistent matching
+    normalized_phone = user_phone.lstrip('+').lstrip('0')
+    phone_variants = [
+        normalized_phone,  # without +
+        '+' + normalized_phone,  # with +
+    ]
+
     now = datetime.now(timezone.utc)
     stmt = (
         select(Appointment)
         .options(selectinload(Appointment.service), selectinload(Appointment.slot))
         .join(TimeSlot, Appointment.slot_id == TimeSlot.id)
         .where(
-            Appointment.user_phone == user_phone,
+            Appointment.user_phone.in_(phone_variants),
             Appointment.status == AppointmentStatus.CONFIRMED,
             TimeSlot.start_time > now,
         )
@@ -167,8 +176,10 @@ async def create_appointment_crm(
     notes: str | None = None,
     source: AppointmentSource = AppointmentSource.ADMIN_DASHBOARD,
 ) -> Appointment:
+    # Normalize phone number: remove '+' prefix for consistency
+    normalized_phone = user_phone.lstrip('+').lstrip('0')
     appointment = Appointment(
-        user_phone=user_phone,
+        user_phone=normalized_phone,
         service_id=service_id,
         slot_id=slot_id,
         provider_id=provider_id,
