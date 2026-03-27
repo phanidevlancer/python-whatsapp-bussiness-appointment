@@ -76,6 +76,7 @@ export default function AppointmentDetailPage() {
   }
 
   const isConfirmed = appt.status === 'confirmed';
+  const isSlotPast = appt.slot ? new Date(appt.slot.start_time) < new Date() : false;
 
   return (
     <div className="max-w-4xl space-y-6">
@@ -174,6 +175,8 @@ export default function AppointmentDetailPage() {
               size="md"
               leftIcon={<CheckCircle size={16} />}
               onClick={() => complete(appt.id, { onSuccess: () => toast.success('Marked as completed') })}
+              disabled={!isSlotPast}
+              title={!isSlotPast ? 'Available after the appointment time has passed' : undefined}
             >
               Mark Complete
             </Button>
@@ -182,6 +185,8 @@ export default function AppointmentDetailPage() {
               size="md"
               leftIcon={<AlertCircle size={16} />}
               onClick={() => noShow(appt.id, { onSuccess: () => toast.success('Marked as no-show') })}
+              disabled={!isSlotPast}
+              title={!isSlotPast ? 'Available after the appointment time has passed' : undefined}
             >
               No Show
             </Button>
