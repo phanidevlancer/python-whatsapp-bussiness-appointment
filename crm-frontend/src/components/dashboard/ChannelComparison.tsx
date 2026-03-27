@@ -38,7 +38,7 @@ function ChannelCard({ channel, stats, cancellationStats, rescheduleStats, isBes
             )}
             {highCancellationRate && (
               <div className="flex items-center gap-1 mt-0.5">
-                <span className="text-xs text-red-600 font-medium">⚠️ Needs Attention</span>
+                <span className="text-xs text-red-600 font-medium">⚠️ High Cancellations</span>
               </div>
             )}
           </div>
