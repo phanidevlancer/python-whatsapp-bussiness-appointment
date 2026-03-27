@@ -91,10 +91,11 @@ export function useCancelAppointment() {
 export function useRescheduleAppointment() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, new_slot_id, reason }: { id: string; new_slot_id: string; reason?: string }) => {
+    mutationFn: async ({ id, new_slot_id, reason, reschedule_source }: { id: string; new_slot_id: string; reason?: string; reschedule_source?: string }) => {
       const res = await api.post<Appointment>(`/api/v1/appointments/${id}/reschedule`, {
         new_slot_id,
         reason,
+        reschedule_source,
       });
       return res.data;
     },

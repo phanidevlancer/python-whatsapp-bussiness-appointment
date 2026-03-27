@@ -37,6 +37,7 @@ class AppointmentCRMRead(BaseModel):
     cancellation_reason: str | None
     cancellation_source: AppointmentSource | None
     rescheduled_from_slot_id: uuid.UUID | None
+    reschedule_source: AppointmentSource | None
     source: AppointmentSource
     booked_at: datetime
     created_at: datetime
@@ -49,6 +50,7 @@ class AppointmentCRMRead(BaseModel):
 class AppointmentRescheduleRequest(BaseModel):
     new_slot_id: uuid.UUID
     reason: str | None = None
+    reschedule_source: AppointmentSource | None = None
 
 
 class AppointmentCancelRequest(BaseModel):

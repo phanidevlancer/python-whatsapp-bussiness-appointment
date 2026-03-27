@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useStats, useTrends, useUpcoming, useChannelStats, useCancellationStats } from '@/hooks/useDashboard';
+import { useStats, useTrends, useUpcoming, useChannelStats, useCancellationStats, useRescheduleStats } from '@/hooks/useDashboard';
 import StatsCards from '@/components/dashboard/StatsCards';
 import TrendChart from '@/components/dashboard/TrendChart';
 import UpcomingList from '@/components/dashboard/UpcomingList';
@@ -19,6 +19,7 @@ export default function DashboardPage() {
   const { data: upcoming, isLoading: upcomingLoading, error: upcomingError } = useUpcoming(50);
   const { data: channels, isLoading: channelsLoading } = useChannelStats();
   const { data: cancellations, isLoading: cancellationsLoading } = useCancellationStats();
+  const { data: reschedules, isLoading: reschedulesLoading } = useRescheduleStats();
 
   // Debug logging
   console.log('Dashboard - Stats:', stats, statsError);
@@ -26,6 +27,7 @@ export default function DashboardPage() {
   console.log('Dashboard - Upcoming:', upcoming, upcomingError);
   console.log('Dashboard - Channels:', channels);
   console.log('Dashboard - Cancellations:', cancellations);
+  console.log('Dashboard - Reschedules:', reschedules);
 
   if (statsLoading) {
     return (
@@ -105,8 +107,8 @@ export default function DashboardPage() {
 
       {/* Channel Performance Comparison */}
       <div>
-        {!channelsLoading && !cancellationsLoading && channels && (
-          <ChannelComparison channels={channels} cancellations={cancellations} />
+        {!channelsLoading && !cancellationsLoading && !reschedulesLoading && channels && (
+          <ChannelComparison channels={channels} cancellations={cancellations} reschedules={reschedules} />
         )}
       </div>
 

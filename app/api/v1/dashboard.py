@@ -11,6 +11,7 @@ from app.schemas.dashboard import (
     UpcomingAppointment,
     ChannelStats,
     ChannelCancellationStats,
+    ChannelRescheduleStats,
 )
 from app.services import dashboard_service
 
@@ -57,3 +58,11 @@ async def get_cancellation_stats(
     _=Depends(get_current_admin_user),
 ):
     return await dashboard_service.get_channel_cancellation_stats(db)
+
+
+@router.get("/reschedules", response_model=list[ChannelRescheduleStats])
+async def get_reschedule_stats(
+    db: AsyncSession = Depends(get_db),
+    _=Depends(get_current_admin_user),
+):
+    return await dashboard_service.get_channel_reschedule_stats(db)

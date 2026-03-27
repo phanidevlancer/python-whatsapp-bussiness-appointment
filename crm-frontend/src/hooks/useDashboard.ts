@@ -6,6 +6,7 @@ import type {
   UpcomingAppointment,
   ChannelStats,
   ChannelCancellationStats,
+  ChannelRescheduleStats,
 } from '@/types/dashboard';
 
 export function useStats() {
@@ -60,6 +61,16 @@ export function useCancellationStats() {
     queryKey: ['dashboard', 'cancellations'],
     queryFn: async () => {
       const res = await api.get<ChannelCancellationStats[]>('/api/v1/dashboard/cancellations');
+      return res.data;
+    },
+  });
+}
+
+export function useRescheduleStats() {
+  return useQuery({
+    queryKey: ['dashboard', 'reschedules'],
+    queryFn: async () => {
+      const res = await api.get<ChannelRescheduleStats[]>('/api/v1/dashboard/reschedules');
       return res.data;
     },
   });

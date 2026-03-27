@@ -26,6 +26,12 @@ export interface ChannelCancellationStats {
   percentage: number;
 }
 
+export interface ChannelRescheduleStats {
+  channel: string;
+  reschedules: number;
+  percentage: number;
+}
+
 export interface TrendDataPoint {
   date: string;
   confirmed: number;

@@ -116,7 +116,7 @@ async def reschedule_appointment(
     current_user=Depends(get_current_admin_user),
 ):
     appt = await crm_svc.reschedule_appointment(
-        db, session_svc, appointment_id, payload.new_slot_id, payload.reason, current_user
+        db, session_svc, appointment_id, payload.new_slot_id, payload.reason, current_user, payload.reschedule_source
     )
     return AppointmentCRMRead.model_validate(appt)
 

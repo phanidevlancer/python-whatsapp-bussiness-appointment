@@ -1,14 +1,15 @@
-import { MessageCircle, User, TrendingUp, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
-import type { ChannelStats, ChannelCancellationStats } from '@/types/dashboard';
+import { MessageCircle, User, TrendingUp, CheckCircle, XCircle, AlertCircle, CalendarClock } from 'lucide-react';
+import type { ChannelStats, ChannelCancellationStats, ChannelRescheduleStats } from '@/types/dashboard';
 
 interface ChannelCardProps {
   channel: string;
   stats: ChannelStats;
   cancellationStats?: ChannelCancellationStats;
+  rescheduleStats?: ChannelRescheduleStats;
   isBest?: boolean;
 }
 
-function ChannelCard({ channel, stats, cancellationStats, isBest }: ChannelCardProps) {
+function ChannelCard({ channel, stats, cancellationStats, rescheduleStats, isBest }: ChannelCardProps) {
   const isWhatsapp = channel === 'whatsapp';
   const IconComponent = isWhatsapp ? MessageCircle : User;
   const channelColor = isWhatsapp ? 'text-green-600' : 'text-blue-600';
@@ -97,6 +98,23 @@ function ChannelCard({ channel, stats, cancellationStats, isBest }: ChannelCardP
           </div>
         </div>
       )}
+
+      {rescheduleStats && (
+        <div className="mt-3 pt-3 border-t border-gray-100">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1.5">
+              <CalendarClock size={14} className="text-indigo-600" />
+              <span className="text-xs text-gray-600">Reschedules</span>
+            </div>
+            <div className="text-right">
+              <span className="text-sm font-bold text-indigo-600">{rescheduleStats.reschedules}</span>
+              {rescheduleStats.percentage > 0 && (
+                <p className="text-xs text-gray-500">{rescheduleStats.percentage}% of total</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -104,9 +122,11 @@ function ChannelCard({ channel, stats, cancellationStats, isBest }: ChannelCardP
 export default function ChannelComparison({
   channels,
   cancellations,
+  reschedules,
 }: {
   channels: ChannelStats[];
   cancellations?: ChannelCancellationStats[];
+  reschedules?: ChannelRescheduleStats[];
 }) {
   if (!channels || channels.length === 0) {
     return (
@@ -128,6 +148,12 @@ export default function ChannelComparison({
     cancellations.forEach((c) => cancellationMap.set(c.channel, c));
   }
 
+  // Build a map of reschedule stats by channel
+  const rescheduleMap = new Map<string, ChannelRescheduleStats>();
+  if (reschedules) {
+    reschedules.forEach((r) => rescheduleMap.set(r.channel, r));
+  }
+
   return (
     <div className="bg-white rounded-lg border border-gray-200 p-4">
       <div className="mb-4">
@@ -144,6 +170,7 @@ export default function ChannelComparison({
             channel={channel.channel}
             stats={channel}
             cancellationStats={cancellationMap.get(channel.channel)}
+            rescheduleStats={rescheduleMap.get(channel.channel)}
             isBest={channel.channel === bestChannel.channel && channel.total_appointments > 0}
           />
         ))}

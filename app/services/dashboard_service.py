@@ -16,6 +16,7 @@ from app.schemas.dashboard import (
     UpcomingAppointment,
     ChannelStats,
     ChannelCancellationStats,
+    ChannelRescheduleStats,
 )
 
 logger = logging.getLogger(__name__)
@@ -280,5 +281,57 @@ async def get_channel_cancellation_stats(db: AsyncSession) -> list[ChannelCancel
 
     # Sort by cancellations descending
     result_list.sort(key=lambda x: x.cancellations, reverse=True)
+    
+    return result_list
+
+
+async def get_channel_reschedule_stats(db: AsyncSession) -> list[ChannelRescheduleStats]:
+    """Get reschedule statistics grouped by reschedule source channel."""
+    now = datetime.now(timezone.utc)
+    week_start = now.replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=7)
+
+    # Get rescheduled appointments with their reschedule source
+    result = await db.execute(
+        select(
+            Appointment.reschedule_source,
+            func.count(Appointment.id).label("cnt"),
+        )
+        .where(
+            Appointment.rescheduled_from_slot_id.isnot(None),
+            Appointment.created_at >= week_start,
+            Appointment.reschedule_source.isnot(None),
+        )
+        .group_by(Appointment.reschedule_source)
+    )
+    rows = result.all()
+
+    # Build reschedule stats map
+    reschedule_map: dict[str, int] = {
+        AppointmentSource.WHATSAPP.value: 0,
+        AppointmentSource.ADMIN_DASHBOARD.value: 0,
+    }
+
+    for row in rows:
+        source_key = row.reschedule_source.value if hasattr(row.reschedule_source, 'value') else str(row.reschedule_source)
+        if source_key in reschedule_map:
+            reschedule_map[source_key] = row.cnt
+
+    # Calculate total reschedules
+    total_reschedules = sum(reschedule_map.values())
+
+    result_list = []
+    for source, count in reschedule_map.items():
+        percentage = 0.0
+        if total_reschedules > 0:
+            percentage = round((count / total_reschedules) * 100, 1)
+        
+        result_list.append(ChannelRescheduleStats(
+            channel=source,
+            reschedules=count,
+            percentage=percentage,
+        ))
+
+    # Sort by reschedules descending
+    result_list.sort(key=lambda x: x.reschedules, reverse=True)
     
     return result_list

@@ -31,6 +31,12 @@ class ChannelCancellationStats(BaseModel):
     percentage: float
 
 
+class ChannelRescheduleStats(BaseModel):
+    channel: str
+    reschedules: int
+    percentage: float
+
+
 class TrendDataPoint(BaseModel):
     date: str
     confirmed: int

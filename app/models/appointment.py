@@ -64,6 +64,10 @@ class Appointment(Base):
     rescheduled_from_slot_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("time_slots.id"), nullable=True
     )
+    reschedule_source: Mapped[AppointmentSource | None] = mapped_column(
+        SQLEnum(AppointmentSource, name="appointmentsource", values_callable=lambda x: [e.value for e in x]),
+        nullable=True,
+    )
     status: Mapped[AppointmentStatus] = mapped_column(
         SQLEnum(AppointmentStatus, name="appointmentstatus", values_callable=lambda x: [e.value for e in x]),
         default=AppointmentStatus.CONFIRMED,

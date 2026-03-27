@@ -207,6 +207,7 @@ async def reschedule_appointment(
     new_slot_id: uuid.UUID,
     reason: str | None,
     rescheduled_by: AdminUser,
+    reschedule_source: AppointmentSource | None = None,
 ) -> Appointment:
     # 1. Load original appointment
     appointment = await appt_repo.get_appointment_crm_by_id(db, appointment_id)
@@ -267,6 +268,8 @@ async def reschedule_appointment(
             notes=notes,
         )
         new_appointment.rescheduled_from_slot_id = old_slot_id
+        if reschedule_source:
+            new_appointment.reschedule_source = reschedule_source
 
         await _write_status_history(
             db,
