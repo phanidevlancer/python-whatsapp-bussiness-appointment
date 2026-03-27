@@ -140,6 +140,8 @@ async def create_appointment(
             booking_ref=str(appointment.id),
         )
     )
+    from app.api.v1.events import broadcast as sse_broadcast
+    sse_broadcast("appointment_created", {"appointment_id": str(appointment.id)})
 
     logger.info("CRM created appointment %s for %s", appointment.id, payload.user_phone)
     return appointment
@@ -208,6 +210,8 @@ async def cancel_appointment(
             )
         )
 
+    from app.api.v1.events import broadcast as sse_broadcast
+    sse_broadcast("appointment_updated", {"appointment_id": str(appointment_id)})
     logger.info("CRM cancelled appointment %s (by %s)", appointment_id, cancelled_by.email)
     return updated
 
@@ -303,6 +307,8 @@ async def reschedule_appointment(
             )
         )
 
+    from app.api.v1.events import broadcast as sse_broadcast
+    sse_broadcast("appointment_updated", {"appointment_id": str(appointment_id)})
     logger.info(
         "CRM rescheduled appointment %s (by %s)",
         appointment_id, rescheduled_by.email,
@@ -379,9 +385,12 @@ async def mark_completed(
         source=AppointmentSource.ADMIN_DASHBOARD,
         slot_start_time=slot_start,
     )
-    return await appt_repo.update_appointment_fields(
+    result = await appt_repo.update_appointment_fields(
         db, appointment_id, status=AppointmentStatus.COMPLETED
     )
+    from app.api.v1.events import broadcast as sse_broadcast
+    sse_broadcast("appointment_updated", {"appointment_id": str(appointment_id)})
+    return result
 
 
 async def mark_no_show(
@@ -408,6 +417,9 @@ async def mark_no_show(
         source=AppointmentSource.ADMIN_DASHBOARD,
         slot_start_time=slot_start,
     )
-    return await appt_repo.update_appointment_fields(
+    result = await appt_repo.update_appointment_fields(
         db, appointment_id, status=AppointmentStatus.NO_SHOW
     )
+    from app.api.v1.events import broadcast as sse_broadcast
+    sse_broadcast("appointment_updated", {"appointment_id": str(appointment_id)})
+    return result
