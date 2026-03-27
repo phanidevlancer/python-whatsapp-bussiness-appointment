@@ -524,6 +524,18 @@ async def _handle_booking_confirmation(
             service_id=user_session.selected_service_id,
             slot_id=slot_id,
         )
+        
+        # Write status history for the booking
+        from app.services.appointment_crm_service import _write_status_history
+        from app.models.appointment import AppointmentSource
+        await _write_status_history(
+            db,
+            appointment_id=appointment.id,
+            old_status=None,
+            new_status="confirmed",
+            changed_by_id=None,
+            source=AppointmentSource.WHATSAPP,
+        )
 
         # Release Redis lock (slot is now permanently booked in DB)
         await session_svc.release_slot_lock(slot_id_str)
@@ -797,6 +809,18 @@ async def _handle_appointment_cancel(
             "Send *my appointments* to see your current bookings at *ORA Clinic*.",
         )
         return
+    
+    # Write status history for cancellation
+    from app.services.appointment_crm_service import _write_status_history
+    from app.models.appointment import AppointmentSource
+    await _write_status_history(
+        db,
+        appointment_id=appointment_id,
+        old_status="confirmed",
+        new_status="cancelled",
+        changed_by_id=None,
+        source=AppointmentSource.WHATSAPP,
+    )
 
     service_name = appointment.service.name if appointment.service else "your appointment"
     slot = appointment.slot
@@ -981,6 +1005,19 @@ async def _handle_reschedule_confirmation(
 
         # Cancel the old appointment (also frees old slot)
         old_appointment = await appt_repo.cancel_appointment(db, old_appointment_id)
+        
+        # Write status history for cancellation (due to reschedule)
+        from app.services.appointment_crm_service import _write_status_history
+        from app.models.appointment import AppointmentSource
+        await _write_status_history(
+            db,
+            appointment_id=old_appointment_id,
+            old_status="confirmed",
+            new_status="cancelled",
+            changed_by_id=None,
+            reason="Rescheduled to new slot via WhatsApp",
+            source=AppointmentSource.WHATSAPP,
+        )
 
         # Create the new appointment
         new_appointment = await appt_repo.create_appointment(
@@ -988,6 +1025,17 @@ async def _handle_reschedule_confirmation(
             user_phone=sender,
             service_id=user_session.selected_service_id,
             slot_id=new_slot_id,
+        )
+        
+        # Write status history for the new appointment
+        await _write_status_history(
+            db,
+            appointment_id=new_appointment.id,
+            old_status=None,
+            new_status="confirmed",
+            changed_by_id=None,
+            source=AppointmentSource.WHATSAPP,
+            reschedule_source=AppointmentSource.WHATSAPP,
         )
 
         await sess_repo.update_session(db, sender, SessionStep.BOOKED)
