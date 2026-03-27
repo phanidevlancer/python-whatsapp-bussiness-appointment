@@ -972,9 +972,9 @@ async def _handle_reschedule_confirmation(
 ) -> None:
     """
     Finalize reschedule:
-    1. Cancel old appointment and free old slot
-    2. Book new slot (SELECT FOR UPDATE NOWAIT)
-    3. Create new appointment
+    1. Book new slot (SELECT FOR UPDATE NOWAIT)
+    2. Update existing appointment with new slot_id
+    3. Write status history
     """
     try:
         new_slot_id = uuid.UUID(new_slot_id_str)
@@ -989,7 +989,7 @@ async def _handle_reschedule_confirmation(
         await wa_client.send_text(sender, "Session expired. Send *my appointments* to try again.")
         return
 
-    old_appointment_id = user_session.selected_appointment_id
+    appointment_id = user_session.selected_appointment_id
 
     try:
         # Book the new slot first (raises OperationalError if taken)
@@ -1003,40 +1003,40 @@ async def _handle_reschedule_confirmation(
             )
             return
 
-        # Cancel the old appointment (also frees old slot)
-        old_appointment = await appt_repo.cancel_appointment(db, old_appointment_id)
+        # Get the old slot_id before updating
+        old_appointment = await appt_repo.get_appointment_crm_by_id(db, appointment_id)
+        if not old_appointment:
+            await session_svc.release_slot_lock(new_slot_id_str)
+            await wa_client.send_text(sender, "Appointment not found.")
+            return
         
-        # Write status history for cancellation (due to reschedule)
+        old_slot_id = old_appointment.slot_id
+
+        # Update the existing appointment with new slot (don't create new record)
+        updated_appointment = await appt_repo.update_appointment_fields(
+            db,
+            appointment_id,
+            slot_id=new_slot_id,
+            rescheduled_from_slot_id=old_slot_id,  # Track which slot was rescheduled from
+            status="confirmed",  # Keep it confirmed
+        )
+
+        # Write status history for the reschedule
         from app.services.appointment_crm_service import _write_status_history
         from app.models.appointment import AppointmentSource
         await _write_status_history(
             db,
-            appointment_id=old_appointment_id,
+            appointment_id=appointment_id,
             old_status="confirmed",
-            new_status="cancelled",
+            new_status="confirmed",  # Status remains confirmed, just slot changed
             changed_by_id=None,
-            reason="Rescheduled to new slot via WhatsApp",
-            source=AppointmentSource.WHATSAPP,
-        )
-
-        # Create the new appointment
-        new_appointment = await appt_repo.create_appointment(
-            db,
-            user_phone=sender,
-            service_id=user_session.selected_service_id,
-            slot_id=new_slot_id,
-        )
-        
-        # Write status history for the new appointment
-        await _write_status_history(
-            db,
-            appointment_id=new_appointment.id,
-            old_status=None,
-            new_status="confirmed",
-            changed_by_id=None,
+            reason=f"Rescheduled to new slot via WhatsApp",
             source=AppointmentSource.WHATSAPP,
             reschedule_source=AppointmentSource.WHATSAPP,
         )
+
+        # Release the old slot (it was implicitly freed when we updated the appointment)
+        await session_svc.release_slot_lock(str(old_slot_id))
 
         await sess_repo.update_session(db, sender, SessionStep.BOOKED)
         await session_svc.release_slot_lock(new_slot_id_str)
@@ -1044,7 +1044,7 @@ async def _handle_reschedule_confirmation(
         service = await svc_repo.get_service_by_id(db, user_session.selected_service_id)
         service_name = service.name if service else "your service"
         time_display = new_slot.start_time.strftime("%A, %B %d at %I:%M %p")
-        booking_ref = str(new_appointment.id).split("-")[0].upper()
+        booking_ref = str(appointment_id).split("-")[0].upper()
 
         _log_action(sender, f'RESCHEDULED: {service_name} → {time_display} (ref: {booking_ref})')
 

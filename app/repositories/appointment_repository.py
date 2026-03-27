@@ -195,48 +195,10 @@ async def create_appointment_crm(
 
 async def get_appointment_history(db: AsyncSession, appointment_id: uuid.UUID) -> list:
     from app.models.appointment_status_history import AppointmentStatusHistory
-    from app.models.appointment import Appointment
-    
-    # Get the current appointment
-    result = await db.execute(
-        select(Appointment)
-        .where(Appointment.id == appointment_id)
-    )
-    appointment = result.scalar_one_or_none()
-    
-    if not appointment:
-        return []
-    
-    # Collect all related appointment IDs (follow the reschedule chain backwards)
-    related_appointment_ids = {appointment_id}
-    
-    # Follow the reschedule chain backwards to find all original appointments
-    current_appt = appointment
-    max_depth = 10  # Prevent infinite loops
-    depth = 0
-    
-    while current_appt and current_appt.rescheduled_from_slot_id and depth < max_depth:
-        # Find the appointment that was cancelled for this reschedule
-        original_result = await db.execute(
-            select(Appointment)
-            .where(
-                Appointment.slot_id == current_appt.rescheduled_from_slot_id,
-                Appointment.status == 'cancelled',
-                Appointment.user_phone == current_appt.user_phone,
-            )
-        )
-        original_appt = original_result.scalar_one_or_none()
-        if original_appt:
-            related_appointment_ids.add(original_appt.id)
-            current_appt = original_appt
-            depth += 1
-        else:
-            break
-    
-    # Get all history for all related appointments, ordered by time
+    # Get all history for the appointment, ordered by time
     history_result = await db.execute(
         select(AppointmentStatusHistory)
-        .where(AppointmentStatusHistory.appointment_id.in_(related_appointment_ids))
+        .where(AppointmentStatusHistory.appointment_id == appointment_id)
         .order_by(AppointmentStatusHistory.created_at)
     )
     return list(history_result.scalars().all())

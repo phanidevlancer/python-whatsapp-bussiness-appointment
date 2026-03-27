@@ -231,10 +231,6 @@ async def reschedule_appointment(
     old_slot_start = appointment.slot.start_time if appointment.slot else None
     old_slot_id = appointment.slot_id
     user_phone = appointment.user_phone
-    service_id = appointment.service_id
-    provider_id = appointment.provider_id
-    customer_id = appointment.customer_id
-    notes = appointment.notes
 
     # 2. Redis lock on new slot
     acquired = await session_svc.acquire_slot_lock(str(new_slot_id), user_phone)
@@ -253,44 +249,29 @@ async def reschedule_appointment(
                 detail="New slot is no longer available.",
             )
 
-        # 4. Cancel old appointment (frees old slot)
-        await appt_repo.cancel_appointment(db, appointment_id)
+        # 4. Update existing appointment with new slot (don't create new record)
+        updated_appointment = await appt_repo.update_appointment_fields(
+            db,
+            appointment_id,
+            slot_id=new_slot_id,
+            rescheduled_from_slot_id=old_slot_id,
+            reschedule_source=reschedule_source,
+        )
+
+        # 5. Write status history for the reschedule
         await _write_status_history(
             db,
             appointment_id=appointment_id,
             old_status=AppointmentStatus.CONFIRMED.value,
-            new_status=AppointmentStatus.CANCELLED.value,
+            new_status=AppointmentStatus.CONFIRMED.value,  # Status remains confirmed
             changed_by_id=rescheduled_by.id,
-            reason=f"Rescheduled to slot {new_slot_id}",
-            source=reschedule_source,
-        )
-
-        # 5. Create new appointment
-        new_appointment = await appt_repo.create_appointment_crm(
-            db,
-            user_phone=user_phone,
-            service_id=service_id,
-            slot_id=new_slot_id,
-            provider_id=provider_id,
-            customer_id=customer_id,
-            notes=notes,
-        )
-        new_appointment.rescheduled_from_slot_id = old_slot_id
-        if reschedule_source:
-            new_appointment.reschedule_source = reschedule_source
-
-        await _write_status_history(
-            db,
-            appointment_id=new_appointment.id,
-            old_status=None,
-            new_status=AppointmentStatus.CONFIRMED.value,
-            changed_by_id=rescheduled_by.id,
-            reason=reason,
+            reason=reason or f"Rescheduled to new slot",
             source=reschedule_source,
             reschedule_source=reschedule_source,
         )
 
-        await db.flush()
+        # 6. Release Redis lock on old slot (freed when we updated the appointment)
+        await session_svc.release_slot_lock(str(old_slot_id))
 
     except HTTPException:
         await session_svc.release_slot_lock(str(new_slot_id))
@@ -299,14 +280,14 @@ async def reschedule_appointment(
         await session_svc.release_slot_lock(str(new_slot_id))
         raise
 
-    # 6. Release Redis lock on new slot
+    # 7. Release Redis lock on new slot
     await session_svc.release_slot_lock(str(new_slot_id))
 
-    # 7. Dispatch reschedule event
+    # 8. Dispatch reschedule event
     if old_slot_start:
         await event_dispatcher.dispatch(
             AppointmentRescheduledEvent(
-                appointment_id=new_appointment.id,
+                appointment_id=appointment_id,
                 user_phone=user_phone,
                 service_name=service_name,
                 old_slot_start_time=old_slot_start,
