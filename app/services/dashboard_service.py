@@ -1,9 +1,8 @@
 import logging
-from datetime import datetime, timezone, timedelta, date
+from datetime import datetime, timezone, timedelta
 
-from sqlalchemy import func, select, case, and_
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 
 from app.models.appointment import Appointment, AppointmentStatus
 from app.models.customer import Customer
@@ -20,47 +19,58 @@ async def get_stats(db: AsyncSession) -> DashboardStats:
     today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
     week_start = today_start - timedelta(days=7)
 
-    # Appointment aggregates in one query
-    appt_result = await db.execute(
-        select(
-            func.count(Appointment.id).label("total"),
-            func.count(
-                case((Appointment.created_at >= today_start, Appointment.id))
-            ).label("today"),
-            func.count(
-                case((Appointment.created_at >= week_start, Appointment.id))
-            ).label("week"),
-            func.count(
-                case((Appointment.status == AppointmentStatus.CONFIRMED, Appointment.id))
-            ).label("confirmed"),
-            func.count(
-                case((Appointment.status == AppointmentStatus.CANCELLED, Appointment.id))
-            ).label("cancelled"),
-            func.count(
-                case((Appointment.status == AppointmentStatus.COMPLETED, Appointment.id))
-            ).label("completed"),
-            func.count(
-                case((Appointment.status == AppointmentStatus.NO_SHOW, Appointment.id))
-            ).label("no_show"),
+    # Get all appointments and count in Python to avoid enum issues
+    result = await db.execute(
+        select(Appointment).where(
+            Appointment.created_at >= week_start
         )
     )
-    row = appt_result.one()
+    recent_appointments = result.scalars().all()
+    
+    # Count by status
+    status_counts = {
+        'confirmed': 0,
+        'cancelled': 0,
+        'completed': 0,
+        'no_show': 0,
+    }
+    
+    today_count = 0
+    week_count = len(recent_appointments)
+    
+    for appt in recent_appointments:
+        # Count today
+        if appt.created_at >= today_start:
+            today_count += 1
+        
+        # Count by status
+        status_value = appt.status.value if hasattr(appt.status, 'value') else str(appt.status)
+        if status_value in status_counts:
+            status_counts[status_value] += 1
 
-    total_customers = (await db.execute(select(func.count(Customer.id)))).scalar_one()
-    total_services = (
-        await db.execute(select(func.count(Service.id)).where(Service.is_active == True))
-    ).scalar_one()
-    total_providers = (
-        await db.execute(select(func.count(Provider.id)).where(Provider.is_active == True))
-    ).scalar_one()
+    # Get total counts
+    total_customers_result = await db.execute(select(func.count(Customer.id)))
+    total_customers = total_customers_result.scalar_one() or 0
+    
+    total_services_result = await db.execute(
+        select(func.count(Service.id)).where(Service.is_active == True)
+    )
+    total_services = total_services_result.scalar_one() or 0
+    
+    total_providers_result = await db.execute(
+        select(func.count(Provider.id)).where(Provider.is_active == True)
+    )
+    total_providers = total_providers_result.scalar_one() or 0
+
+    logger.info(f"Stats: today={today_count}, week={week_count}, confirmed={status_counts['confirmed']}, cancelled={status_counts['cancelled']}, completed={status_counts['completed']}")
 
     return DashboardStats(
-        total_appointments_today=row.today,
-        total_appointments_week=row.week,
-        total_confirmed=row.confirmed,
-        total_cancelled=row.cancelled,
-        total_completed=row.completed,
-        total_no_show=row.no_show,
+        total_appointments_today=today_count,
+        total_appointments_week=week_count,
+        total_confirmed=status_counts['confirmed'],
+        total_cancelled=status_counts['cancelled'],
+        total_completed=status_counts['completed'],
+        total_no_show=status_counts['no_show'],
         total_customers=total_customers,
         total_active_services=total_services,
         total_active_providers=total_providers,
@@ -80,7 +90,7 @@ async def get_trends(db: AsyncSession, range_str: str = "7d") -> TrendResponse:
             Appointment.status,
             func.count(Appointment.id).label("cnt"),
         )
-        .join(TimeSlot, Appointment.slot_id == TimeSlot.id)
+        .join(TimeSlot, Appointment.slot_id == TimeSlot.id, isouter=True)
         .where(TimeSlot.start_time >= start)
         .group_by(func.date(TimeSlot.start_time), Appointment.status)
         .order_by(func.date(TimeSlot.start_time))
@@ -90,10 +100,16 @@ async def get_trends(db: AsyncSession, range_str: str = "7d") -> TrendResponse:
     # Build date → counts map
     data_map: dict[str, dict] = {}
     for row in rows:
+        if row.slot_date is None:
+            continue
         d = str(row.slot_date)
         if d not in data_map:
             data_map[d] = {"confirmed": 0, "cancelled": 0, "completed": 0, "no_show": 0}
-        status_key = row.status.value if hasattr(row.status, "value") else str(row.status)
+        # Get status value properly
+        if row.status and hasattr(row.status, 'value'):
+            status_key = row.status.value
+        else:
+            status_key = str(row.status) if row.status else "pending"
         if status_key in data_map[d]:
             data_map[d][status_key] = row.cnt
 
@@ -107,7 +123,7 @@ async def get_trends(db: AsyncSession, range_str: str = "7d") -> TrendResponse:
     return TrendResponse(range=range_str, data=trend_data)
 
 
-async def get_upcoming_appointments(db: AsyncSession, limit: int = 10) -> list[UpcomingAppointment]:
+async def get_upcoming_appointments(db: AsyncSession, limit: int = 50) -> list[UpcomingAppointment]:
     now = datetime.now(timezone.utc)
     result = await db.execute(
         select(
@@ -135,7 +151,7 @@ async def get_upcoming_appointments(db: AsyncSession, limit: int = 10) -> list[U
             user_phone=r.user_phone,
             service_name=r.service_name,
             start_time=r.start_time,
-            status=r.status.value if hasattr(r.status, "value") else str(r.status),
+            status=r.status.value if hasattr(r.status, 'value') else str(r.status),
             provider_name=r.provider_name,
         )
         for r in rows

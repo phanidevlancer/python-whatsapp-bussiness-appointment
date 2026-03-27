@@ -3,8 +3,22 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { format } from 'date-fns';
-import { Search } from 'lucide-react';
+import { Search, Users, Plus } from 'lucide-react';
 import { useCustomersList } from '@/hooks/useCustomers';
+import { Card } from '@/components/ui/Card';
+import { Input } from '@/components/ui/Input';
+import { Button } from '@/components/ui/Button';
+import { Avatar } from '@/components/ui/Avatar';
+import { Badge } from '@/components/ui/Badge';
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from '@/components/ui/Table';
+import { Skeleton } from '@/components/ui/Skeleton';
 
 export default function CustomersPage() {
   const [search, setSearch] = useState('');
@@ -13,49 +27,142 @@ export default function CustomersPage() {
 
   return (
     <div className="space-y-4">
-      <div className="bg-white rounded-xl border border-gray-200 p-4 flex items-center gap-3">
-        <div className="relative">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-          <input
-            className="pl-8 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 w-72"
-            placeholder="Search by name, phone, or email…"
-            value={search}
-            onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-          />
+      {/* Page Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-bold text-gray-900">Customers</h2>
+          <p className="text-sm text-gray-500 mt-0.5">Manage your customer relationships</p>
         </div>
-        <span className="text-sm text-gray-400 ml-auto">{data?.total ?? 0} customers</span>
+        <Button
+          variant="primary"
+          size="md"
+          leftIcon={<Plus size={18} />}
+        >
+          Add Customer
+        </Button>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-gray-200">
-              <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500">Name</th>
-              <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500">Phone</th>
-              <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500">Email</th>
-              <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500">Since</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {isLoading ? (
-              <tr><td colSpan={4} className="text-center py-12 text-gray-400">Loading…</td></tr>
-            ) : !data?.items.length ? (
-              <tr><td colSpan={4} className="text-center py-12 text-gray-400">No customers found</td></tr>
-            ) : data.items.map((c) => (
-              <tr key={c.id} className="hover:bg-gray-50">
-                <td className="py-3 px-4">
-                  <Link href={`/customers/${c.id}`} className="font-medium text-gray-900 hover:text-blue-600 transition-colors">
-                    {c.name ?? '—'}
-                  </Link>
-                </td>
-                <td className="py-3 px-4 text-gray-600">{c.phone}</td>
-                <td className="py-3 px-4 text-gray-600">{c.email ?? '—'}</td>
-                <td className="py-3 px-4 text-gray-400 text-xs">{format(new Date(c.created_at), 'MMM d, yyyy')}</td>
-              </tr>
+      {/* Search & Stats */}
+      <Card className="p-4" variant="elevated">
+        <div className="flex items-center gap-3">
+          <div className="flex-1">
+            <Input
+              placeholder="Search by name, phone, or email..."
+              value={search}
+              onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+              leftIcon={<Search size={16} />}
+              className="w-full"
+            />
+          </div>
+          <Badge variant="primary" size="lg">
+            <Users size={16} />
+            {data?.total ?? 0} customers
+          </Badge>
+        </div>
+      </Card>
+
+      {/* Table */}
+      <Card className="p-0 overflow-hidden" variant="elevated">
+        {isLoading ? (
+          <div className="p-4 space-y-3">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="flex gap-4">
+                <Skeleton variant="circular" width={40} height={40} />
+                <div className="flex-1 space-y-2">
+                  <Skeleton variant="text" className="w-40 h-4" />
+                  <Skeleton variant="text" className="w-32 h-3" />
+                </div>
+                <Skeleton variant="text" className="w-48 h-4" />
+                <Skeleton variant="text" className="w-24 h-4" />
+              </div>
             ))}
-          </tbody>
-        </table>
-      </div>
+          </div>
+        ) : !data?.items.length ? (
+          <div className="text-center py-16">
+            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Users size={32} className="text-gray-400" />
+            </div>
+            <h3 className="text-sm font-medium text-gray-900 mb-1">No customers found</h3>
+            <p className="text-sm text-gray-500">Try adjusting your search</p>
+          </div>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow hoverable={false}>
+                <TableHead className="w-12"><span className="sr-only">Avatar</span></TableHead>
+                <TableHead>Name</TableHead>
+                <TableHead>Phone</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Since</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {data.items.map((c) => (
+                <TableRow key={c.id}>
+                  <TableCell>
+                    <Avatar name={c.name ?? c.phone} size="sm" />
+                  </TableCell>
+                  <TableCell>
+                    <Link
+                      href={`/customers/${c.id}`}
+                      className="font-medium text-gray-900 hover:text-primary-600 transition-colors"
+                    >
+                      {c.name ?? '—'}
+                    </Link>
+                    {c.name && (
+                      <p className="text-xs text-gray-500">{c.phone}</p>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <span className="text-sm text-gray-700">{c.phone}</span>
+                  </TableCell>
+                  <TableCell>
+                    <span className="text-sm text-gray-700">{c.email ?? '—'}</span>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 rounded-full bg-primary-500" />
+                      <span className="text-sm text-gray-700">
+                        {format(new Date(c.created_at), 'MMM d, yyyy')}
+                      </span>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+      </Card>
+
+      {/* Pagination */}
+      {data && data.total > 20 && (
+        <Card className="p-4" variant="default">
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-gray-500">
+              Page <span className="font-medium text-gray-900">{page}</span> of{' '}
+              <span className="font-medium text-gray-900">{Math.ceil(data.total / 20)}</span>
+            </span>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={page <= 1}
+                onClick={() => setPage(page - 1)}
+              >
+                Previous
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={page >= Math.ceil(data.total / 20)}
+                onClick={() => setPage(page + 1)}
+              >
+                Next
+              </Button>
+            </div>
+          </div>
+        </Card>
+      )}
     </div>
   );
 }

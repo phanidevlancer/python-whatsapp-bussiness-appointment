@@ -2,82 +2,189 @@
 
 import { useState } from 'react';
 import { format } from 'date-fns';
-import { RefreshCw } from 'lucide-react';
+import { RefreshCw, MessageSquare, AlertCircle, CheckCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useNotificationLogs, useResendNotification } from '@/hooks/useNotifications';
-import Link from 'next/link';
+import { Card, CardHeader, CardTitle } from '@/components/ui/Card';
+import { Button } from '@/components/ui/Button';
+import { Badge } from '@/components/ui/Badge';
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from '@/components/ui/Table';
+import { Skeleton } from '@/components/ui/Skeleton';
 
 export default function NotificationsPage() {
   const [page, setPage] = useState(1);
   const { data, isLoading } = useNotificationLogs({ page });
   const { mutate: resend } = useResendNotification();
 
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'sent':
+        return <CheckCircle size={16} className="text-success-600" />;
+      case 'failed':
+        return <AlertCircle size={16} className="text-error-600" />;
+      default:
+        return <MessageSquare size={16} className="text-gray-400" />;
+    }
+  };
+
   return (
     <div className="space-y-4">
-      <div className="bg-white rounded-xl border border-gray-200 overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-gray-200">
-              <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500">Phone</th>
-              <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500">Type</th>
-              <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500">Status</th>
-              <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500">Sent At</th>
-              <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500">Error</th>
-              <th className="text-right py-3 px-4 text-xs font-semibold text-gray-500">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {isLoading ? (
-              <tr><td colSpan={6} className="text-center py-12 text-gray-400">Loading…</td></tr>
-            ) : !data?.items.length ? (
-              <tr><td colSpan={6} className="text-center py-12 text-gray-400">No notification logs</td></tr>
-            ) : data.items.map((log) => (
-              <tr key={log.id} className="hover:bg-gray-50">
-                <td className="py-3 px-4 text-gray-700">{log.customer_phone}</td>
-                <td className="py-3 px-4 text-gray-600 capitalize">{log.message_type.replace(/_/g, ' ')}</td>
-                <td className="py-3 px-4">
-                  <span className={`text-xs px-2 py-0.5 rounded-full ${
-                    log.status === 'sent' ? 'bg-green-100 text-green-700' :
-                    log.status === 'failed' ? 'bg-red-100 text-red-700' :
-                    'bg-gray-100 text-gray-600'
-                  }`}>
-                    {log.status}
-                  </span>
-                </td>
-                <td className="py-3 px-4 text-gray-400 text-xs">
-                  {log.sent_at ? format(new Date(log.sent_at), 'MMM d, h:mm a') : '—'}
-                </td>
-                <td className="py-3 px-4 text-red-500 text-xs max-w-xs truncate" title={log.error_message ?? ''}>
-                  {log.error_message ?? '—'}
-                </td>
-                <td className="py-3 px-4 text-right">
-                  {log.appointment_id && (
-                    <button
-                      onClick={() => resend(log.appointment_id!, {
-                        onSuccess: () => toast.success('Notification resent'),
-                        onError: () => toast.error('Resend failed'),
-                      })}
-                      className="text-gray-400 hover:text-blue-600 transition-colors"
-                      title="Resend"
-                    >
-                      <RefreshCw size={14} />
-                    </button>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      {/* Page Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-bold text-gray-900">Notifications</h2>
+          <p className="text-sm text-gray-500 mt-0.5">Track WhatsApp message delivery status</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <Badge variant="primary" size="md">
+            <MessageSquare size={16} />
+            {data?.total ?? 0} messages
+          </Badge>
+        </div>
       </div>
 
-      {data && data.total > data.page_size && (
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-gray-500">Page {page} of {Math.ceil(data.total / data.page_size)}</span>
-          <div className="flex gap-2">
-            <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="px-3 py-1 border border-gray-200 rounded-lg disabled:opacity-40 hover:bg-gray-50">Previous</button>
-            <button disabled={page >= Math.ceil(data.total / data.page_size)} onClick={() => setPage(p => p + 1)} className="px-3 py-1 border border-gray-200 rounded-lg disabled:opacity-40 hover:bg-gray-50">Next</button>
+      {/* Notifications Table */}
+      <Card className="p-0 overflow-hidden" variant="elevated">
+        {isLoading ? (
+          <div className="p-4 space-y-3">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="flex gap-4">
+                <Skeleton variant="text" className="w-32 h-4" />
+                <Skeleton variant="text" className="w-24 h-4" />
+                <Skeleton variant="text" className="w-20 h-4" />
+                <Skeleton variant="text" className="w-32 h-4" />
+                <Skeleton variant="text" className="w-40 h-4" />
+              </div>
+            ))}
           </div>
-        </div>
+        ) : !data?.items.length ? (
+          <div className="text-center py-16">
+            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <MessageSquare size={32} className="text-gray-400" />
+            </div>
+            <h3 className="text-sm font-medium text-gray-900 mb-1">No notification logs</h3>
+            <p className="text-sm text-gray-500">WhatsApp messages will appear here</p>
+          </div>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow hoverable={false}>
+                <TableHead>Phone</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Sent At</TableHead>
+                <TableHead>Error</TableHead>
+                <TableHead align="right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {data.items.map((log) => (
+                <TableRow key={log.id}>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <MessageSquare size={16} className="text-gray-400" />
+                      <span className="text-sm text-gray-700">{log.customer_phone}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <span className="text-sm text-gray-700 capitalize">
+                      {log.message_type.replace(/_/g, ' ')}
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      {getStatusIcon(log.status)}
+                      <Badge
+                        variant={
+                          log.status === 'sent'
+                            ? 'success'
+                            : log.status === 'failed'
+                            ? 'error'
+                            : 'default'
+                        }
+                        size="sm"
+                      >
+                        {log.status}
+                      </Badge>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <span className="text-sm text-gray-500">
+                      {log.sent_at ? format(new Date(log.sent_at), 'MMM d, h:mm a') : '—'}
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    {log.error_message ? (
+                      <div className="flex items-center gap-1 text-sm text-error-600 max-w-xs">
+                        <AlertCircle size={14} />
+                        <span className="truncate" title={log.error_message}>
+                          {log.error_message}
+                        </span>
+                      </div>
+                    ) : (
+                      <span className="text-sm text-gray-400">—</span>
+                    )}
+                  </TableCell>
+                  <TableCell align="right">
+                    {log.appointment_id && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        leftIcon={<RefreshCw size={14} />}
+                        onClick={() =>
+                          resend(log.appointment_id!, {
+                            onSuccess: () => toast.success('Notification resent successfully'),
+                            onError: () => toast.error('Failed to resend notification'),
+                          })
+                        }
+                        className="text-gray-400 hover:text-primary-600"
+                      >
+                        Resend
+                      </Button>
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+      </Card>
+
+      {/* Pagination */}
+      {data && data.total > data.page_size && (
+        <Card className="p-4" variant="default">
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-gray-500">
+              Page <span className="font-medium text-gray-900">{page}</span> of{' '}
+              <span className="font-medium text-gray-900">{Math.ceil(data.total / data.page_size)}</span>
+            </span>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={page <= 1}
+                onClick={() => setPage((p) => p - 1)}
+              >
+                Previous
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={page >= Math.ceil(data.total / data.page_size)}
+                onClick={() => setPage((p) => p + 1)}
+              >
+                Next
+              </Button>
+            </div>
+          </div>
+        </Card>
       )}
     </div>
   );

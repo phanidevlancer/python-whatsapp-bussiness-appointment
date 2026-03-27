@@ -29,5 +29,12 @@ export function useUpcoming(limit = 10) {
       const res = await api.get<UpcomingAppointment[]>('/api/v1/dashboard/upcoming', { params: { limit } });
       return res.data;
     },
+    retry: (failureCount, error: any) => {
+      // Don't retry on 401 errors
+      if (error?.response?.status === 401) {
+        return false;
+      }
+      return failureCount < 3;
+    },
   });
 }

@@ -1,53 +1,101 @@
 'use client';
 
-import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Legend,
-} from 'recharts';
+import { LineChart } from '@mui/x-charts/LineChart';
 import type { TrendDataPoint } from '@/types/dashboard';
 import { format } from 'date-fns';
 
 export default function TrendChart({ data }: { data: TrendDataPoint[] }) {
-  const formatted = data.map((d) => ({
-    ...d,
-    date: format(new Date(d.date), 'MMM d'),
-  }));
+  const labels = data.map((d) => format(new Date(d.date), 'MMM d'));
+
+  const series = [
+    {
+      id: 'confirmed',
+      label: 'Confirmed',
+      data: data.map((d) => d.confirmed),
+      color: '#3b82f6',
+      curve: 'catmullRom' as const,
+      showMark: true,
+      markRadius: 4,
+    },
+    {
+      id: 'completed',
+      label: 'Completed',
+      data: data.map((d) => d.completed),
+      color: '#22c55e',
+      curve: 'catmullRom' as const,
+      showMark: true,
+      markRadius: 4,
+    },
+    {
+      id: 'cancelled',
+      label: 'Cancelled',
+      data: data.map((d) => d.cancelled),
+      color: '#ef4444',
+      curve: 'catmullRom' as const,
+      showMark: true,
+      markRadius: 4,
+    },
+  ];
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-5">
-      <h2 className="text-sm font-semibold text-gray-700 mb-4">Appointment Trends</h2>
-      <ResponsiveContainer width="100%" height={240}>
-        <AreaChart data={formatted} margin={{ top: 4, right: 16, bottom: 0, left: 0 }}>
-          <defs>
-            <linearGradient id="confirmed" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.15} />
-              <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
-            </linearGradient>
-            <linearGradient id="cancelled" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#ef4444" stopOpacity={0.15} />
-              <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
-            </linearGradient>
-            <linearGradient id="completed" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#10b981" stopOpacity={0.15} />
-              <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
-            </linearGradient>
-          </defs>
-          <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-          <XAxis dataKey="date" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-          <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} width={30} />
-          <Tooltip />
-          <Legend wrapperStyle={{ fontSize: 12 }} />
-          <Area type="monotone" dataKey="confirmed" stroke="#3b82f6" fill="url(#confirmed)" strokeWidth={2} />
-          <Area type="monotone" dataKey="cancelled" stroke="#ef4444" fill="url(#cancelled)" strokeWidth={2} />
-          <Area type="monotone" dataKey="completed" stroke="#10b981" fill="url(#completed)" strokeWidth={2} />
-        </AreaChart>
-      </ResponsiveContainer>
+    <div className="bg-white rounded-lg border border-gray-200 p-4 h-80">
+      <LineChart
+        xAxis={[
+          {
+            id: 'x-axis',
+            data: labels,
+            scaleType: 'point',
+            tickLabelStyle: {
+              fontSize: 11,
+              fill: '#6b7280',
+            },
+            label: 'Date',
+            labelStyle: {
+              fontSize: 12,
+              fill: '#6b7280',
+            },
+          },
+        ]}
+        yAxis={[
+          {
+            id: 'y-axis',
+            min: 0,
+            tickLabelStyle: {
+              fontSize: 11,
+              fill: '#6b7280',
+            },
+            label: 'Appointments',
+            labelStyle: {
+              fontSize: 12,
+              fill: '#6b7280',
+            },
+          },
+        ]}
+        series={series}
+        width={undefined}
+        height={280}
+        margin={{ top: 20, right: 20, bottom: 50, left: 50 }}
+        sx={{
+          '& .MuiChartsLegend-root': {
+            fontSize: '12px',
+          },
+          '& .MuiChartsAxis-tick text': {
+            fill: '#6b7280',
+            fontSize: '11px',
+          },
+          '& .MuiChartsAxis-label': {
+            fill: '#6b7280',
+            fontSize: '12px',
+          },
+          '& .MuiLineElement-root': {
+            strokeWidth: 2,
+          },
+          '& .MuiAreaElement-root': {
+            opacity: 0.1,
+          },
+        }}
+        grid={{ vertical: false, horizontal: true }}
+      />
     </div>
   );
 }

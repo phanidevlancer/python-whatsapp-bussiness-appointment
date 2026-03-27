@@ -1,9 +1,23 @@
 'use client';
 
 import { useState } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, User, Mail, Phone } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useProvidersList, useCreateProvider, useUpdateProvider } from '@/hooks/useProviders';
+import { Card, CardHeader, CardTitle } from '@/components/ui/Card';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import { Badge } from '@/components/ui/Badge';
+import { Avatar } from '@/components/ui/Avatar';
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from '@/components/ui/Table';
+import { Skeleton } from '@/components/ui/Skeleton';
 
 export default function ProvidersPage() {
   const [showCreate, setShowCreate] = useState(false);
@@ -21,83 +35,170 @@ export default function ProvidersPage() {
       { name: newName, email: newEmail || undefined, phone: newPhone || undefined },
       {
         onSuccess: () => {
-          toast.success('Provider created');
+          toast.success('Provider created successfully');
           setShowCreate(false);
           setNewName(''); setNewEmail(''); setNewPhone('');
         },
-        onError: (err: any) => toast.error(err?.response?.data?.detail ?? 'Failed'),
+        onError: (err: any) => toast.error(err?.response?.data?.detail ?? 'Failed to create provider'),
       }
     );
   };
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-end">
-        <button
+      {/* Page Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-bold text-gray-900">Providers</h2>
+          <p className="text-sm text-gray-500 mt-0.5">Manage your clinic staff and providers</p>
+        </div>
+        <Button
+          variant="primary"
+          size="md"
+          leftIcon={<Plus size={18} />}
           onClick={() => setShowCreate(true)}
-          className="flex items-center gap-2 px-4 py-2 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
         >
-          <Plus size={14} /> Add Provider
-        </button>
+          Add Provider
+        </Button>
       </div>
 
+      {/* Create Provider Form */}
       {showCreate && (
-        <div className="bg-white rounded-xl border border-gray-200 p-5">
-          <h3 className="text-sm font-semibold text-gray-800 mb-4">Add Provider</h3>
+        <Card className="p-5" variant="elevated">
+          <CardHeader className="pb-4 border-0">
+            <CardTitle>Add New Provider</CardTitle>
+          </CardHeader>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <input className="border border-gray-300 rounded-lg px-3 py-2 text-sm" placeholder="Name *" value={newName} onChange={(e) => setNewName(e.target.value)} />
-            <input className="border border-gray-300 rounded-lg px-3 py-2 text-sm" placeholder="Email (optional)" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} />
-            <input className="border border-gray-300 rounded-lg px-3 py-2 text-sm" placeholder="Phone (optional)" value={newPhone} onChange={(e) => setNewPhone(e.target.value)} />
+            <Input
+              placeholder="Full Name *"
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              leftIcon={<User size={16} />}
+            />
+            <Input
+              placeholder="Email (optional)"
+              type="email"
+              value={newEmail}
+              onChange={(e) => setNewEmail(e.target.value)}
+              leftIcon={<Mail size={16} />}
+            />
+            <Input
+              placeholder="Phone (optional)"
+              value={newPhone}
+              onChange={(e) => setNewPhone(e.target.value)}
+              leftIcon={<Phone size={16} />}
+            />
           </div>
-          <div className="flex gap-3 mt-4">
-            <button onClick={handleCreate} disabled={creating} className="px-4 py-2 text-sm bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-lg">
-              {creating ? 'Creating…' : 'Add'}
-            </button>
-            <button onClick={() => setShowCreate(false)} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900">Cancel</button>
+          <div className="flex gap-3 mt-4 pt-4 border-t border-gray-100">
+            <Button
+              variant="primary"
+              size="md"
+              onClick={handleCreate}
+              isLoading={creating}
+            >
+              {creating ? 'Creating...' : 'Add Provider'}
+            </Button>
+            <Button
+              variant="outline"
+              size="md"
+              onClick={() => setShowCreate(false)}
+            >
+              Cancel
+            </Button>
           </div>
-        </div>
+        </Card>
       )}
 
-      <div className="bg-white rounded-xl border border-gray-200 overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-gray-200">
-              <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500">Name</th>
-              <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500">Email</th>
-              <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500">Phone</th>
-              <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500">Status</th>
-              <th className="text-right py-3 px-4 text-xs font-semibold text-gray-500">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {isLoading ? (
-              <tr><td colSpan={5} className="text-center py-12 text-gray-400">Loading…</td></tr>
-            ) : providers?.map((p) => (
-              <tr key={p.id} className="hover:bg-gray-50">
-                <td className="py-3 px-4 font-medium text-gray-900">{p.name}</td>
-                <td className="py-3 px-4 text-gray-500">{p.email ?? '—'}</td>
-                <td className="py-3 px-4 text-gray-500">{p.phone ?? '—'}</td>
-                <td className="py-3 px-4">
-                  <span className={`text-xs px-2 py-0.5 rounded-full ${p.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
-                    {p.is_active ? 'Active' : 'Inactive'}
-                  </span>
-                </td>
-                <td className="py-3 px-4 text-right">
-                  <button
-                    onClick={() => update(
-                      { id: p.id, is_active: !p.is_active },
-                      { onSuccess: () => toast.success(`Provider ${p.is_active ? 'deactivated' : 'activated'}`) }
-                    )}
-                    className="text-xs text-gray-400 hover:text-gray-700 transition-colors"
-                  >
-                    {p.is_active ? 'Deactivate' : 'Activate'}
-                  </button>
-                </td>
-              </tr>
+      {/* Providers Table */}
+      <Card className="p-0 overflow-hidden" variant="elevated">
+        {isLoading ? (
+          <div className="p-4 space-y-3">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="flex gap-4">
+                <Skeleton variant="circular" width={40} height={40} />
+                <div className="flex-1 space-y-2">
+                  <Skeleton variant="text" className="w-40 h-4" />
+                  <Skeleton variant="text" className="w-32 h-3" />
+                </div>
+                <Skeleton variant="text" className="w-24 h-4" />
+                <Skeleton variant="text" className="w-20 h-4" />
+              </div>
             ))}
-          </tbody>
-        </table>
-      </div>
+          </div>
+        ) : !providers?.length ? (
+          <div className="text-center py-16">
+            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <User size={32} className="text-gray-400" />
+            </div>
+            <h3 className="text-sm font-medium text-gray-900 mb-1">No providers found</h3>
+            <p className="text-sm text-gray-500">Add your first provider to get started</p>
+          </div>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow hoverable={false}>
+                <TableHead className="w-12"><span className="sr-only">Avatar</span></TableHead>
+                <TableHead>Name</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Phone</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead align="right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {providers.map((p) => (
+                <TableRow key={p.id}>
+                  <TableCell>
+                    <Avatar name={p.name} size="sm" />
+                  </TableCell>
+                  <TableCell>
+                    <span className="font-medium text-gray-900">{p.name}</span>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2 text-sm text-gray-500">
+                      <Mail size={14} className="text-gray-400" />
+                      {p.email ?? '—'}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2 text-sm text-gray-500">
+                      <Phone size={14} className="text-gray-400" />
+                      {p.phone ?? '—'}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge
+                      variant={p.is_active ? 'success' : 'default'}
+                      size="sm"
+                      dot
+                    >
+                      {p.is_active ? 'Active' : 'Inactive'}
+                    </Badge>
+                  </TableCell>
+                  <TableCell align="right">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() =>
+                        update(
+                          { id: p.id, is_active: !p.is_active },
+                          {
+                            onSuccess: () =>
+                              toast.success(`Provider ${p.is_active ? 'deactivated' : 'activated'}`),
+                          }
+                        )
+                      }
+                      className={p.is_active ? 'text-gray-400 hover:text-error-600' : 'text-gray-400 hover:text-success-600'}
+                    >
+                      {p.is_active ? 'Deactivate' : 'Activate'}
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+      </Card>
     </div>
   );
 }

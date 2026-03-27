@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run *)",
+      "Bash(npm install *)",
+      "Bash(python *)",
+      "Bash(source *)",
+      "Bash(curl *)",
+      "Bash(sleep *)",
+      "Bash(pgrep *)",
+      "Bash(npx *)",
+      "Bash(pkill *)",
+      "Bash(lsof *)",
+      "Bash(xargs *)",
+      "Bash(venv/bin/uvicorn *)",
+      "Bash(docker-compose *)",
+      "Bash(kill *)",
+      "Bash(git add *)",
+      "Bash(git commit *)"
+    ]
+  },
+  "$version": 3
+}
