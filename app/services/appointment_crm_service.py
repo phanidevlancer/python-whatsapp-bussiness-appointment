@@ -40,6 +40,7 @@ async def _write_status_history(
     new_status: str,
     changed_by_id: uuid.UUID | None = None,
     reason: str | None = None,
+    reschedule_source: AppointmentSource | None = None,
 ) -> None:
     entry = AppointmentStatusHistory(
         appointment_id=appointment_id,
@@ -47,6 +48,7 @@ async def _write_status_history(
         new_status=new_status,
         changed_by_id=changed_by_id,
         reason=reason,
+        reschedule_source=reschedule_source,
     )
     db.add(entry)
     await db.flush()
@@ -278,6 +280,7 @@ async def reschedule_appointment(
             new_status=AppointmentStatus.CONFIRMED.value,
             changed_by_id=rescheduled_by.id,
             reason=reason,
+            reschedule_source=reschedule_source,
         )
 
         await db.flush()

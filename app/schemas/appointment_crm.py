@@ -62,10 +62,12 @@ class AppointmentStatusHistoryRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: uuid.UUID
+    appointment_id: uuid.UUID
     old_status: str | None
     new_status: str
     changed_by_id: uuid.UUID | None
     reason: str | None
+    reschedule_source: AppointmentSource | None
     created_at: datetime
 
 

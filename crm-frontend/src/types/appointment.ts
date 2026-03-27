@@ -58,10 +58,12 @@ export interface Appointment {
 
 export interface AppointmentStatusHistory {
   id: string;
+  appointment_id: string;
   old_status: string | null;
   new_status: string;
   changed_by_id: string | null;
   reason: string | null;
+  reschedule_source: string | null;
   created_at: string;
 }
 

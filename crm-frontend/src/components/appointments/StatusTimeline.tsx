@@ -1,36 +1,98 @@
 import { format } from 'date-fns';
+import { Calendar, RotateCcw, XCircle, CheckCircle, Clock, AlertCircle } from 'lucide-react';
 import type { AppointmentStatusHistory } from '@/types/appointment';
 import { clsx } from 'clsx';
 
-const statusColor: Record<string, string> = {
-  confirmed: 'bg-blue-500',
-  cancelled: 'bg-red-500',
-  completed: 'bg-green-500',
-  no_show: 'bg-gray-400',
-  pending: 'bg-amber-500',
+const statusConfig: Record<string, { color: string; icon: React.ReactNode; label: string }> = {
+  confirmed: { color: 'bg-blue-500', icon: <CheckCircle size={14} />, label: 'Confirmed' },
+  cancelled: { color: 'bg-red-500', icon: <XCircle size={14} />, label: 'Cancelled' },
+  completed: { color: 'bg-green-500', icon: <CheckCircle size={14} />, label: 'Completed' },
+  no_show: { color: 'bg-gray-400', icon: <AlertCircle size={14} />, label: 'No Show' },
+  pending: { color: 'bg-amber-500', icon: <Clock size={14} />, label: 'Pending' },
 };
 
 export default function StatusTimeline({ history }: { history: AppointmentStatusHistory[] }) {
-  if (!history.length) return <p className="text-sm text-gray-400">No history</p>;
+  if (!history.length) {
+    return (
+      <div className="text-center py-8">
+        <Clock size={40} className="mx-auto text-gray-300 mb-2" />
+        <p className="text-sm text-gray-500">No history available</p>
+      </div>
+    );
+  }
+
+  const getEventDescription = (entry: AppointmentStatusHistory) => {
+    // Handle reschedule events
+    if (entry.reschedule_source) {
+      const source = entry.reschedule_source === 'whatsapp' ? 'WhatsApp' : 'Admin';
+      return {
+        title: 'Rescheduled',
+        description: `Rescheduled via ${source}`,
+        icon: <RotateCcw size={14} className="text-indigo-600" />,
+        color: 'border-indigo-500',
+      };
+    }
+
+    // Handle booking event (first entry with no old_status)
+    if (!entry.old_status) {
+      const source = entry.new_status === 'confirmed' ? ' at booking' : '';
+      return {
+        title: 'Booked',
+        description: `Appointment created${source}`,
+        icon: <Calendar size={14} className="text-blue-600" />,
+        color: 'border-blue-500',
+      };
+    }
+
+    // Handle status changes
+    const config = statusConfig[entry.new_status] || statusConfig.pending;
+    return {
+      title: config.label,
+      description: entry.reason || `Status changed to ${entry.new_status}`,
+      icon: config.icon,
+      color: config.color.replace('bg-', 'border-'),
+    };
+  };
 
   return (
-    <div className="relative pl-5 space-y-4">
-      <div className="absolute left-2 top-2 bottom-2 w-px bg-gray-200" />
-      {history.map((entry) => (
-        <div key={entry.id} className="relative flex items-start gap-3">
-          <div className={clsx('w-3 h-3 rounded-full shrink-0 -ml-1.5 mt-0.5', statusColor[entry.new_status] ?? 'bg-gray-300')} />
-          <div>
-            <p className="text-sm font-medium text-gray-800 capitalize">
-              {entry.old_status ? `${entry.old_status} → ` : 'Created as '}
-              {entry.new_status}
-            </p>
-            {entry.reason && <p className="text-xs text-gray-500 mt-0.5">{entry.reason}</p>}
-            <p className="text-xs text-gray-400 mt-0.5">
-              {format(new Date(entry.created_at), 'MMM d, yyyy h:mm a')}
-            </p>
+    <div className="relative space-y-4">
+      {history.map((entry, index) => {
+        const event = getEventDescription(entry);
+        const isLast = index === history.length - 1;
+
+        return (
+          <div key={entry.id} className="relative flex gap-3">
+            {/* Timeline line */}
+            {!isLast && (
+              <div className="absolute left-[19px] top-8 bottom-0 w-px bg-gray-200" />
+            )}
+
+            {/* Icon */}
+            <div className={clsx(
+              'w-10 h-10 rounded-full shrink-0 flex items-center justify-center border-2 bg-white',
+              event.color
+            )}>
+              {event.icon}
+            </div>
+
+            {/* Content */}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <p className="text-sm font-semibold text-gray-900">{event.title}</p>
+                <span className="text-xs text-gray-400">
+                  {format(new Date(entry.created_at), 'MMM d, yyyy h:mm a')}
+                </span>
+              </div>
+              {event.description && (
+                <p className="text-sm text-gray-600 mt-0.5">{event.description}</p>
+              )}
+              {entry.reason && entry.reschedule_source && (
+                <p className="text-xs text-gray-500 mt-1">Reason: {entry.reason}</p>
+              )}
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
