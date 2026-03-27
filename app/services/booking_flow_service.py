@@ -535,6 +535,7 @@ async def _handle_booking_confirmation(
             new_status="confirmed",
             changed_by_id=None,
             source=AppointmentSource.WHATSAPP,
+            slot_start_time=slot.start_time,
         )
 
         # Release Redis lock (slot is now permanently booked in DB)
@@ -810,6 +811,9 @@ async def _handle_appointment_cancel(
         )
         return
     
+    service_name = appointment.service.name if appointment.service else "your appointment"
+    slot = appointment.slot
+
     # Write status history for cancellation
     from app.services.appointment_crm_service import _write_status_history
     from app.models.appointment import AppointmentSource
@@ -820,10 +824,8 @@ async def _handle_appointment_cancel(
         new_status="cancelled",
         changed_by_id=None,
         source=AppointmentSource.WHATSAPP,
+        slot_start_time=slot.start_time if slot else None,
     )
-
-    service_name = appointment.service.name if appointment.service else "your appointment"
-    slot = appointment.slot
     time_display = slot.start_time.strftime("%A, %B %d at %I:%M %p") if slot else "—"
 
     # Release any Redis lock for that slot (in case it was somehow still held)
@@ -1024,15 +1026,18 @@ async def _handle_reschedule_confirmation(
         # Write status history for the reschedule
         from app.services.appointment_crm_service import _write_status_history
         from app.models.appointment import AppointmentSource
+        old_slot_start = old_appointment.slot.start_time if old_appointment.slot else None
         await _write_status_history(
             db,
             appointment_id=appointment_id,
             old_status="confirmed",
             new_status="confirmed",  # Status remains confirmed, just slot changed
             changed_by_id=None,
-            reason=f"Rescheduled to new slot via WhatsApp",
+            reason="Rescheduled to new slot via WhatsApp",
             source=AppointmentSource.WHATSAPP,
             reschedule_source=AppointmentSource.WHATSAPP,
+            slot_start_time=new_slot.start_time,
+            old_slot_start_time=old_slot_start,
         )
 
         # Release the old slot (it was implicitly freed when we updated the appointment)
