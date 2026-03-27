@@ -11,7 +11,7 @@ const statusConfig: Record<string, { color: string; icon: React.ReactNode; label
   pending: { color: 'bg-amber-500', icon: <Clock size={14} />, label: 'Pending' },
 };
 
-export default function StatusTimeline({ history }: { history: AppointmentStatusHistory[] }) {
+export default function StatusTimeline({ history, source }: { history: AppointmentStatusHistory[]; source?: string }) {
   if (!history.length) {
     return (
       <div className="text-center py-8">
@@ -24,10 +24,10 @@ export default function StatusTimeline({ history }: { history: AppointmentStatus
   const getEventDescription = (entry: AppointmentStatusHistory) => {
     // Handle reschedule events
     if (entry.reschedule_source) {
-      const source = entry.reschedule_source === 'whatsapp' ? 'WhatsApp' : 'Admin';
+      const rescheduleSource = entry.reschedule_source === 'whatsapp' ? 'WhatsApp' : 'Admin';
       return {
         title: 'Rescheduled',
-        description: `Rescheduled via ${source}`,
+        description: `Rescheduled via ${rescheduleSource}`,
         icon: <RotateCcw size={14} className="text-indigo-600" />,
         color: 'border-indigo-500',
       };
@@ -35,10 +35,10 @@ export default function StatusTimeline({ history }: { history: AppointmentStatus
 
     // Handle booking event (first entry with no old_status)
     if (!entry.old_status) {
-      const source = entry.new_status === 'confirmed' ? ' at booking' : '';
+      const bookingSource = source === 'whatsapp' ? 'WhatsApp' : source === 'admin_dashboard' ? 'Admin' : 'Unknown';
       return {
         title: 'Booked',
-        description: `Appointment created${source}`,
+        description: `Appointment created via ${bookingSource}`,
         icon: <Calendar size={14} className="text-blue-600" />,
         color: 'border-blue-500',
       };

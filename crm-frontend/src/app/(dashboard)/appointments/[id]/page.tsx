@@ -205,7 +205,7 @@ export default function AppointmentDetailPage() {
             <CardTitle>Status History</CardTitle>
           </CardHeader>
           <CardContent className="pt-0">
-            <StatusTimeline history={history ?? []} />
+            <StatusTimeline history={history ?? []} source={appt.source} />
           </CardContent>
         </Card>
 
