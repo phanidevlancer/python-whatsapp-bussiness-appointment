@@ -340,13 +340,14 @@ async def update_appointment(
     old_status = appointment.status.value
     if payload.status is not None and payload.status != appointment.status:
         updates["status"] = payload.status
+        # Status updates via API are always from Admin
         await _write_status_history(
             db,
             appointment_id=appointment_id,
             old_status=old_status,
             new_status=payload.status.value,
             changed_by_id=updated_by.id,
-            source=appointment.source,
+            source=AppointmentSource.ADMIN_DASHBOARD,
         )
         await event_dispatcher.dispatch(
             AppointmentStatusChangedEvent(
@@ -385,7 +386,8 @@ async def mark_completed(
         old_status,
         AppointmentStatus.COMPLETED.value,
         updated_by.id,
-        source=appointment.source,
+        # Mark as completed via Admin (API action)
+        source=AppointmentSource.ADMIN_DASHBOARD,
     )
     return await appt_repo.update_appointment_fields(
         db, appointment_id, status=AppointmentStatus.COMPLETED
@@ -412,7 +414,8 @@ async def mark_no_show(
         old_status,
         AppointmentStatus.NO_SHOW.value,
         updated_by.id,
-        source=appointment.source,
+        # Mark as no-show via Admin (API action)
+        source=AppointmentSource.ADMIN_DASHBOARD,
     )
     return await appt_repo.update_appointment_fields(
         db, appointment_id, status=AppointmentStatus.NO_SHOW
