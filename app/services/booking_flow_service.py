@@ -169,6 +169,10 @@ async def _process_message(
     user_session = await sess_repo.get_or_create_session(db, sender)
     text_body = get_text_body(message)
 
+    # --- Load customer name once for personalised messages ---
+    _customer, _ = await customer_repo.get_or_create_by_phone(db, sender)
+    uname: str | None = _customer.name.title() if _customer.name else None
+
     # Resolve service name once for the log block (cheap: already in identity map if loaded)
     _svc_name: str | None = None
     if user_session.selected_service_id is not None:
@@ -182,46 +186,49 @@ async def _process_message(
 
     # --- Manage flow keyword — works from any state ---
     if msg_type == MessageType.TEXT and is_manage_request(text_body):
-        await _handle_manage_menu(sender, db, wa_client)
+        await _handle_manage_menu(sender, db, wa_client, uname)
         return
 
     # --- Button clicks for quick actions ---
     if msg_type == MessageType.BUTTON_REPLY:
         button_id = get_button_reply_id(message)
         if button_id == "book_appointment":
-            await _handle_greeting(sender, db, wa_client)
+            await _handle_greeting(sender, db, wa_client, uname)
             return
         if button_id == "my_appointments":
-            await _handle_manage_menu(sender, db, wa_client)
+            await _handle_manage_menu(sender, db, wa_client, uname)
+            return
+        if button_id == "update_name":
+            await _handle_update_name_prompt(sender, db, wa_client, uname)
             return
 
     # --- Greeting always shows the main menu buttons ---
     if msg_type == MessageType.TEXT and is_greeting(text_body):
-        await _handle_main_menu(sender, db, wa_client)
+        await _handle_main_menu(sender, db, wa_client, uname)
         return
 
     # --- Route by state ---
     step = user_session.current_step
 
     if step in (SessionStep.START, SessionStep.BOOKED):
-        await _handle_main_menu(sender, db, wa_client)
+        await _handle_main_menu(sender, db, wa_client, uname)
 
     elif step == SessionStep.SERVICE_SELECTED:
         if msg_type == MessageType.LIST_REPLY:
-            await _handle_service_selection(sender, get_list_reply_id(message), db, wa_client)
+            await _handle_service_selection(sender, get_list_reply_id(message), db, wa_client, uname)
         else:
-            await wa_client.send_text(sender, "Please select a service from the list below.")
+            await wa_client.send_text(sender, f"Please select a service from the list below{', ' + uname if uname else ''}.")
 
     elif step == SessionStep.SLOT_SELECTED:
         if msg_type == MessageType.LIST_REPLY:
-            await _handle_slot_selection(sender, get_list_reply_id(message), db, session_svc, wa_client)
+            await _handle_slot_selection(sender, get_list_reply_id(message), db, session_svc, wa_client, uname)
         elif msg_type == MessageType.BUTTON_REPLY:
             button_id = get_button_reply_id(message)
             if button_id.startswith("confirm_"):
                 slot_id_str = button_id[len("confirm_"):]
-                await _handle_booking_confirmation(sender, slot_id_str, db, session_svc, wa_client)
+                await _handle_booking_confirmation(sender, slot_id_str, db, session_svc, wa_client, uname)
             elif button_id == "cancel_booking":
-                await _handle_cancel(sender, db, wa_client)
+                await _handle_cancel(sender, db, wa_client, uname)
             else:
                 await wa_client.send_text(sender, "Please use the buttons to confirm or cancel.")
         else:
@@ -229,7 +236,7 @@ async def _process_message(
 
     elif step == SessionStep.MANAGE_MENU:
         if msg_type == MessageType.LIST_REPLY:
-            await _handle_appointment_selection(sender, get_list_reply_id(message), db, wa_client)
+            await _handle_appointment_selection(sender, get_list_reply_id(message), db, wa_client, uname)
         else:
             await wa_client.send_text(sender, "Please select an appointment from the list below.")
 
@@ -238,16 +245,22 @@ async def _process_message(
             button_id = get_button_reply_id(message)
             if button_id.startswith("cancel_appt_"):
                 appt_id_str = button_id[len("cancel_appt_"):]
-                await _handle_appointment_cancel(sender, appt_id_str, db, session_svc, wa_client)
+                await _handle_appointment_cancel(sender, appt_id_str, db, session_svc, wa_client, uname)
             elif button_id.startswith("reschedule_"):
                 appt_id_str = button_id[len("reschedule_"):]
-                await _handle_reschedule_start(sender, appt_id_str, db, wa_client)
+                await _handle_reschedule_start(sender, appt_id_str, db, wa_client, uname)
             elif button_id == "back_to_menu":
-                await _handle_manage_menu(sender, db, wa_client)
+                await _handle_manage_menu(sender, db, wa_client, uname)
             else:
                 await wa_client.send_text(sender, "Please use the buttons to choose an action.")
         else:
             await wa_client.send_text(sender, "Please use the buttons to choose an action.")
+
+    elif step == SessionStep.UPDATING_NAME:
+        if msg_type == MessageType.TEXT and text_body:
+            await _handle_save_updated_name(sender, text_body.strip(), db, wa_client)
+        else:
+            await wa_client.send_text(sender, "Please reply with your new name.")
 
     elif step == SessionStep.AWAITING_NAME:
         if msg_type == MessageType.FLOW_REPLY:
@@ -259,20 +272,20 @@ async def _process_message(
 
     elif step == SessionStep.AWAITING_EMAIL:
         if msg_type == MessageType.TEXT and text_body:
-            await _handle_text_email(sender, text_body.strip(), db, wa_client)
+            await _handle_text_email(sender, text_body.strip(), db, wa_client, uname)
         else:
-            await wa_client.send_text(sender, "Please reply with your email, or type *skip* to skip.")
+            await wa_client.send_text(sender, f"Please reply with your email{', ' + uname if uname else ''}, or type *skip* to skip.")
 
     elif step == SessionStep.RESCHEDULE_SLOT:
         if msg_type == MessageType.LIST_REPLY:
-            await _handle_reschedule_slot_selection(sender, get_list_reply_id(message), db, session_svc, wa_client)
+            await _handle_reschedule_slot_selection(sender, get_list_reply_id(message), db, session_svc, wa_client, uname)
         elif msg_type == MessageType.BUTTON_REPLY:
             button_id = get_button_reply_id(message)
             if button_id.startswith("confirm_reschedule_"):
                 slot_id_str = button_id[len("confirm_reschedule_"):]
-                await _handle_reschedule_confirmation(sender, slot_id_str, db, session_svc, wa_client)
+                await _handle_reschedule_confirmation(sender, slot_id_str, db, session_svc, wa_client, uname)
             elif button_id == "cancel_reschedule":
-                await _handle_manage_menu(sender, db, wa_client)
+                await _handle_manage_menu(sender, db, wa_client, uname)
             else:
                 await wa_client.send_text(sender, "Please use the buttons to confirm or go back.")
         else:
@@ -284,26 +297,27 @@ async def _process_message(
 # ---------------------------------------------------------------------------
 
 async def _handle_main_menu(
-    sender: str, db: AsyncSession, wa_client: WhatsAppClient
+    sender: str, db: AsyncSession, wa_client: WhatsAppClient, uname: str | None = None
 ) -> None:
     """Show the main menu with 2 options: Book an appointment / My appointments."""
-    await customer_repo.get_or_create_by_phone(db, sender)
     await sess_repo.reset_session(db, sender)
     await db.commit()
     _log_action(sender, "Sent main menu buttons")
 
-    await wa_client.send_button_message(
-        to=sender,
-        body="Welcome to *ORA Clinic*! 👋\n\nWe're here to help you with your healthcare needs. How can we assist you today?",
-        buttons=[
-            {"id": "book_appointment", "title": "Book an appointment"},
-            {"id": "my_appointments", "title": "My appointments"},
-        ],
-    )
+    greeting = f"Welcome back, *{uname}*! 👋" if uname else "Welcome to *ORA Clinic*! 👋"
+    body = f"{greeting}\n\nWe're here to help you with your healthcare needs. How can we assist you today?"
+
+    buttons = [
+        {"id": "book_appointment", "title": "Book an appointment"},
+        {"id": "my_appointments", "title": "My appointments"},
+        {"id": "update_name", "title": "Update my name"},
+    ]
+
+    await wa_client.send_button_message(to=sender, body=body, buttons=buttons)
 
 
 async def _handle_greeting(
-    sender: str, db: AsyncSession, wa_client: WhatsAppClient
+    sender: str, db: AsyncSession, wa_client: WhatsAppClient, uname: str | None = None
 ) -> None:
     """Show the service selection list (called when user taps 'Book an appointment')."""
     services = await svc_repo.get_active_services(db)
@@ -338,9 +352,10 @@ async def _handle_greeting(
         }
     ]
 
+    intro = f"Great, *{uname}*!" if uname else "Thank you for choosing *ORA Clinic*!"
     await wa_client.send_list_message(
         to=sender,
-        body="Thank you for choosing *ORA Clinic*! Please select a service to book your appointment:",
+        body=f"{intro} Please select a service to book your appointment:",
         button_label="View Services",
         sections=sections,
     )
@@ -351,6 +366,7 @@ async def _handle_service_selection(
     service_id_str: str,
     db: AsyncSession,
     wa_client: WhatsAppClient,
+    uname: str | None = None,
 ) -> None:
     """Store selected service and send available time slots."""
     try:
@@ -392,9 +408,10 @@ async def _handle_service_selection(
         }
     ]
 
+    name_part = f", *{uname}*" if uname else ""
     await wa_client.send_list_message(
         to=sender,
-        body=f"Great choice! You selected *{service.name}* ({service.duration_minutes} min).\n\nChoose a time slot that works for you:",
+        body=f"Great choice{name_part}! You selected *{service.name}* ({service.duration_minutes} min).\n\nChoose a time slot that works for you:",
         button_label="View Slots",
         sections=sections,
     )
@@ -406,6 +423,7 @@ async def _handle_slot_selection(
     db: AsyncSession,
     session_svc: SessionService,
     wa_client: WhatsAppClient,
+    uname: str | None = None,
 ) -> None:
     """Acquire a Redis lock on the slot and prompt for confirmation."""
     try:
@@ -440,10 +458,11 @@ async def _handle_slot_selection(
 
     _log_action(sender, f'Slot selected: {time_display} — sent confirmation prompt')
 
+    name_part = f", *{uname}*" if uname else ""
     await wa_client.send_button_message(
         to=sender,
         body=(
-            f"Almost there! Please confirm your appointment at *ORA Clinic*:\n\n"
+            f"Almost there{name_part}! Please confirm your appointment at *ORA Clinic*:\n\n"
             f"Date & Time: {time_display} – {end_display}\n\n"
             f"Tap *Confirm* to book or *Cancel* to choose a different slot."
         ),
@@ -460,6 +479,7 @@ async def _handle_booking_confirmation(
     db: AsyncSession,
     session_svc: SessionService,
     wa_client: WhatsAppClient,
+    uname: str | None = None,
 ) -> None:
     """
     Finalize the booking with a DB transaction.
@@ -517,9 +537,10 @@ async def _handle_booking_confirmation(
 
         _log_action(sender, f'BOOKED: {service_name} on {time_display} (ref: {booking_ref})')
 
+        name_part = f", *{uname}*" if uname else ""
         await wa_client.send_text(
             sender,
-            f"🎉 Your appointment at *ORA Clinic* is confirmed!\n\n"
+            f"🎉 Your appointment at *ORA Clinic* is confirmed{name_part}!\n\n"
             f"Service: {service_name}\n"
             f"Date & Time: {time_display}\n"
             f"Booking Ref: {booking_ref}\n\n"
@@ -571,10 +592,33 @@ async def _send_details_flow(sender: str, wa_client: WhatsAppClient) -> None:
         )
 
 
+async def _handle_update_name_prompt(
+    sender: str, db: AsyncSession, wa_client: WhatsAppClient, uname: str | None = None
+) -> None:
+    """Ask the user to type their new name."""
+    await sess_repo.update_session(db, sender, SessionStep.UPDATING_NAME)
+    await db.commit()
+    current = f" (currently *{uname}*)" if uname else ""
+    await wa_client.send_text(sender, f"What would you like to update your name to?{current}")
+
+
+async def _handle_save_updated_name(
+    sender: str, name: str, db: AsyncSession, wa_client: WhatsAppClient
+) -> None:
+    """Save the updated name and return to main menu."""
+    name = name.title()
+    customer, _ = await customer_repo.get_or_create_by_phone(db, sender)
+    await customer_repo.update_customer(db, customer.id, name=name)
+    await sess_repo.update_session(db, sender, SessionStep.BOOKED)
+    await db.commit()
+    await wa_client.send_text(sender, f"Done! Your name has been updated to *{name}*. Reply *hi* to go back to the menu.")
+
+
 async def _handle_text_name(
     sender: str, name: str, db: AsyncSession, wa_client: WhatsAppClient
 ) -> None:
     """Fallback: collect name via plain text reply."""
+    name = name.title()
     customer, _ = await customer_repo.get_or_create_by_phone(db, sender)
     await customer_repo.update_customer(db, customer.id, name=name)
     await sess_repo.update_session(db, sender, SessionStep.AWAITING_EMAIL)
@@ -583,7 +627,7 @@ async def _handle_text_name(
 
 
 async def _handle_text_email(
-    sender: str, text: str, db: AsyncSession, wa_client: WhatsAppClient
+    sender: str, text: str, db: AsyncSession, wa_client: WhatsAppClient, uname: str | None = None
 ) -> None:
     """Fallback: collect email via plain text reply."""
     if text.lower() != "skip":
@@ -591,9 +635,10 @@ async def _handle_text_email(
         await customer_repo.update_customer(db, customer.id, email=text)
     await sess_repo.update_session(db, sender, SessionStep.BOOKED)
     await db.commit()
+    name_part = f", *{uname}*" if uname else ""
     await wa_client.send_text(
         sender,
-        "All set! Reply *hi* to book another appointment or *my appointments* to manage your bookings.",
+        f"All set{name_part}! Reply *hi* to book another appointment or *my appointments* to manage your bookings.",
     )
 
 
@@ -601,7 +646,7 @@ async def _handle_flow_submission(
     sender: str, data: dict, db: AsyncSession, wa_client: WhatsAppClient
 ) -> None:
     """Handle submitted WhatsApp Flow form data (name + email)."""
-    name = data.get("name", "").strip()
+    name = data.get("name", "").strip().title()
     email = data.get("email", "").strip()
     customer, _ = await customer_repo.get_or_create_by_phone(db, sender)
     updates = {}
@@ -620,10 +665,10 @@ async def _handle_flow_submission(
 
 
 async def _handle_cancel(
-    sender: str, db: AsyncSession, wa_client: WhatsAppClient
+    sender: str, db: AsyncSession, wa_client: WhatsAppClient, uname: str | None = None
 ) -> None:
     """User cancelled — reset session and send service list again."""
-    await _handle_greeting(sender, db, wa_client)
+    await _handle_greeting(sender, db, wa_client, uname)
 
 
 # ---------------------------------------------------------------------------
@@ -631,15 +676,16 @@ async def _handle_cancel(
 # ---------------------------------------------------------------------------
 
 async def _handle_manage_menu(
-    sender: str, db: AsyncSession, wa_client: WhatsAppClient
+    sender: str, db: AsyncSession, wa_client: WhatsAppClient, uname: str | None = None
 ) -> None:
     """Show the user's upcoming confirmed appointments as a list."""
     appointments = await appt_repo.get_upcoming_appointments(db, sender)
 
     if not appointments:
+        name_part = f", *{uname}*" if uname else ""
         await wa_client.send_text(
             sender,
-            "You have no upcoming appointments at *ORA Clinic*.\n\nSend *hi* to book one.",
+            f"You have no upcoming appointments at *ORA Clinic*{name_part}.\n\nSend *hi* to book one.",
         )
         return
 
@@ -664,9 +710,10 @@ async def _handle_manage_menu(
 
     sections = [{"title": "Upcoming Appointments", "rows": rows}]
 
+    name_part = f", *{uname}*" if uname else ""
     await wa_client.send_list_message(
         to=sender,
-        body="Here are your upcoming appointments at *ORA Clinic*. Tap one to cancel or reschedule:",
+        body=f"Here are your upcoming appointments at *ORA Clinic*{name_part}. Tap one to cancel or reschedule:",
         button_label="My Bookings",
         sections=sections,
     )
@@ -677,6 +724,7 @@ async def _handle_appointment_selection(
     appointment_id_str: str,
     db: AsyncSession,
     wa_client: WhatsAppClient,
+    uname: str | None = None,
 ) -> None:
     """User tapped an appointment — show cancel / reschedule / back buttons."""
     try:
@@ -709,12 +757,13 @@ async def _handle_appointment_selection(
     await db.commit()
     _log_action(sender, f'Appointment selected: "{service_name}" on {time_display}')
 
+    name_part = f", *{uname}*" if uname else ""
     await wa_client.send_button_message(
         to=sender,
         body=(
             f"*{service_name}* at *ORA Clinic*\n"
             f"Date & Time: {time_display} – {end_display}\n\n"
-            f"What would you like to do?"
+            f"What would you like to do{name_part}?"
         ),
         buttons=[
             {"id": f"cancel_appt_{appointment_id_str}", "title": "Cancel"},
@@ -730,6 +779,7 @@ async def _handle_appointment_cancel(
     db: AsyncSession,
     session_svc: SessionService,
     wa_client: WhatsAppClient,
+    uname: str | None = None,
 ) -> None:
     """Cancel the selected appointment and free the slot."""
     try:
@@ -759,9 +809,10 @@ async def _handle_appointment_cancel(
     await sess_repo.update_session(db, sender, SessionStep.BOOKED)
     _log_action(sender, f'CANCELLED: "{service_name}" on {time_display}')
 
+    name_part = f", *{uname}*" if uname else ""
     await wa_client.send_text(
         sender,
-        f"Your appointment at *ORA Clinic* has been cancelled.\n\n"
+        f"Your appointment at *ORA Clinic* has been cancelled{name_part}.\n\n"
         f"Service: {service_name}\n"
         f"Date & Time: {time_display}\n\n"
         f"Send *hi* to book a new appointment.",
@@ -773,6 +824,7 @@ async def _handle_reschedule_start(
     appointment_id_str: str,
     db: AsyncSession,
     wa_client: WhatsAppClient,
+    uname: str | None = None,
 ) -> None:
     """Begin reschedule: load the appointment's service and show available slots."""
     try:
@@ -828,9 +880,10 @@ async def _handle_reschedule_start(
         }
     ]
 
+    name_part = f", *{uname}*" if uname else ""
     await wa_client.send_list_message(
         to=sender,
-        body=f"Rescheduling your appointment at *ORA Clinic*.\n\nChoose a new time slot for *{service.name}*:",
+        body=f"Rescheduling your appointment at *ORA Clinic*{name_part}.\n\nChoose a new time slot for *{service.name}*:",
         button_label="View Slots",
         sections=sections,
     )
@@ -842,6 +895,7 @@ async def _handle_reschedule_slot_selection(
     db: AsyncSession,
     session_svc: SessionService,
     wa_client: WhatsAppClient,
+    uname: str | None = None,
 ) -> None:
     """Acquire Redis lock on the new slot and show confirm/back buttons."""
     try:
@@ -869,10 +923,11 @@ async def _handle_reschedule_slot_selection(
     end_display = slot.end_time.strftime("%I:%M %p")
     _log_action(sender, f'New slot selected: {time_display} — sent reschedule confirmation')
 
+    name_part = f", *{uname}*" if uname else ""
     await wa_client.send_button_message(
         to=sender,
         body=(
-            f"New time slot at *ORA Clinic*:\n\n"
+            f"New time slot at *ORA Clinic*{name_part}:\n\n"
             f"Date & Time: {time_display} – {end_display}\n\n"
             f"Tap *Confirm* to reschedule or *Back* to choose a different slot."
         ),
@@ -889,6 +944,7 @@ async def _handle_reschedule_confirmation(
     db: AsyncSession,
     session_svc: SessionService,
     wa_client: WhatsAppClient,
+    uname: str | None = None,
 ) -> None:
     """
     Finalize reschedule:
@@ -944,9 +1000,10 @@ async def _handle_reschedule_confirmation(
 
         _log_action(sender, f'RESCHEDULED: {service_name} → {time_display} (ref: {booking_ref})')
 
+        name_part = f", *{uname}*" if uname else ""
         await wa_client.send_text(
             sender,
-            f"Your appointment at *ORA Clinic* has been rescheduled!\n\n"
+            f"Your appointment at *ORA Clinic* has been rescheduled{name_part}!\n\n"
             f"Service: {service_name}\n"
             f"New Date & Time: {time_display}\n"
             f"Booking Ref: {booking_ref}\n\n"
