@@ -21,7 +21,7 @@ Manage state transitions:
 import logging
 import uuid
 
-from sqlalchemy.exc import OperationalError
+from sqlalchemy.exc import IntegrityError, OperationalError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.integrations.whatsapp_client import WhatsAppClient, WhatsAppAPIError
@@ -48,6 +48,74 @@ from app.utils.whatsapp_parser import (
 
 logger = logging.getLogger(__name__)
 
+_SEP = "─" * 60
+
+
+_FLOW_LABEL = {
+    "START":                "New Booking",
+    "SERVICE_SELECTED":     "New Booking  — selecting service",
+    "SLOT_SELECTED":        "New Booking  — selecting slot",
+    "BOOKED":               "New Booking  — completed",
+    "MANAGE_MENU":          "Manage Appointments",
+    "MANAGE_APPOINTMENT":   "Manage Appointments — appointment selected",
+    "RESCHEDULE_SLOT":      "Reschedule   — selecting new slot",
+}
+
+
+def _log_incoming(
+    sender: str,
+    msg_type,
+    step: str,
+    text_body: str | None,
+    message: dict,
+    user_session=None,
+    service_name: str | None = None,
+) -> None:
+    """Log a full-context block for every incoming message."""
+    # --- What the user said ---
+    if msg_type.value == "text":
+        user_msg = f'"{text_body}"'
+    elif msg_type.value == "list_reply":
+        try:
+            title = message["interactive"]["list_reply"].get("title", "")
+            desc  = message["interactive"]["list_reply"].get("description", "")
+            user_msg = f'selected "{title}"' + (f'  ({desc})' if desc else "")
+        except (KeyError, TypeError):
+            user_msg = "selected (list)"
+    elif msg_type.value == "button_reply":
+        try:
+            title = message["interactive"]["button_reply"].get("title", "")
+            user_msg = f'tapped "{title}"'
+        except (KeyError, TypeError):
+            user_msg = "tapped (button)"
+    else:
+        user_msg = f"({msg_type.value})"
+
+    # --- Flow context ---
+    flow = _FLOW_LABEL.get(step, step)
+
+    # --- Session context lines (only when we have useful info) ---
+    ctx_lines = []
+    if service_name:
+        ctx_lines.append(f"  Service : {service_name}")
+    if user_session is not None:
+        if getattr(user_session, "selected_slot_id", None):
+            ctx_lines.append(f"  Slot ID : {str(user_session.selected_slot_id)[:8]}…")
+        if getattr(user_session, "selected_appointment_id", None):
+            ctx_lines.append(f"  Appt ID : {str(user_session.selected_appointment_id)[:8]}…")
+
+    ctx_block = ("\n" + "\n".join(ctx_lines)) if ctx_lines else ""
+
+    logger.info(
+        "\n%s\n  From  : %s\n  Flow  : %s\n  Msg   : %s%s\n%s",
+        _SEP, sender, flow, user_msg, ctx_block, _SEP,
+    )
+
+
+def _log_action(sender: str, action: str) -> None:
+    """Log what the bot did in response."""
+    logger.info("  ↳ Bot : %s", action)
+
 
 async def handle_incoming_message(
     payload: dict,
@@ -63,10 +131,7 @@ async def handle_incoming_message(
     try:
         await _process_message(payload, db, session_svc, wa_client)
     except Exception as e:
-        import traceback
-        print(f"BOOKING FLOW ERROR: {e}", flush=True)
-        traceback.print_exc()
-        logger.exception("Unhandled error in booking flow")
+        logger.exception("Unhandled error in booking flow: %s", e)
 
 
 async def _process_message(
@@ -75,12 +140,9 @@ async def _process_message(
     session_svc: SessionService,
     wa_client: WhatsAppClient,
 ) -> None:
-    logger.info("RAW PAYLOAD: %s", payload)
-
     message = extract_message(payload)
     if message is None:
-        logger.info("No message in payload (status update), skipping")
-        return
+        return  # status update (delivery/read receipt), nothing to process
 
     sender = extract_sender_phone(payload)
     if not sender:
@@ -89,11 +151,10 @@ async def _process_message(
 
     message_id = get_message_id(message)
     msg_type = get_message_type(message)
-    logger.info("Extracted: sender=%s message_id=%s msg_type=%s message=%s", sender, message_id, msg_type, message)
 
     # --- Idempotency: skip already-processed messages ---
     if message_id and await session_svc.is_duplicate_message(message_id):
-        logger.info("Skipping duplicate message id=%s", message_id)
+        logger.debug("Skipping duplicate message id=%s", message_id)
         return
 
     if message_id:
@@ -101,39 +162,50 @@ async def _process_message(
 
     # --- Load or create session ---
     user_session = await sess_repo.get_or_create_session(db, sender)
-    logger.info("Session loaded for %s: step=%s", sender, user_session.current_step)
     text_body = get_text_body(message)
-    logger.info(
-        "Message from %s | type=%s | step=%s | text=%r",
-        sender, msg_type, user_session.current_step, text_body
+
+    # Resolve service name once for the log block (cheap: already in identity map if loaded)
+    _svc_name: str | None = None
+    if user_session.selected_service_id is not None:
+        _svc = await svc_repo.get_service_by_id(db, user_session.selected_service_id)
+        _svc_name = _svc.name if _svc else None
+
+    _log_incoming(
+        sender, msg_type, user_session.current_step.value,
+        text_body, message, user_session=user_session, service_name=_svc_name,
     )
 
     # --- Manage flow keyword — works from any state ---
     if msg_type == MessageType.TEXT and is_manage_request(text_body):
-        logger.info("Manage request detected, showing appointments to %s", sender)
         await _handle_manage_menu(sender, db, wa_client)
         return
 
-    # --- Greeting always restarts the booking flow regardless of current state ---
+    # --- Button clicks for quick actions ---
+    if msg_type == MessageType.BUTTON_REPLY:
+        button_id = get_button_reply_id(message)
+        if button_id == "book_appointment":
+            await _handle_greeting(sender, db, wa_client)
+            return
+        if button_id == "my_appointments":
+            await _handle_manage_menu(sender, db, wa_client)
+            return
+
+    # --- Greeting always shows the main menu buttons ---
     if msg_type == MessageType.TEXT and is_greeting(text_body):
-        logger.info("Greeting detected, sending service list to %s", sender)
-        await _handle_greeting(sender, db, wa_client)
+        await _handle_main_menu(sender, db, wa_client)
         return
 
     # --- Route by state ---
     step = user_session.current_step
 
     if step in (SessionStep.START, SessionStep.BOOKED):
-        await wa_client.send_text(
-            sender,
-            "Send *hi* to book an appointment, or *my appointments* to view and manage your bookings.",
-        )
+        await _handle_main_menu(sender, db, wa_client)
 
     elif step == SessionStep.SERVICE_SELECTED:
         if msg_type == MessageType.LIST_REPLY:
             await _handle_service_selection(sender, get_list_reply_id(message), db, wa_client)
         else:
-            await wa_client.send_text(sender, "Please select a service from the list.")
+            await wa_client.send_text(sender, "Please select a service from the list below.")
 
     elif step == SessionStep.SLOT_SELECTED:
         if msg_type == MessageType.LIST_REPLY:
@@ -148,13 +220,13 @@ async def _process_message(
             else:
                 await wa_client.send_text(sender, "Please use the buttons to confirm or cancel.")
         else:
-            await wa_client.send_text(sender, "Please select a time slot from the list.")
+            await wa_client.send_text(sender, "Please select a time slot from the list below.")
 
     elif step == SessionStep.MANAGE_MENU:
         if msg_type == MessageType.LIST_REPLY:
             await _handle_appointment_selection(sender, get_list_reply_id(message), db, wa_client)
         else:
-            await wa_client.send_text(sender, "Please select an appointment from the list.")
+            await wa_client.send_text(sender, "Please select an appointment from the list below.")
 
     elif step == SessionStep.MANAGE_APPOINTMENT:
         if msg_type == MessageType.BUTTON_REPLY:
@@ -185,25 +257,41 @@ async def _process_message(
             else:
                 await wa_client.send_text(sender, "Please use the buttons to confirm or go back.")
         else:
-            await wa_client.send_text(sender, "Please select a new time slot from the list.")
+            await wa_client.send_text(sender, "Please select a new time slot from the list below.")
 
 
 # ---------------------------------------------------------------------------
 # Booking step handlers
 # ---------------------------------------------------------------------------
 
+async def _handle_main_menu(
+    sender: str, db: AsyncSession, wa_client: WhatsAppClient
+) -> None:
+    """Show the main menu with 2 options: Book an appointment / My appointments."""
+    await sess_repo.reset_session(db, sender)
+    await db.commit()
+    _log_action(sender, "Sent main menu buttons")
+
+    await wa_client.send_button_message(
+        to=sender,
+        body="Welcome to *ORA Clinic*! 👋\n\nWe're here to help you with your healthcare needs. How can we assist you today?",
+        buttons=[
+            {"id": "book_appointment", "title": "Book an appointment"},
+            {"id": "my_appointments", "title": "My appointments"},
+        ],
+    )
+
+
 async def _handle_greeting(
     sender: str, db: AsyncSession, wa_client: WhatsAppClient
 ) -> None:
-    """Reset session and send the service selection list."""
-    logger.info("_handle_greeting called for %s", sender)
+    """Show the service selection list (called when user taps 'Book an appointment')."""
     services = await svc_repo.get_active_services(db)
-    logger.info("Found %d services for %s", len(services), sender)
 
     if not services:
         await wa_client.send_text(
             sender,
-            "Sorry, there are no services available right now. Please try again later.",
+            "We're sorry, but *ORA Clinic* has no services available right now. Please try again later.",
         )
         return
 
@@ -213,7 +301,7 @@ async def _handle_greeting(
     # The API call takes ~1-2s; without this early commit, the user can reply
     # before the transaction is committed and read stale START state.
     await db.commit()
-    logger.info("Session committed as SERVICE_SELECTED for %s", sender)
+    _log_action(sender, f"Sent service list ({len(services)} services)")
 
     sections = [
         {
@@ -232,11 +320,10 @@ async def _handle_greeting(
 
     await wa_client.send_list_message(
         to=sender,
-        body="Welcome! Please select a service to book an appointment:",
+        body="Thank you for choosing *ORA Clinic*! Please select a service to book your appointment:",
         button_label="View Services",
         sections=sections,
     )
-    logger.info("_handle_greeting completed for %s", sender)
 
 
 async def _handle_service_selection(
@@ -250,25 +337,26 @@ async def _handle_service_selection(
         service_id = uuid.UUID(service_id_str)
     except (ValueError, AttributeError):
         logger.warning("Invalid service_id received: %r", service_id_str)
-        await wa_client.send_text(sender, "Invalid selection. Please choose a service from the list.")
+        await wa_client.send_text(sender, "Invalid selection. Please choose a service from the list below.")
         return
 
     service = await svc_repo.get_service_by_id(db, service_id)
     if service is None:
-        await wa_client.send_text(sender, "That service is no longer available. Please try again.")
+        await wa_client.send_text(sender, "That service is no longer available. Please select another service.")
         return
 
     slots = await slot_repo.get_available_slots(db, service_id)
     if not slots:
         await wa_client.send_text(
             sender,
-            f"No available slots for *{service.name}* right now. "
+            f"No available slots for *{service.name}* at *ORA Clinic* right now. "
             "Please try again later or choose a different service.",
         )
         return
 
     await sess_repo.update_session(db, sender, SessionStep.SLOT_SELECTED, service_id=service_id)
     await db.commit()  # commit before sending — user may reply before we return
+    _log_action(sender, f'Service selected: "{service.name}" — sent {len(slots)} slots')
 
     sections = [
         {
@@ -286,7 +374,7 @@ async def _handle_service_selection(
 
     await wa_client.send_list_message(
         to=sender,
-        body=f"You selected *{service.name}* ({service.duration_minutes} min).\n\nChoose a time slot:",
+        body=f"Great choice! You selected *{service.name}* ({service.duration_minutes} min).\n\nChoose a time slot that works for you:",
         button_label="View Slots",
         sections=sections,
     )
@@ -304,7 +392,7 @@ async def _handle_slot_selection(
         slot_id = uuid.UUID(slot_id_str)
     except (ValueError, AttributeError):
         logger.warning("Invalid slot_id received: %r", slot_id_str)
-        await wa_client.send_text(sender, "Invalid selection. Please choose a slot from the list.")
+        await wa_client.send_text(sender, "Invalid selection. Please choose a slot from the list below.")
         return
 
     slot = await slot_repo.get_slot_by_id(db, slot_id)
@@ -330,10 +418,12 @@ async def _handle_slot_selection(
     time_display = slot.start_time.strftime("%A, %B %d at %I:%M %p")
     end_display = slot.end_time.strftime("%I:%M %p")
 
+    _log_action(sender, f'Slot selected: {time_display} — sent confirmation prompt')
+
     await wa_client.send_button_message(
         to=sender,
         body=(
-            f"Please confirm your appointment:\n\n"
+            f"Almost there! Please confirm your appointment at *ORA Clinic*:\n\n"
             f"Date & Time: {time_display} – {end_display}\n\n"
             f"Tap *Confirm* to book or *Cancel* to choose a different slot."
         ),
@@ -361,7 +451,7 @@ async def _handle_booking_confirmation(
     try:
         slot_id = uuid.UUID(slot_id_str)
     except (ValueError, AttributeError):
-        await wa_client.send_text(sender, "Something went wrong. Please start over by sending 'hi'.")
+        await wa_client.send_text(sender, "Something went wrong. Please send 'hi' to start over.")
         return
 
     user_session = await sess_repo.get_or_create_session(db, sender)
@@ -408,23 +498,27 @@ async def _handle_booking_confirmation(
         time_display = slot.start_time.strftime("%A, %B %d at %I:%M %p")
         booking_ref = str(appointment.id).split("-")[0].upper()  # Short human-readable ID
 
+        _log_action(sender, f'BOOKED: {service_name} on {time_display} (ref: {booking_ref})')
+
         await wa_client.send_text(
             sender,
-            f"Your appointment is confirmed!\n\n"
+            f"🎉 Your appointment at *ORA Clinic* is confirmed!\n\n"
             f"Service: {service_name}\n"
             f"Date & Time: {time_display}\n"
             f"Booking Ref: {booking_ref}\n\n"
             f"Reply *my appointments* to manage your bookings, or *hi* to book another.",
         )
 
-    except OperationalError:
-        # SELECT FOR UPDATE NOWAIT raised — concurrent booking in progress
-        logger.warning("Slot %s locked by concurrent transaction for user %s", slot_id, sender)
+    except (OperationalError, IntegrityError):
+        # OperationalError: SELECT FOR UPDATE NOWAIT raised (concurrent lock)
+        # IntegrityError: unique constraint on slot_id violated (slot already booked)
+        logger.warning("Slot %s unavailable for user %s", slot_id, sender)
         await session_svc.release_slot_lock(slot_id_str)
         await sess_repo.update_session(db, sender, SessionStep.SERVICE_SELECTED)
+        await db.rollback()
         await wa_client.send_text(
             sender,
-            "That slot was just taken. Please choose a different time.",
+            "Sorry, that slot is no longer available. Please send *hi* to choose a different time.",
         )
     except WhatsAppAPIError:
         # DB was updated but confirmation message failed — log for manual follow-up
@@ -453,12 +547,13 @@ async def _handle_manage_menu(
     if not appointments:
         await wa_client.send_text(
             sender,
-            "You have no upcoming appointments.\n\nSend *hi* to book one.",
+            "You have no upcoming appointments at *ORA Clinic*.\n\nSend *hi* to book one.",
         )
         return
 
     await sess_repo.update_session(db, sender, SessionStep.MANAGE_MENU)
     await db.commit()
+    _log_action(sender, f"Sent appointments list ({len(appointments)} upcoming)")
 
     rows = []
     for appt in appointments:
@@ -467,17 +562,19 @@ async def _handle_manage_menu(
             appt.slot.start_time.strftime("%b %d, %I:%M %p") if appt.slot else "—"
         )
         ref = str(appt.id).split("-")[0].upper()
+        # Row title max 24 chars — truncate service name if needed
+        title = service_name[:24]
         rows.append({
             "id": str(appt.id),
-            "title": f"{service_name} — {slot_display}",
-            "description": f"Ref: {ref}",
+            "title": title,
+            "description": f"{slot_display} · {ref}",
         })
 
     sections = [{"title": "Upcoming Appointments", "rows": rows}]
 
     await wa_client.send_list_message(
         to=sender,
-        body="Here are your upcoming appointments. Tap one to cancel or reschedule:",
+        body="Here are your upcoming appointments at *ORA Clinic*. Tap one to cancel or reschedule:",
         button_label="My Bookings",
         sections=sections,
     )
@@ -493,7 +590,7 @@ async def _handle_appointment_selection(
     try:
         appointment_id = uuid.UUID(appointment_id_str)
     except (ValueError, AttributeError):
-        await wa_client.send_text(sender, "Invalid selection. Please choose from the list.")
+        await wa_client.send_text(sender, "Invalid selection. Please choose from the list below.")
         return
 
     appointment = await appt_repo.get_appointment_by_id(db, appointment_id)
@@ -518,11 +615,12 @@ async def _handle_appointment_selection(
         db, sender, SessionStep.MANAGE_APPOINTMENT, appointment_id=appointment_id
     )
     await db.commit()
+    _log_action(sender, f'Appointment selected: "{service_name}" on {time_display}')
 
     await wa_client.send_button_message(
         to=sender,
         body=(
-            f"*{service_name}*\n"
+            f"*{service_name}* at *ORA Clinic*\n"
             f"Date & Time: {time_display} – {end_display}\n\n"
             f"What would you like to do?"
         ),
@@ -554,7 +652,7 @@ async def _handle_appointment_cancel(
         await wa_client.send_text(
             sender,
             "That appointment could not be cancelled (it may already be cancelled). "
-            "Send *my appointments* to see your current bookings.",
+            "Send *my appointments* to see your current bookings at *ORA Clinic*.",
         )
         return
 
@@ -567,10 +665,11 @@ async def _handle_appointment_cancel(
         await session_svc.release_slot_lock(str(slot.id))
 
     await sess_repo.update_session(db, sender, SessionStep.BOOKED)
+    _log_action(sender, f'CANCELLED: "{service_name}" on {time_display}')
 
     await wa_client.send_text(
         sender,
-        f"Your appointment has been cancelled.\n\n"
+        f"Your appointment at *ORA Clinic* has been cancelled.\n\n"
         f"Service: {service_name}\n"
         f"Date & Time: {time_display}\n\n"
         f"Send *hi* to book a new appointment.",
@@ -607,7 +706,7 @@ async def _handle_reschedule_start(
     if not slots:
         await wa_client.send_text(
             sender,
-            f"No available slots for *{service.name}* right now. "
+            f"No available slots for *{service.name}* at *ORA Clinic* right now. "
             "Please try again later.",
         )
         return
@@ -621,6 +720,7 @@ async def _handle_reschedule_start(
         appointment_id=appointment_id,
     )
     await db.commit()
+    _log_action(sender, f'Reschedule started for "{service.name}" — sent {len(slots)} slots')
 
     sections = [
         {
@@ -638,7 +738,7 @@ async def _handle_reschedule_start(
 
     await wa_client.send_list_message(
         to=sender,
-        body=f"Rescheduling *{service.name}*.\n\nChoose a new time slot:",
+        body=f"Rescheduling your appointment at *ORA Clinic*.\n\nChoose a new time slot for *{service.name}*:",
         button_label="View Slots",
         sections=sections,
     )
@@ -655,7 +755,7 @@ async def _handle_reschedule_slot_selection(
     try:
         slot_id = uuid.UUID(slot_id_str)
     except (ValueError, AttributeError):
-        await wa_client.send_text(sender, "Invalid selection. Please choose a slot from the list.")
+        await wa_client.send_text(sender, "Invalid selection. Please choose a slot from the list below.")
         return
 
     slot = await slot_repo.get_slot_by_id(db, slot_id)
@@ -675,11 +775,12 @@ async def _handle_reschedule_slot_selection(
 
     time_display = slot.start_time.strftime("%A, %B %d at %I:%M %p")
     end_display = slot.end_time.strftime("%I:%M %p")
+    _log_action(sender, f'New slot selected: {time_display} — sent reschedule confirmation')
 
     await wa_client.send_button_message(
         to=sender,
         body=(
-            f"New time slot:\n\n"
+            f"New time slot at *ORA Clinic*:\n\n"
             f"Date & Time: {time_display} – {end_display}\n\n"
             f"Tap *Confirm* to reschedule or *Back* to choose a different slot."
         ),
@@ -749,21 +850,24 @@ async def _handle_reschedule_confirmation(
         time_display = new_slot.start_time.strftime("%A, %B %d at %I:%M %p")
         booking_ref = str(new_appointment.id).split("-")[0].upper()
 
+        _log_action(sender, f'RESCHEDULED: {service_name} → {time_display} (ref: {booking_ref})')
+
         await wa_client.send_text(
             sender,
-            f"Your appointment has been rescheduled!\n\n"
+            f"Your appointment at *ORA Clinic* has been rescheduled!\n\n"
             f"Service: {service_name}\n"
             f"New Date & Time: {time_display}\n"
             f"Booking Ref: {booking_ref}\n\n"
             f"Reply *my appointments* to manage your bookings.",
         )
 
-    except OperationalError:
-        logger.warning("New slot %s locked by concurrent transaction for user %s", new_slot_id, sender)
+    except (OperationalError, IntegrityError):
+        logger.warning("New slot %s unavailable for user %s", new_slot_id, sender)
         await session_svc.release_slot_lock(new_slot_id_str)
+        await db.rollback()
         await wa_client.send_text(
             sender,
-            "That slot was just taken. Please choose a different time.",
+            "Sorry, that slot is no longer available. Please send *my appointments* to try again.",
         )
     except WhatsAppAPIError:
         logger.exception(
