@@ -1,13 +1,22 @@
 """
 Booking flow state machine.
 
-State transitions:
+Booking state transitions:
   START / BOOKED  ──(greeting)──►  SERVICE_SELECTED   (shows service list)
   SERVICE_SELECTED ──(list reply)──► SLOT_SELECTED    (shows slot list)
   SLOT_SELECTED   ──(list reply)──►  SLOT_SELECTED    (acquire lock, show confirm btn)
   SLOT_SELECTED   ──(confirm btn)──► BOOKED           (DB transaction, confirmation msg)
   SLOT_SELECTED   ──(cancel btn)──►  START            (resets session)
   any state        ──(greeting)──►  SERVICE_SELECTED   (always restarts the flow)
+
+Manage state transitions:
+  any state        ──(manage kw)──►  MANAGE_MENU      (shows upcoming appointments list)
+  MANAGE_MENU      ──(list reply)──► MANAGE_APPOINTMENT (shows cancel/reschedule buttons)
+  MANAGE_APPOINTMENT ──(cancel btn)──► BOOKED         (cancels, sends confirmation)
+  MANAGE_APPOINTMENT ──(reschedule btn)──► RESCHEDULE_SLOT (shows slot list for same service)
+  RESCHEDULE_SLOT  ──(list reply)──► RESCHEDULE_SLOT  (acquire lock, show confirm btn)
+  RESCHEDULE_SLOT  ──(confirm btn)──► BOOKED          (cancels old, books new, sends confirmation)
+  RESCHEDULE_SLOT  ──(cancel btn)──►  MANAGE_MENU     (back to appointments list)
 """
 import logging
 import uuid
@@ -34,6 +43,7 @@ from app.utils.whatsapp_parser import (
     get_message_type,
     get_text_body,
     is_greeting,
+    is_manage_request,
 )
 
 logger = logging.getLogger(__name__)
@@ -98,7 +108,13 @@ async def _process_message(
         sender, msg_type, user_session.current_step, text_body
     )
 
-    # --- Greeting always restarts the flow regardless of current state ---
+    # --- Manage flow keyword — works from any state ---
+    if msg_type == MessageType.TEXT and is_manage_request(text_body):
+        logger.info("Manage request detected, showing appointments to %s", sender)
+        await _handle_manage_menu(sender, db, wa_client)
+        return
+
+    # --- Greeting always restarts the booking flow regardless of current state ---
     if msg_type == MessageType.TEXT and is_greeting(text_body):
         logger.info("Greeting detected, sending service list to %s", sender)
         await _handle_greeting(sender, db, wa_client)
@@ -108,10 +124,9 @@ async def _process_message(
     step = user_session.current_step
 
     if step in (SessionStep.START, SessionStep.BOOKED):
-        # Any non-greeting message when at START/BOOKED
         await wa_client.send_text(
             sender,
-            "Send 'hi' to start booking an appointment.",
+            "Send *hi* to book an appointment, or *my appointments* to view and manage your bookings.",
         )
 
     elif step == SessionStep.SERVICE_SELECTED:
@@ -122,7 +137,6 @@ async def _process_message(
 
     elif step == SessionStep.SLOT_SELECTED:
         if msg_type == MessageType.LIST_REPLY:
-            # User picked a slot — acquire lock and show confirmation button
             await _handle_slot_selection(sender, get_list_reply_id(message), db, session_svc, wa_client)
         elif msg_type == MessageType.BUTTON_REPLY:
             button_id = get_button_reply_id(message)
@@ -136,9 +150,46 @@ async def _process_message(
         else:
             await wa_client.send_text(sender, "Please select a time slot from the list.")
 
+    elif step == SessionStep.MANAGE_MENU:
+        if msg_type == MessageType.LIST_REPLY:
+            await _handle_appointment_selection(sender, get_list_reply_id(message), db, wa_client)
+        else:
+            await wa_client.send_text(sender, "Please select an appointment from the list.")
+
+    elif step == SessionStep.MANAGE_APPOINTMENT:
+        if msg_type == MessageType.BUTTON_REPLY:
+            button_id = get_button_reply_id(message)
+            if button_id.startswith("cancel_appt_"):
+                appt_id_str = button_id[len("cancel_appt_"):]
+                await _handle_appointment_cancel(sender, appt_id_str, db, session_svc, wa_client)
+            elif button_id.startswith("reschedule_"):
+                appt_id_str = button_id[len("reschedule_"):]
+                await _handle_reschedule_start(sender, appt_id_str, db, wa_client)
+            elif button_id == "back_to_menu":
+                await _handle_manage_menu(sender, db, wa_client)
+            else:
+                await wa_client.send_text(sender, "Please use the buttons to choose an action.")
+        else:
+            await wa_client.send_text(sender, "Please use the buttons to choose an action.")
+
+    elif step == SessionStep.RESCHEDULE_SLOT:
+        if msg_type == MessageType.LIST_REPLY:
+            await _handle_reschedule_slot_selection(sender, get_list_reply_id(message), db, session_svc, wa_client)
+        elif msg_type == MessageType.BUTTON_REPLY:
+            button_id = get_button_reply_id(message)
+            if button_id.startswith("confirm_reschedule_"):
+                slot_id_str = button_id[len("confirm_reschedule_"):]
+                await _handle_reschedule_confirmation(sender, slot_id_str, db, session_svc, wa_client)
+            elif button_id == "cancel_reschedule":
+                await _handle_manage_menu(sender, db, wa_client)
+            else:
+                await wa_client.send_text(sender, "Please use the buttons to confirm or go back.")
+        else:
+            await wa_client.send_text(sender, "Please select a new time slot from the list.")
+
 
 # ---------------------------------------------------------------------------
-# Step handlers
+# Booking step handlers
 # ---------------------------------------------------------------------------
 
 async def _handle_greeting(
@@ -347,7 +398,6 @@ async def _handle_booking_confirmation(
         # Advance session to BOOKED
         await sess_repo.update_session(db, sender, SessionStep.BOOKED)
 
-        # Commit happens automatically in get_db() after this function returns
         # Release Redis lock (slot is now permanently booked in DB)
         await session_svc.release_slot_lock(slot_id_str)
 
@@ -364,7 +414,7 @@ async def _handle_booking_confirmation(
             f"Service: {service_name}\n"
             f"Date & Time: {time_display}\n"
             f"Booking Ref: {booking_ref}\n\n"
-            f"We look forward to seeing you. Reply 'hi' to book another appointment.",
+            f"Reply *my appointments* to manage your bookings, or *hi* to book another.",
         )
 
     except OperationalError:
@@ -388,3 +438,334 @@ async def _handle_cancel(
 ) -> None:
     """User cancelled — reset session and send service list again."""
     await _handle_greeting(sender, db, wa_client)
+
+
+# ---------------------------------------------------------------------------
+# Manage appointments handlers
+# ---------------------------------------------------------------------------
+
+async def _handle_manage_menu(
+    sender: str, db: AsyncSession, wa_client: WhatsAppClient
+) -> None:
+    """Show the user's upcoming confirmed appointments as a list."""
+    appointments = await appt_repo.get_upcoming_appointments(db, sender)
+
+    if not appointments:
+        await wa_client.send_text(
+            sender,
+            "You have no upcoming appointments.\n\nSend *hi* to book one.",
+        )
+        return
+
+    await sess_repo.update_session(db, sender, SessionStep.MANAGE_MENU)
+    await db.commit()
+
+    rows = []
+    for appt in appointments:
+        service_name = appt.service.name if appt.service else "Service"
+        slot_display = (
+            appt.slot.start_time.strftime("%b %d, %I:%M %p") if appt.slot else "—"
+        )
+        ref = str(appt.id).split("-")[0].upper()
+        rows.append({
+            "id": str(appt.id),
+            "title": f"{service_name} — {slot_display}",
+            "description": f"Ref: {ref}",
+        })
+
+    sections = [{"title": "Upcoming Appointments", "rows": rows}]
+
+    await wa_client.send_list_message(
+        to=sender,
+        body="Here are your upcoming appointments. Tap one to cancel or reschedule:",
+        button_label="My Bookings",
+        sections=sections,
+    )
+
+
+async def _handle_appointment_selection(
+    sender: str,
+    appointment_id_str: str,
+    db: AsyncSession,
+    wa_client: WhatsAppClient,
+) -> None:
+    """User tapped an appointment — show cancel / reschedule / back buttons."""
+    try:
+        appointment_id = uuid.UUID(appointment_id_str)
+    except (ValueError, AttributeError):
+        await wa_client.send_text(sender, "Invalid selection. Please choose from the list.")
+        return
+
+    appointment = await appt_repo.get_appointment_by_id(db, appointment_id)
+    if appointment is None or appointment.status.value != "confirmed":
+        await wa_client.send_text(
+            sender,
+            "That appointment is no longer active. Send *my appointments* to refresh the list.",
+        )
+        return
+
+    service_name = appointment.service.name if appointment.service else "Service"
+    time_display = (
+        appointment.slot.start_time.strftime("%A, %B %d at %I:%M %p")
+        if appointment.slot
+        else "—"
+    )
+    end_display = (
+        appointment.slot.end_time.strftime("%I:%M %p") if appointment.slot else ""
+    )
+
+    await sess_repo.update_session(
+        db, sender, SessionStep.MANAGE_APPOINTMENT, appointment_id=appointment_id
+    )
+    await db.commit()
+
+    await wa_client.send_button_message(
+        to=sender,
+        body=(
+            f"*{service_name}*\n"
+            f"Date & Time: {time_display} – {end_display}\n\n"
+            f"What would you like to do?"
+        ),
+        buttons=[
+            {"id": f"cancel_appt_{appointment_id_str}", "title": "Cancel"},
+            {"id": f"reschedule_{appointment_id_str}", "title": "Reschedule"},
+            {"id": "back_to_menu", "title": "Back"},
+        ],
+    )
+
+
+async def _handle_appointment_cancel(
+    sender: str,
+    appointment_id_str: str,
+    db: AsyncSession,
+    session_svc: SessionService,
+    wa_client: WhatsAppClient,
+) -> None:
+    """Cancel the selected appointment and free the slot."""
+    try:
+        appointment_id = uuid.UUID(appointment_id_str)
+    except (ValueError, AttributeError):
+        await wa_client.send_text(sender, "Something went wrong. Send *my appointments* to try again.")
+        return
+
+    appointment = await appt_repo.cancel_appointment(db, appointment_id)
+
+    if appointment is None:
+        await wa_client.send_text(
+            sender,
+            "That appointment could not be cancelled (it may already be cancelled). "
+            "Send *my appointments* to see your current bookings.",
+        )
+        return
+
+    service_name = appointment.service.name if appointment.service else "your appointment"
+    slot = appointment.slot
+    time_display = slot.start_time.strftime("%A, %B %d at %I:%M %p") if slot else "—"
+
+    # Release any Redis lock for that slot (in case it was somehow still held)
+    if slot:
+        await session_svc.release_slot_lock(str(slot.id))
+
+    await sess_repo.update_session(db, sender, SessionStep.BOOKED)
+
+    await wa_client.send_text(
+        sender,
+        f"Your appointment has been cancelled.\n\n"
+        f"Service: {service_name}\n"
+        f"Date & Time: {time_display}\n\n"
+        f"Send *hi* to book a new appointment.",
+    )
+
+
+async def _handle_reschedule_start(
+    sender: str,
+    appointment_id_str: str,
+    db: AsyncSession,
+    wa_client: WhatsAppClient,
+) -> None:
+    """Begin reschedule: load the appointment's service and show available slots."""
+    try:
+        appointment_id = uuid.UUID(appointment_id_str)
+    except (ValueError, AttributeError):
+        await wa_client.send_text(sender, "Something went wrong. Send *my appointments* to try again.")
+        return
+
+    appointment = await appt_repo.get_appointment_by_id(db, appointment_id)
+    if appointment is None or appointment.status.value != "confirmed":
+        await wa_client.send_text(
+            sender,
+            "That appointment is no longer active. Send *my appointments* to refresh.",
+        )
+        return
+
+    service = appointment.service
+    if service is None:
+        await wa_client.send_text(sender, "Could not load service details. Please try again.")
+        return
+
+    slots = await slot_repo.get_available_slots(db, service.id)
+    if not slots:
+        await wa_client.send_text(
+            sender,
+            f"No available slots for *{service.name}* right now. "
+            "Please try again later.",
+        )
+        return
+
+    # Store appointment_id and service_id in session for the confirmation step
+    await sess_repo.update_session(
+        db,
+        sender,
+        SessionStep.RESCHEDULE_SLOT,
+        service_id=service.id,
+        appointment_id=appointment_id,
+    )
+    await db.commit()
+
+    sections = [
+        {
+            "title": "Available Slots",
+            "rows": [
+                {
+                    "id": str(slot.id),
+                    "title": slot.start_time.strftime("%b %d, %I:%M %p"),
+                    "description": f"Until {slot.end_time.strftime('%I:%M %p')}",
+                }
+                for slot in slots
+            ],
+        }
+    ]
+
+    await wa_client.send_list_message(
+        to=sender,
+        body=f"Rescheduling *{service.name}*.\n\nChoose a new time slot:",
+        button_label="View Slots",
+        sections=sections,
+    )
+
+
+async def _handle_reschedule_slot_selection(
+    sender: str,
+    slot_id_str: str,
+    db: AsyncSession,
+    session_svc: SessionService,
+    wa_client: WhatsAppClient,
+) -> None:
+    """Acquire Redis lock on the new slot and show confirm/back buttons."""
+    try:
+        slot_id = uuid.UUID(slot_id_str)
+    except (ValueError, AttributeError):
+        await wa_client.send_text(sender, "Invalid selection. Please choose a slot from the list.")
+        return
+
+    slot = await slot_repo.get_slot_by_id(db, slot_id)
+    if slot is None or slot.is_booked:
+        await wa_client.send_text(sender, "That slot is no longer available. Please choose another time.")
+        return
+
+    acquired = await session_svc.acquire_slot_lock(slot_id_str, sender)
+    if not acquired:
+        await wa_client.send_text(
+            sender,
+            "That slot is being reserved by another user. Please choose a different time.",
+        )
+        return
+
+    await sess_repo.update_session(db, sender, SessionStep.RESCHEDULE_SLOT, slot_id=slot_id)
+
+    time_display = slot.start_time.strftime("%A, %B %d at %I:%M %p")
+    end_display = slot.end_time.strftime("%I:%M %p")
+
+    await wa_client.send_button_message(
+        to=sender,
+        body=(
+            f"New time slot:\n\n"
+            f"Date & Time: {time_display} – {end_display}\n\n"
+            f"Tap *Confirm* to reschedule or *Back* to choose a different slot."
+        ),
+        buttons=[
+            {"id": f"confirm_reschedule_{slot_id_str}", "title": "Confirm"},
+            {"id": "cancel_reschedule", "title": "Back"},
+        ],
+    )
+
+
+async def _handle_reschedule_confirmation(
+    sender: str,
+    new_slot_id_str: str,
+    db: AsyncSession,
+    session_svc: SessionService,
+    wa_client: WhatsAppClient,
+) -> None:
+    """
+    Finalize reschedule:
+    1. Cancel old appointment and free old slot
+    2. Book new slot (SELECT FOR UPDATE NOWAIT)
+    3. Create new appointment
+    """
+    try:
+        new_slot_id = uuid.UUID(new_slot_id_str)
+    except (ValueError, AttributeError):
+        await wa_client.send_text(sender, "Something went wrong. Send *my appointments* to try again.")
+        return
+
+    user_session = await sess_repo.get_or_create_session(db, sender)
+
+    if user_session.selected_appointment_id is None or user_session.selected_service_id is None:
+        await sess_repo.reset_session(db, sender)
+        await wa_client.send_text(sender, "Session expired. Send *my appointments* to try again.")
+        return
+
+    old_appointment_id = user_session.selected_appointment_id
+
+    try:
+        # Book the new slot first (raises OperationalError if taken)
+        new_slot = await slot_repo.mark_slot_booked(db, new_slot_id)
+
+        if new_slot is None:
+            await session_svc.release_slot_lock(new_slot_id_str)
+            await wa_client.send_text(
+                sender,
+                "Sorry, that slot was just taken. Please choose a different time.",
+            )
+            return
+
+        # Cancel the old appointment (also frees old slot)
+        old_appointment = await appt_repo.cancel_appointment(db, old_appointment_id)
+
+        # Create the new appointment
+        new_appointment = await appt_repo.create_appointment(
+            db,
+            user_phone=sender,
+            service_id=user_session.selected_service_id,
+            slot_id=new_slot_id,
+        )
+
+        await sess_repo.update_session(db, sender, SessionStep.BOOKED)
+        await session_svc.release_slot_lock(new_slot_id_str)
+
+        service = await svc_repo.get_service_by_id(db, user_session.selected_service_id)
+        service_name = service.name if service else "your service"
+        time_display = new_slot.start_time.strftime("%A, %B %d at %I:%M %p")
+        booking_ref = str(new_appointment.id).split("-")[0].upper()
+
+        await wa_client.send_text(
+            sender,
+            f"Your appointment has been rescheduled!\n\n"
+            f"Service: {service_name}\n"
+            f"New Date & Time: {time_display}\n"
+            f"Booking Ref: {booking_ref}\n\n"
+            f"Reply *my appointments* to manage your bookings.",
+        )
+
+    except OperationalError:
+        logger.warning("New slot %s locked by concurrent transaction for user %s", new_slot_id, sender)
+        await session_svc.release_slot_lock(new_slot_id_str)
+        await wa_client.send_text(
+            sender,
+            "That slot was just taken. Please choose a different time.",
+        )
+    except WhatsAppAPIError:
+        logger.exception(
+            "Reschedule completed for %s but failed to send confirmation message", sender
+        )

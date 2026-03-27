@@ -44,6 +44,7 @@ async def update_session(
     step: SessionStep,
     service_id: uuid.UUID | None = None,
     slot_id: uuid.UUID | None = None,
+    appointment_id: uuid.UUID | None = None,
 ) -> UserSession:
     session = await get_or_create_session(db, user_phone)
     session.current_step = step
@@ -54,6 +55,9 @@ async def update_session(
     if slot_id is not None:
         session.selected_slot_id = slot_id
 
+    if appointment_id is not None:
+        session.selected_appointment_id = appointment_id
+
     return session
 
 
@@ -62,4 +66,5 @@ async def reset_session(db: AsyncSession, user_phone: str) -> UserSession:
     session.current_step = SessionStep.START
     session.selected_service_id = None
     session.selected_slot_id = None
+    session.selected_appointment_id = None
     return session

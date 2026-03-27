@@ -14,6 +14,9 @@ class SessionStep(str, enum.Enum):
     SERVICE_SELECTED = "SERVICE_SELECTED"
     SLOT_SELECTED = "SLOT_SELECTED"
     BOOKED = "BOOKED"
+    MANAGE_MENU = "MANAGE_MENU"
+    MANAGE_APPOINTMENT = "MANAGE_APPOINTMENT"
+    RESCHEDULE_SLOT = "RESCHEDULE_SLOT"
 
 
 class UserSession(Base):
@@ -36,6 +39,9 @@ class UserSession(Base):
     )
     selected_slot_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("time_slots.id"), nullable=True
+    )
+    selected_appointment_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("appointments.id"), nullable=True
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),

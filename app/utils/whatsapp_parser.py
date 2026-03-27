@@ -83,7 +83,15 @@ def get_message_id(message: dict) -> str:
 # Greetings that trigger the booking flow from any state
 GREETING_KEYWORDS = {"hi", "hello", "hey", "start", "book", "appointment"}
 
+# Keywords that trigger the manage-appointments flow
+MANAGE_KEYWORDS = {"my appointments", "manage", "my bookings", "view appointments", "appointments"}
+
 
 def is_greeting(text: str) -> bool:
     """Return True if the text is a greeting that should restart the booking flow."""
     return text.strip().lower() in GREETING_KEYWORDS
+
+
+def is_manage_request(text: str) -> bool:
+    """Return True if the text should trigger the manage-appointments flow."""
+    return text.strip().lower() in MANAGE_KEYWORDS
