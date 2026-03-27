@@ -5,10 +5,12 @@ import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
 import Sidebar from '@/components/layout/Sidebar';
 import Header from '@/components/layout/Header';
+import { useRealtimeEvents } from '@/hooks/useRealtimeEvents';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const token = useAuthStore((s) => s.token);
   const router = useRouter();
+  useRealtimeEvents();
 
   useEffect(() => {
     if (!token) {

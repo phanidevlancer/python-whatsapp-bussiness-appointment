@@ -16,6 +16,7 @@ from app.routers.webhook import router as webhook_router
 
 # CRM routers
 from app.api.v1 import auth, appointments, customers, services, providers, slots, notifications, dashboard
+from app.api.v1 import events as sse
 
 # Events + notification service
 from app.events import event_dispatcher
@@ -23,6 +24,7 @@ from app.events.appointment_events import (
     AppointmentCreatedEvent,
     AppointmentCancelledEvent,
     AppointmentRescheduledEvent,
+    AppointmentStatusChangedEvent,
 )
 from app.services import notification_service as notif_svc
 
@@ -60,6 +62,24 @@ async def lifespan(app: FastAPI):
     event_dispatcher.register(AppointmentCreatedEvent, notif_svc.on_appointment_created)
     event_dispatcher.register(AppointmentCancelledEvent, notif_svc.on_appointment_cancelled)
     event_dispatcher.register(AppointmentRescheduledEvent, notif_svc.on_appointment_rescheduled)
+
+    # Register event → SSE broadcast handlers
+    async def _sse_created(e: AppointmentCreatedEvent):
+        sse.broadcast("appointment_created", {"appointment_id": str(e.appointment_id)})
+
+    async def _sse_cancelled(e: AppointmentCancelledEvent):
+        sse.broadcast("appointment_updated", {"appointment_id": str(e.appointment_id)})
+
+    async def _sse_rescheduled(e: AppointmentRescheduledEvent):
+        sse.broadcast("appointment_updated", {"appointment_id": str(e.appointment_id)})
+
+    async def _sse_status_changed(e: AppointmentStatusChangedEvent):
+        sse.broadcast("appointment_updated", {"appointment_id": str(e.appointment_id)})
+
+    event_dispatcher.register(AppointmentCreatedEvent, _sse_created)
+    event_dispatcher.register(AppointmentCancelledEvent, _sse_cancelled)
+    event_dispatcher.register(AppointmentRescheduledEvent, _sse_rescheduled)
+    event_dispatcher.register(AppointmentStatusChangedEvent, _sse_status_changed)
 
     logger.info("Startup complete")
     yield
@@ -101,6 +121,7 @@ app.include_router(services.router,      prefix=f"{API_V1}/services",      tags=
 app.include_router(providers.router,     prefix=f"{API_V1}/providers",     tags=["providers"])
 app.include_router(slots.router,         prefix=f"{API_V1}/slots",         tags=["slots"])
 app.include_router(notifications.router, prefix=f"{API_V1}/notifications", tags=["notifications"])
+app.include_router(sse.router,           prefix=f"{API_V1}",              tags=["events"])
 
 
 # ---------------------------------------------------------------------------

@@ -541,6 +541,10 @@ async def _handle_booking_confirmation(
         # Release Redis lock (slot is now permanently booked in DB)
         await session_svc.release_slot_lock(slot_id_str)
 
+        # Broadcast SSE event to CRM clients
+        from app.api.v1.events import broadcast as sse_broadcast
+        sse_broadcast("appointment_created", {"appointment_id": str(appointment.id)})
+
         # Fetch service name for the confirmation message
         service = await svc_repo.get_service_by_id(db, user_session.selected_service_id)
         service_name = service.name if service else "your service"
@@ -826,6 +830,10 @@ async def _handle_appointment_cancel(
         source=AppointmentSource.WHATSAPP,
         slot_start_time=slot.start_time if slot else None,
     )
+    # Broadcast SSE event to CRM clients
+    from app.api.v1.events import broadcast as sse_broadcast
+    sse_broadcast("appointment_updated", {"appointment_id": str(appointment_id)})
+
     time_display = slot.start_time.strftime("%A, %B %d at %I:%M %p") if slot else "—"
 
     # Release any Redis lock for that slot (in case it was somehow still held)
@@ -1042,6 +1050,10 @@ async def _handle_reschedule_confirmation(
 
         # Release the old slot (it was implicitly freed when we updated the appointment)
         await session_svc.release_slot_lock(str(old_slot_id))
+
+        # Broadcast SSE event to CRM clients
+        from app.api.v1.events import broadcast as sse_broadcast
+        sse_broadcast("appointment_updated", {"appointment_id": str(appointment_id)})
 
         await sess_repo.update_session(db, sender, SessionStep.BOOKED)
         await session_svc.release_slot_lock(new_slot_id_str)
