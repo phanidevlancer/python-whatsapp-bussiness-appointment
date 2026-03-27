@@ -11,7 +11,7 @@ const statusConfig: Record<string, { color: string; icon: React.ReactNode; label
   pending: { color: 'bg-amber-500', icon: <Clock size={14} />, label: 'Pending' },
 };
 
-export default function StatusTimeline({ history }: { history: AppointmentStatusHistory[] }) {
+export default function StatusTimeline({ history, appointmentSource }: { history: AppointmentStatusHistory[]; appointmentSource?: string }) {
   if (!history.length) {
     return (
       <div className="text-center py-8">
@@ -22,15 +22,18 @@ export default function StatusTimeline({ history }: { history: AppointmentStatus
   }
 
   const getEventDescription = (entry: AppointmentStatusHistory) => {
-    // Get source display name
+    // Get source display name - prefer entry source, fallback to appointment source
     const getSourceName = (src: string | null) => {
       if (src === 'whatsapp') return 'WhatsApp';
       if (src === 'admin_dashboard') return 'Admin';
       return null;
     };
 
+    // Try to get source from entry first, then fallback to appointment source
+    const entrySource = entry.source ?? appointmentSource ?? null;
+
     // Check if this is a cancellation due to rescheduling
-    const isRescheduleCancel = entry.new_status === 'cancelled' && 
+    const isRescheduleCancel = entry.new_status === 'cancelled' &&
                                entry.reason?.startsWith('Rescheduled to slot');
 
     // Handle reschedule events (the new appointment creation)
@@ -46,7 +49,7 @@ export default function StatusTimeline({ history }: { history: AppointmentStatus
 
     // Handle booking event (first entry with no old_status)
     if (!entry.old_status) {
-      const bookingSource = getSourceName(entry.source);
+      const bookingSource = getSourceName(entrySource);
       return {
         title: 'Booked',
         description: bookingSource ? `Appointment created via ${bookingSource}` : 'Appointment created',
@@ -57,8 +60,8 @@ export default function StatusTimeline({ history }: { history: AppointmentStatus
 
     // Handle status changes with source
     const config = statusConfig[entry.new_status] || statusConfig.pending;
-    const eventSource = getSourceName(entry.source);
-    
+    const eventSource = getSourceName(entrySource);
+
     // Special handling for cancellation due to rescheduling
     if (isRescheduleCancel) {
       return {
@@ -68,7 +71,7 @@ export default function StatusTimeline({ history }: { history: AppointmentStatus
         color: 'border-indigo-500',
       };
     }
-    
+
     return {
       title: config.label,
       description: entry.reason || (eventSource ? `Status changed via ${eventSource}` : `Status changed to ${entry.new_status}`),
