@@ -141,6 +141,7 @@ async def cancel_appointment(
     appointment_id: uuid.UUID,
     reason: str | None,
     cancelled_by: AdminUser,
+    cancellation_source: AppointmentSource | None = None,
 ) -> Appointment:
     # 1. Load appointment with relations
     appointment = await appt_repo.get_appointment_crm_by_id(db, appointment_id)
@@ -164,9 +165,11 @@ async def cancel_appointment(
     if updated is None:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Appointment could not be cancelled")
 
-    # 4. Set cancellation reason
+    # 4. Set cancellation reason and source
     if reason:
         updated.cancellation_reason = reason
+    if cancellation_source:
+        updated.cancellation_source = cancellation_source
 
     # 5. Status history
     await _write_status_history(

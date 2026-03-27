@@ -130,7 +130,7 @@ async def cancel_appointment(
     current_user=Depends(get_current_admin_user),
 ):
     appt = await crm_svc.cancel_appointment(
-        db, session_svc, appointment_id, payload.reason, current_user
+        db, session_svc, appointment_id, payload.reason, current_user, payload.cancellation_source
     )
     return AppointmentCRMRead.model_validate(appt)
 

@@ -25,6 +25,12 @@ class ChannelStats(BaseModel):
     conversion_rate: float
 
 
+class ChannelCancellationStats(BaseModel):
+    channel: str
+    cancellations: int
+    percentage: float
+
+
 class TrendDataPoint(BaseModel):
     date: str
     confirmed: int

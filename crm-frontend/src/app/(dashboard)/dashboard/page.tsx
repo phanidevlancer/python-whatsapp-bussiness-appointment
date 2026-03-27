@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useStats, useTrends, useUpcoming, useChannelStats } from '@/hooks/useDashboard';
+import { useStats, useTrends, useUpcoming, useChannelStats, useCancellationStats } from '@/hooks/useDashboard';
 import StatsCards from '@/components/dashboard/StatsCards';
 import TrendChart from '@/components/dashboard/TrendChart';
 import UpcomingList from '@/components/dashboard/UpcomingList';
@@ -18,12 +18,14 @@ export default function DashboardPage() {
   const { data: trends, isLoading: trendsLoading, error: trendsError } = useTrends(range);
   const { data: upcoming, isLoading: upcomingLoading, error: upcomingError } = useUpcoming(50);
   const { data: channels, isLoading: channelsLoading } = useChannelStats();
+  const { data: cancellations, isLoading: cancellationsLoading } = useCancellationStats();
 
   // Debug logging
   console.log('Dashboard - Stats:', stats, statsError);
   console.log('Dashboard - Trends:', trends, trendsError);
   console.log('Dashboard - Upcoming:', upcoming, upcomingError);
   console.log('Dashboard - Channels:', channels);
+  console.log('Dashboard - Cancellations:', cancellations);
 
   if (statsLoading) {
     return (
@@ -103,7 +105,9 @@ export default function DashboardPage() {
 
       {/* Channel Performance Comparison */}
       <div>
-        {!channelsLoading && channels && <ChannelComparison channels={channels} />}
+        {!channelsLoading && !cancellationsLoading && channels && (
+          <ChannelComparison channels={channels} cancellations={cancellations} />
+        )}
       </div>
 
       {/* Charts Row 2 */}

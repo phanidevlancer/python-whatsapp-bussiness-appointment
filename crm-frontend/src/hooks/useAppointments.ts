@@ -76,8 +76,8 @@ export function useCreateAppointment() {
 export function useCancelAppointment() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, reason }: { id: string; reason?: string }) => {
-      const res = await api.post<Appointment>(`/api/v1/appointments/${id}/cancel`, { reason });
+    mutationFn: async ({ id, reason, cancellation_source }: { id: string; reason?: string; cancellation_source?: string }) => {
+      const res = await api.post<Appointment>(`/api/v1/appointments/${id}/cancel`, { reason, cancellation_source });
       return res.data;
     },
     onSuccess: (_, { id }) => {

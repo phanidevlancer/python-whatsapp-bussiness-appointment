@@ -1,13 +1,14 @@
 import { MessageCircle, User, TrendingUp, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
-import type { ChannelStats } from '@/types/dashboard';
+import type { ChannelStats, ChannelCancellationStats } from '@/types/dashboard';
 
 interface ChannelCardProps {
   channel: string;
   stats: ChannelStats;
+  cancellationStats?: ChannelCancellationStats;
   isBest?: boolean;
 }
 
-function ChannelCard({ channel, stats, isBest }: ChannelCardProps) {
+function ChannelCard({ channel, stats, cancellationStats, isBest }: ChannelCardProps) {
   const isWhatsapp = channel === 'whatsapp';
   const IconComponent = isWhatsapp ? MessageCircle : User;
   const channelColor = isWhatsapp ? 'text-green-600' : 'text-blue-600';
@@ -79,11 +80,34 @@ function ChannelCard({ channel, stats, isBest }: ChannelCardProps) {
           <span className="text-sm font-bold text-purple-600">{stats.conversion_rate}%</span>
         </div>
       </div>
+
+      {cancellationStats && (
+        <div className="mt-3 pt-3 border-t border-gray-100">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1.5">
+              <XCircle size={14} className="text-red-600" />
+              <span className="text-xs text-gray-600">Cancellations</span>
+            </div>
+            <div className="text-right">
+              <span className="text-sm font-bold text-red-600">{cancellationStats.cancellations}</span>
+              {cancellationStats.percentage > 0 && (
+                <p className="text-xs text-gray-500">{cancellationStats.percentage}% of total</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
-export default function ChannelComparison({ channels }: { channels: ChannelStats[] }) {
+export default function ChannelComparison({
+  channels,
+  cancellations,
+}: {
+  channels: ChannelStats[];
+  cancellations?: ChannelCancellationStats[];
+}) {
   if (!channels || channels.length === 0) {
     return (
       <div className="bg-white rounded-lg border border-gray-200 p-6">
@@ -94,15 +118,23 @@ export default function ChannelComparison({ channels }: { channels: ChannelStats
   }
 
   // Find the best performing channel (highest total appointments)
-  const bestChannel = channels.reduce((max, channel) => 
+  const bestChannel = channels.reduce((max, channel) =>
     channel.total_appointments > max.total_appointments ? channel : max
   , channels[0]);
+
+  // Build a map of cancellation stats by channel
+  const cancellationMap = new Map<string, ChannelCancellationStats>();
+  if (cancellations) {
+    cancellations.forEach((c) => cancellationMap.set(c.channel, c));
+  }
 
   return (
     <div className="bg-white rounded-lg border border-gray-200 p-4">
       <div className="mb-4">
         <h2 className="text-sm font-semibold text-gray-700">Channel Performance</h2>
-        <p className="text-xs text-gray-500 mt-0.5">Compare WhatsApp vs Admin Dashboard (Last 7 Days)</p>
+        <p className="text-xs text-gray-500 mt-0.5">
+          Compare WhatsApp vs Admin Dashboard (Last 7 Days)
+        </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -111,6 +143,7 @@ export default function ChannelComparison({ channels }: { channels: ChannelStats
             key={channel.channel}
             channel={channel.channel}
             stats={channel}
+            cancellationStats={cancellationMap.get(channel.channel)}
             isBest={channel.channel === bestChannel.channel && channel.total_appointments > 0}
           />
         ))}

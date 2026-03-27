@@ -57,6 +57,10 @@ class Appointment(Base):
     )
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
     cancellation_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+    cancellation_source: Mapped[AppointmentSource | None] = mapped_column(
+        SQLEnum(AppointmentSource, name="appointmentsource", values_callable=lambda x: [e.value for e in x]),
+        nullable=True,
+    )
     rescheduled_from_slot_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("time_slots.id"), nullable=True
     )

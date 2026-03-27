@@ -9,7 +9,14 @@ from app.models.customer import Customer
 from app.models.provider import Provider
 from app.models.service import Service
 from app.models.time_slot import TimeSlot
-from app.schemas.dashboard import DashboardStats, TrendDataPoint, TrendResponse, UpcomingAppointment, ChannelStats
+from app.schemas.dashboard import (
+    DashboardStats,
+    TrendDataPoint,
+    TrendResponse,
+    UpcomingAppointment,
+    ChannelStats,
+    ChannelCancellationStats,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -221,5 +228,57 @@ async def get_channel_stats(db: AsyncSession) -> list[ChannelStats]:
 
     # Sort by total appointments descending
     result_list.sort(key=lambda x: x.total_appointments, reverse=True)
+    
+    return result_list
+
+
+async def get_channel_cancellation_stats(db: AsyncSession) -> list[ChannelCancellationStats]:
+    """Get cancellation statistics grouped by cancellation source channel."""
+    now = datetime.now(timezone.utc)
+    week_start = now.replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=7)
+
+    # Get cancelled appointments with their cancellation source
+    result = await db.execute(
+        select(
+            Appointment.cancellation_source,
+            func.count(Appointment.id).label("cnt"),
+        )
+        .where(
+            Appointment.status == AppointmentStatus.CANCELLED,
+            Appointment.created_at >= week_start,
+            Appointment.cancellation_source.isnot(None),
+        )
+        .group_by(Appointment.cancellation_source)
+    )
+    rows = result.all()
+
+    # Build cancellation stats map
+    cancellation_map: dict[str, int] = {
+        AppointmentSource.WHATSAPP.value: 0,
+        AppointmentSource.ADMIN_DASHBOARD.value: 0,
+    }
+
+    for row in rows:
+        source_key = row.cancellation_source.value if hasattr(row.cancellation_source, 'value') else str(row.cancellation_source)
+        if source_key in cancellation_map:
+            cancellation_map[source_key] = row.cnt
+
+    # Calculate total cancellations
+    total_cancellations = sum(cancellation_map.values())
+
+    result_list = []
+    for source, count in cancellation_map.items():
+        percentage = 0.0
+        if total_cancellations > 0:
+            percentage = round((count / total_cancellations) * 100, 1)
+        
+        result_list.append(ChannelCancellationStats(
+            channel=source,
+            cancellations=count,
+            percentage=percentage,
+        ))
+
+    # Sort by cancellations descending
+    result_list.sort(key=lambda x: x.cancellations, reverse=True)
     
     return result_list

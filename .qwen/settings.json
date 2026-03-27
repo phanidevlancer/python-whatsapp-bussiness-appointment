@@ -16,7 +16,8 @@
       "Bash(docker-compose *)",
       "Bash(kill *)",
       "Bash(git add *)",
-      "Bash(git commit *)"
+      "Bash(git commit *)",
+      "Bash(git push)"
     ]
   },
   "$version": 3

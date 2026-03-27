@@ -20,6 +20,12 @@ export interface ChannelStats {
   conversion_rate: number;
 }
 
+export interface ChannelCancellationStats {
+  channel: string;
+  cancellations: number;
+  percentage: number;
+}
+
 export interface TrendDataPoint {
   date: string;
   confirmed: number;
