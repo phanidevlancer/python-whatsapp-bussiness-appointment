@@ -112,6 +112,46 @@ class WhatsAppClient:
         }
         return await self._post(payload)
 
+    async def send_flow_message(
+        self,
+        to: str,
+        body: str,
+        button_label: str,
+        flow_id: str,
+        flow_token: str = "unused",
+        screen: str = "COLLECT_INFO",
+    ) -> dict:
+        """
+        Send a WhatsApp Flow message that opens an in-chat form.
+
+        flow_id: the Flow ID from Meta Business Manager.
+        flow_token: unique per-message token (used for replay protection); pass a UUID.
+        screen: the opening screen ID defined in your Flow JSON.
+        """
+        payload = {
+            "messaging_product": "whatsapp",
+            "to": to,
+            "type": "interactive",
+            "interactive": {
+                "type": "flow",
+                "body": {"text": body},
+                "action": {
+                    "name": "flow",
+                    "parameters": {
+                        "flow_message_version": "3",
+                        "flow_token": flow_token,
+                        "flow_id": flow_id,
+                        "flow_cta": button_label,
+                        "flow_action": "navigate",
+                        "flow_action_payload": {
+                            "screen": screen,
+                        },
+                    },
+                },
+            },
+        }
+        return await self._post(payload)
+
     async def _post(self, payload: dict) -> dict:
         """Internal helper: POST to the messages endpoint with error handling."""
         try:

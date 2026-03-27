@@ -21,6 +21,7 @@ class MessageType(str, enum.Enum):
     TEXT = "text"
     LIST_REPLY = "list_reply"
     BUTTON_REPLY = "button_reply"
+    FLOW_REPLY = "flow_reply"
     UNKNOWN = "unknown"
 
 
@@ -56,6 +57,8 @@ def get_message_type(message: dict) -> MessageType:
             return MessageType.LIST_REPLY
         if interactive_type == "button_reply":
             return MessageType.BUTTON_REPLY
+        if interactive_type == "nfm_reply":
+            return MessageType.FLOW_REPLY
 
     return MessageType.UNKNOWN
 
@@ -78,6 +81,16 @@ def get_button_reply_id(message: dict) -> str:
 def get_message_id(message: dict) -> str:
     """Return the unique message ID (used for idempotency deduplication)."""
     return message.get("id", "")
+
+
+def get_flow_reply_data(message: dict) -> dict:
+    """Return the submitted payload from a WhatsApp Flow reply (nfm_reply)."""
+    import json
+    raw = message.get("interactive", {}).get("nfm_reply", {}).get("response_json", "{}")
+    try:
+        return json.loads(raw)
+    except (ValueError, TypeError):
+        return {}
 
 
 # Greetings that trigger the booking flow from any state

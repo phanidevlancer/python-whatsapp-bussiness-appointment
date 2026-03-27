@@ -24,10 +24,14 @@ import uuid
 from sqlalchemy.exc import IntegrityError, OperationalError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+import uuid as _uuid
+
+from app.core.config import settings
 from app.integrations.whatsapp_client import WhatsAppClient, WhatsAppAPIError
 from app.models.user_session import SessionStep
 from app.repositories import (
     appointment_repository as appt_repo,
+    customer_repository as customer_repo,
     service_repository as svc_repo,
     session_repository as sess_repo,
     slot_repository as slot_repo,
@@ -38,6 +42,7 @@ from app.utils.whatsapp_parser import (
     extract_message,
     extract_sender_phone,
     get_button_reply_id,
+    get_flow_reply_data,
     get_list_reply_id,
     get_message_id,
     get_message_type,
@@ -244,6 +249,20 @@ async def _process_message(
         else:
             await wa_client.send_text(sender, "Please use the buttons to choose an action.")
 
+    elif step == SessionStep.AWAITING_NAME:
+        if msg_type == MessageType.FLOW_REPLY:
+            await _handle_flow_submission(sender, get_flow_reply_data(message), db, wa_client)
+        elif msg_type == MessageType.TEXT and text_body:
+            await _handle_text_name(sender, text_body.strip(), db, wa_client)
+        else:
+            await _send_details_flow(sender, wa_client)
+
+    elif step == SessionStep.AWAITING_EMAIL:
+        if msg_type == MessageType.TEXT and text_body:
+            await _handle_text_email(sender, text_body.strip(), db, wa_client)
+        else:
+            await wa_client.send_text(sender, "Please reply with your email, or type *skip* to skip.")
+
     elif step == SessionStep.RESCHEDULE_SLOT:
         if msg_type == MessageType.LIST_REPLY:
             await _handle_reschedule_slot_selection(sender, get_list_reply_id(message), db, session_svc, wa_client)
@@ -268,6 +287,7 @@ async def _handle_main_menu(
     sender: str, db: AsyncSession, wa_client: WhatsAppClient
 ) -> None:
     """Show the main menu with 2 options: Book an appointment / My appointments."""
+    await customer_repo.get_or_create_by_phone(db, sender)
     await sess_repo.reset_session(db, sender)
     await db.commit()
     _log_action(sender, "Sent main menu buttons")
@@ -485,9 +505,6 @@ async def _handle_booking_confirmation(
             slot_id=slot_id,
         )
 
-        # Advance session to BOOKED
-        await sess_repo.update_session(db, sender, SessionStep.BOOKED)
-
         # Release Redis lock (slot is now permanently booked in DB)
         await session_svc.release_slot_lock(slot_id_str)
 
@@ -509,6 +526,15 @@ async def _handle_booking_confirmation(
             f"Reply *my appointments* to manage your bookings, or *hi* to book another.",
         )
 
+        # Collect name/email via Flow if we don't have them yet
+        customer, _ = await customer_repo.get_or_create_by_phone(db, sender)
+        if not customer.name:
+            await sess_repo.update_session(db, sender, SessionStep.AWAITING_NAME)
+            await db.commit()
+            await _send_details_flow(sender, wa_client)
+        else:
+            await sess_repo.update_session(db, sender, SessionStep.BOOKED)
+
     except (OperationalError, IntegrityError):
         # OperationalError: SELECT FOR UPDATE NOWAIT raised (concurrent lock)
         # IntegrityError: unique constraint on slot_id violated (slot already booked)
@@ -525,6 +551,72 @@ async def _handle_booking_confirmation(
         logger.exception(
             "Appointment created for %s but failed to send confirmation message", sender
         )
+
+
+async def _send_details_flow(sender: str, wa_client: WhatsAppClient) -> None:
+    """Send the WhatsApp Flow form to collect name and email.
+    Falls back to a plain text prompt if no Flow ID is configured."""
+    if settings.WHATSAPP_FLOW_ID:
+        await wa_client.send_flow_message(
+            to=sender,
+            body="Just one last step — please fill in your details so we can keep you updated about your appointment.",
+            button_label="Fill in details",
+            flow_id=settings.WHATSAPP_FLOW_ID,
+            flow_token=str(_uuid.uuid4()),
+        )
+    else:
+        await wa_client.send_text(
+            sender,
+            "One quick thing — what's your name so we can personalise your experience?",
+        )
+
+
+async def _handle_text_name(
+    sender: str, name: str, db: AsyncSession, wa_client: WhatsAppClient
+) -> None:
+    """Fallback: collect name via plain text reply."""
+    customer, _ = await customer_repo.get_or_create_by_phone(db, sender)
+    await customer_repo.update_customer(db, customer.id, name=name)
+    await sess_repo.update_session(db, sender, SessionStep.AWAITING_EMAIL)
+    await db.commit()
+    await wa_client.send_text(sender, f"Thanks, {name}! What's your email address? (Type *skip* to skip)")
+
+
+async def _handle_text_email(
+    sender: str, text: str, db: AsyncSession, wa_client: WhatsAppClient
+) -> None:
+    """Fallback: collect email via plain text reply."""
+    if text.lower() != "skip":
+        customer, _ = await customer_repo.get_or_create_by_phone(db, sender)
+        await customer_repo.update_customer(db, customer.id, email=text)
+    await sess_repo.update_session(db, sender, SessionStep.BOOKED)
+    await db.commit()
+    await wa_client.send_text(
+        sender,
+        "All set! Reply *hi* to book another appointment or *my appointments* to manage your bookings.",
+    )
+
+
+async def _handle_flow_submission(
+    sender: str, data: dict, db: AsyncSession, wa_client: WhatsAppClient
+) -> None:
+    """Handle submitted WhatsApp Flow form data (name + email)."""
+    name = data.get("name", "").strip()
+    email = data.get("email", "").strip()
+    customer, _ = await customer_repo.get_or_create_by_phone(db, sender)
+    updates = {}
+    if name:
+        updates["name"] = name
+    if email:
+        updates["email"] = email
+    if updates:
+        await customer_repo.update_customer(db, customer.id, **updates)
+    await sess_repo.update_session(db, sender, SessionStep.BOOKED)
+    await db.commit()
+    await wa_client.send_text(
+        sender,
+        f"Thanks{', ' + name if name else ''}! 😊 We'll be in touch. Reply *hi* to book another or *my appointments* to manage your bookings.",
+    )
 
 
 async def _handle_cancel(

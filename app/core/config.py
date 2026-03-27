@@ -18,6 +18,7 @@ class Settings(BaseSettings):
     WHATSAPP_TOKEN: str = ""
     WHATSAPP_PHONE_NUMBER_ID: str = ""
     WHATSAPP_VERIFY_TOKEN: str = ""
+    WHATSAPP_FLOW_ID: str = ""  # Flow ID from Meta Business Manager → WhatsApp Flows
 
     # Booking behavior
     SLOT_LOCK_TTL_SECONDS: int = 300       # 5 min soft reservation
