@@ -29,7 +29,11 @@ export default function StatusTimeline({ history }: { history: AppointmentStatus
       return null;
     };
 
-    // Handle reschedule events
+    // Check if this is a cancellation due to rescheduling
+    const isRescheduleCancel = entry.new_status === 'cancelled' && 
+                               entry.reason?.startsWith('Rescheduled to slot');
+
+    // Handle reschedule events (the new appointment creation)
     if (entry.reschedule_source) {
       const rescheduleSource = getSourceName(entry.reschedule_source);
       return {
@@ -54,6 +58,17 @@ export default function StatusTimeline({ history }: { history: AppointmentStatus
     // Handle status changes with source
     const config = statusConfig[entry.new_status] || statusConfig.pending;
     const eventSource = getSourceName(entry.source);
+    
+    // Special handling for cancellation due to rescheduling
+    if (isRescheduleCancel) {
+      return {
+        title: 'Rescheduled',
+        description: 'Previous slot cancelled (rescheduled to new slot)',
+        icon: <RotateCcw size={14} className="text-indigo-600" />,
+        color: 'border-indigo-500',
+      };
+    }
+    
     return {
       title: config.label,
       description: entry.reason || (eventSource ? `Status changed via ${eventSource}` : `Status changed to ${entry.new_status}`),
