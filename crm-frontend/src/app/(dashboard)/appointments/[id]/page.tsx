@@ -16,12 +16,14 @@ import { Button } from '@/components/ui/Button';
 import { Avatar } from '@/components/ui/Avatar';
 import { Badge } from '@/components/ui/Badge';
 import { Skeleton } from '@/components/ui/Skeleton';
+import { Modal, ModalHeader, ModalTitle, ModalContent, ModalFooter } from '@/components/ui/Modal';
 
 export default function AppointmentDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const [showCancel, setShowCancel] = useState(false);
   const [showReschedule, setShowReschedule] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<'complete' | 'no_show' | null>(null);
 
   const { data: appt, isLoading } = useAppointmentDetail(id);
   const { data: history } = useAppointmentHistory(id);
@@ -174,7 +176,7 @@ export default function AppointmentDetailPage() {
               variant="success"
               size="md"
               leftIcon={<CheckCircle size={16} />}
-              onClick={() => complete(appt.id, { onSuccess: () => toast.success('Marked as completed') })}
+              onClick={() => setConfirmAction('complete')}
               disabled={!isSlotPast}
               title={!isSlotPast ? 'Available after the appointment time has passed' : undefined}
             >
@@ -184,7 +186,7 @@ export default function AppointmentDetailPage() {
               variant="outline"
               size="md"
               leftIcon={<AlertCircle size={16} />}
-              onClick={() => noShow(appt.id, { onSuccess: () => toast.success('Marked as no-show') })}
+              onClick={() => setConfirmAction('no_show')}
               disabled={!isSlotPast}
               title={!isSlotPast ? 'Available after the appointment time has passed' : undefined}
             >
@@ -273,6 +275,41 @@ export default function AppointmentDetailPage() {
           onClose={() => setShowReschedule(false)}
         />
       )}
+
+      {/* Complete / No Show confirmation */}
+      <Modal isOpen={!!confirmAction} onClose={() => setConfirmAction(null)} size="sm">
+        <ModalHeader>
+          <ModalTitle>
+            {confirmAction === 'complete' ? 'Mark as Completed?' : 'Mark as No Show?'}
+          </ModalTitle>
+        </ModalHeader>
+        <ModalContent>
+          <p className="text-sm text-gray-600">
+            {confirmAction === 'complete'
+              ? 'This will mark the appointment as completed. This action cannot be undone.'
+              : 'This will mark the patient as a no show. This action cannot be undone.'}
+          </p>
+        </ModalContent>
+        <ModalFooter>
+          <Button variant="outline" size="sm" onClick={() => setConfirmAction(null)}>
+            Cancel
+          </Button>
+          <Button
+            variant={confirmAction === 'complete' ? 'success' : 'danger'}
+            size="sm"
+            onClick={() => {
+              if (confirmAction === 'complete') {
+                complete(appt.id, { onSuccess: () => toast.success('Marked as completed') });
+              } else {
+                noShow(appt.id, { onSuccess: () => toast.success('Marked as no-show') });
+              }
+              setConfirmAction(null);
+            }}
+          >
+            Confirm
+          </Button>
+        </ModalFooter>
+      </Modal>
     </div>
   );
 }
