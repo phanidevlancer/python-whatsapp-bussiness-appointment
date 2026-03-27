@@ -20,11 +20,12 @@ from app.events.appointment_events import (
     AppointmentRescheduledEvent,
     AppointmentStatusChangedEvent,
 )
-from app.models.appointment import Appointment, AppointmentStatus
+from app.models.appointment import Appointment, AppointmentStatus, AppointmentSource
 from app.models.appointment_status_history import AppointmentStatusHistory
 from app.models.admin_user import AdminUser
 from app.repositories import appointment_repository as appt_repo
 from app.repositories import customer_repository as customer_repo
+from app.repositories import service_repository as svc_repo
 from app.repositories import slot_repository as slot_repo
 from app.schemas.appointment_crm import AppointmentCRMCreate, AppointmentCRMUpdate
 from app.services.session_service import SessionService
@@ -77,7 +78,11 @@ async def create_appointment(
                 detail="Slot is no longer available.",
             )
 
-        # 4. Create appointment
+        # 4. Fetch service name BEFORE creating appointment (avoid lazy loading after flush)
+        service = await svc_repo.get_service_by_id(db, payload.service_id)
+        service_name = service.name if service else "Appointment"
+
+        # 5. Create appointment
         appointment = await appt_repo.create_appointment_crm(
             db,
             user_phone=payload.user_phone,
@@ -86,9 +91,10 @@ async def create_appointment(
             provider_id=payload.provider_id,
             customer_id=customer.id,
             notes=payload.notes,
+            source=payload.source,
         )
 
-        # 5. Status history: creation event (None → CONFIRMED)
+        # 6. Status history: creation event (None → CONFIRMED)
         await _write_status_history(
             db,
             appointment_id=appointment.id,
@@ -106,11 +112,13 @@ async def create_appointment(
         await session_svc.release_slot_lock(str(payload.slot_id))
         raise
 
-    # 6. Release Redis lock (slot now hard-booked in DB)
+    # 7. Release Redis lock (slot now hard-booked in DB)
     await session_svc.release_slot_lock(str(payload.slot_id))
 
-    # 7. Dispatch event (notification sent asynchronously after commit)
-    service_name = appointment.service.name if appointment.service else "Appointment"
+    # 8. Commit the transaction BEFORE dispatching events
+    await db.commit()
+
+    # 9. Dispatch event (after commit so appointment exists in DB)
     slot_start = slot.start_time
 
     await event_dispatcher.dispatch(

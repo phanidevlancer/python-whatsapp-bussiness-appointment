@@ -5,7 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.models.appointment import Appointment, AppointmentStatus
+from app.models.appointment import Appointment, AppointmentStatus, AppointmentSource
 
 
 async def create_appointment(
@@ -13,6 +13,7 @@ async def create_appointment(
     user_phone: str,
     service_id: uuid.UUID,
     slot_id: uuid.UUID,
+    source: AppointmentSource = AppointmentSource.WHATSAPP,
 ) -> Appointment:
     """
     Create a new confirmed appointment.
@@ -24,6 +25,7 @@ async def create_appointment(
         service_id=service_id,
         slot_id=slot_id,
         status=AppointmentStatus.CONFIRMED,
+        source=source,
     )
     db.add(appointment)
     await db.flush()  # Get the generated ID before commit
@@ -163,6 +165,7 @@ async def create_appointment_crm(
     provider_id: uuid.UUID | None = None,
     customer_id: uuid.UUID | None = None,
     notes: str | None = None,
+    source: AppointmentSource = AppointmentSource.ADMIN_DASHBOARD,
 ) -> Appointment:
     appointment = Appointment(
         user_phone=user_phone,
@@ -172,6 +175,7 @@ async def create_appointment_crm(
         customer_id=customer_id,
         notes=notes,
         status=AppointmentStatus.CONFIRMED,
+        source=source,
     )
     db.add(appointment)
     await db.flush()

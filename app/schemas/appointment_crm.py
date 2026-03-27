@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime, date
 from pydantic import BaseModel, ConfigDict
-from app.models.appointment import AppointmentStatus
+from app.models.appointment import AppointmentStatus, AppointmentSource
 from app.schemas.customer import CustomerRead
 from app.schemas.provider import ProviderRead
 from app.schemas.slot_crm import SlotRead
@@ -14,6 +14,7 @@ class AppointmentCRMCreate(BaseModel):
     slot_id: uuid.UUID
     provider_id: uuid.UUID | None = None
     notes: str | None = None
+    source: AppointmentSource = AppointmentSource.ADMIN_DASHBOARD
 
 
 class AppointmentCRMUpdate(BaseModel):
@@ -35,6 +36,7 @@ class AppointmentCRMRead(BaseModel):
     notes: str | None
     cancellation_reason: str | None
     rescheduled_from_slot_id: uuid.UUID | None
+    source: AppointmentSource
     booked_at: datetime
     created_at: datetime
     service: ServiceRead | None = None

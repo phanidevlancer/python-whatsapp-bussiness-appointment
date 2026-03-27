@@ -1,4 +1,5 @@
 export type AppointmentStatus = 'pending' | 'confirmed' | 'cancelled' | 'completed' | 'no_show';
+export type AppointmentSource = 'whatsapp' | 'admin_dashboard';
 
 export interface Service {
   id: string;
@@ -46,6 +47,7 @@ export interface Appointment {
   notes: string | null;
   cancellation_reason: string | null;
   rescheduled_from_slot_id: string | null;
+  source: AppointmentSource;
   booked_at: string;
   created_at: string;
   service: Service | null;

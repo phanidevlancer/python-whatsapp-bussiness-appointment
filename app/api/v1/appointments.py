@@ -36,6 +36,8 @@ async def create_appointment(
     current_user=Depends(get_current_admin_user),
 ):
     appt = await crm_svc.create_appointment(db, session_svc, payload, current_user)
+    # Reload with relationships to avoid lazy loading
+    appt = await appt_repo.get_appointment_crm_by_id(db, appt.id)
     return AppointmentCRMRead.model_validate(appt)
 
 

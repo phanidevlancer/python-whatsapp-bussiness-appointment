@@ -17,6 +17,11 @@ class AppointmentStatus(str, enum.Enum):
     NO_SHOW = "no_show"
 
 
+class AppointmentSource(str, enum.Enum):
+    WHATSAPP = "whatsapp"
+    ADMIN_DASHBOARD = "admin_dashboard"
+
+
 class Appointment(Base):
     __tablename__ = "appointments"
     __table_args__ = (
@@ -56,8 +61,13 @@ class Appointment(Base):
         UUID(as_uuid=True), ForeignKey("time_slots.id"), nullable=True
     )
     status: Mapped[AppointmentStatus] = mapped_column(
-        SQLEnum(AppointmentStatus, name="appointmentstatus"),
+        SQLEnum(AppointmentStatus, name="appointmentstatus", values_callable=lambda x: [e.value for e in x]),
         default=AppointmentStatus.CONFIRMED,
+        nullable=False,
+    )
+    source: Mapped[AppointmentSource] = mapped_column(
+        SQLEnum(AppointmentSource, name="appointmentsource", values_callable=lambda x: [e.value for e in x]),
+        default=AppointmentSource.ADMIN_DASHBOARD,
         nullable=False,
     )
     booked_at: Mapped[datetime] = mapped_column(

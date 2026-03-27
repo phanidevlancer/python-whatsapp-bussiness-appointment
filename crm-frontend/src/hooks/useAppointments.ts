@@ -5,14 +5,25 @@ import type {
   AppointmentFilters,
   AppointmentStatusHistory,
   PaginatedAppointmentResponse,
+  TimeSlot,
+  Service,
+  Provider,
 } from '@/types/appointment';
 
 export function useAppointmentsList(filters: AppointmentFilters = {}) {
   return useQuery({
     queryKey: ['appointments', filters],
     queryFn: async () => {
+      // Filter out undefined values to avoid 422 errors
+      const validFilters: Record<string, any> = {};
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+          validFilters[key] = value;
+        }
+      });
+      
       const res = await api.get<PaginatedAppointmentResponse>('/api/v1/appointments', {
-        params: filters,
+        params: validFilters,
       });
       return res.data;
     },
@@ -116,6 +127,44 @@ export function useNoShowAppointment() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['appointments'] });
+    },
+  });
+}
+
+export function useSlotsList(serviceId?: string, filterDate?: string) {
+  return useQuery({
+    queryKey: ['slots', serviceId, filterDate],
+    queryFn: async () => {
+      const params: Record<string, any> = { available_only: true };
+      if (serviceId) params.service_id = serviceId;
+      if (filterDate) params.filter_date = filterDate;
+      const res = await api.get<{ items: TimeSlot[]; total: number }>('/api/v1/slots', { params });
+      return res.data.items;
+    },
+    enabled: !!serviceId,
+  });
+}
+
+export function useServicesListForForm() {
+  return useQuery({
+    queryKey: ['services', 'active'],
+    queryFn: async () => {
+      const res = await api.get<Service[]>('/api/v1/services', {
+        params: { include_inactive: false },
+      });
+      return res.data;
+    },
+  });
+}
+
+export function useProvidersListForForm() {
+  return useQuery({
+    queryKey: ['providers', 'active'],
+    queryFn: async () => {
+      const res = await api.get<Provider[]>('/api/v1/providers', {
+        params: { active_only: true },
+      });
+      return res.data;
     },
   });
 }
