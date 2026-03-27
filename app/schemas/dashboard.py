@@ -15,6 +15,16 @@ class DashboardStats(BaseModel):
     total_active_providers: int
 
 
+class ChannelStats(BaseModel):
+    channel: str
+    total_appointments: int
+    confirmed: int
+    cancelled: int
+    completed: int
+    no_show: int
+    conversion_rate: float
+
+
 class TrendDataPoint(BaseModel):
     date: str
     confirmed: int

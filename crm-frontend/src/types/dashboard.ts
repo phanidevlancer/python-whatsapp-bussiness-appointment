@@ -10,6 +10,16 @@ export interface DashboardStats {
   total_active_providers: number;
 }
 
+export interface ChannelStats {
+  channel: string;
+  total_appointments: number;
+  confirmed: number;
+  cancelled: number;
+  completed: number;
+  no_show: number;
+  conversion_rate: number;
+}
+
 export interface TrendDataPoint {
   date: string;
   confirmed: number;

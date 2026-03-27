@@ -4,12 +4,12 @@ from datetime import datetime, timezone, timedelta
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.appointment import Appointment, AppointmentStatus
+from app.models.appointment import Appointment, AppointmentStatus, AppointmentSource
 from app.models.customer import Customer
 from app.models.provider import Provider
 from app.models.service import Service
 from app.models.time_slot import TimeSlot
-from app.schemas.dashboard import DashboardStats, TrendDataPoint, TrendResponse, UpcomingAppointment
+from app.schemas.dashboard import DashboardStats, TrendDataPoint, TrendResponse, UpcomingAppointment, ChannelStats
 
 logger = logging.getLogger(__name__)
 
@@ -156,3 +156,70 @@ async def get_upcoming_appointments(db: AsyncSession, limit: int = 50) -> list[U
         )
         for r in rows
     ]
+
+
+async def get_channel_stats(db: AsyncSession) -> list[ChannelStats]:
+    """Get appointment statistics grouped by source channel (WhatsApp vs Admin Dashboard)."""
+    now = datetime.now(timezone.utc)
+    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    week_start = today_start - timedelta(days=7)
+
+    # Get appointments from the last 7 days
+    result = await db.execute(
+        select(
+            Appointment.source,
+            Appointment.status,
+            func.count(Appointment.id).label("cnt"),
+        )
+        .where(Appointment.created_at >= week_start)
+        .group_by(Appointment.source, Appointment.status)
+    )
+    rows = result.all()
+
+    # Build channel stats map
+    channel_map: dict[str, dict] = {
+        AppointmentSource.WHATSAPP.value: {
+            "total": 0,
+            "confirmed": 0,
+            "cancelled": 0,
+            "completed": 0,
+            "no_show": 0,
+        },
+        AppointmentSource.ADMIN_DASHBOARD.value: {
+            "total": 0,
+            "confirmed": 0,
+            "cancelled": 0,
+            "completed": 0,
+            "no_show": 0,
+        },
+    }
+
+    for row in rows:
+        source_key = row.source.value if hasattr(row.source, 'value') else str(row.source)
+        status_key = row.status.value if hasattr(row.status, 'value') else str(row.status)
+        
+        if source_key in channel_map and status_key in channel_map[source_key]:
+            channel_map[source_key][status_key] = row.cnt
+            channel_map[source_key]["total"] += row.cnt
+
+    # Calculate conversion rate (confirmed / total * 100)
+    result_list = []
+    for source, stats in channel_map.items():
+        conversion_rate = 0.0
+        if stats["total"] > 0:
+            conversion_rate = round((stats["confirmed"] / stats["total"]) * 100, 1)
+        
+        result_list.append(ChannelStats(
+            channel=source,
+            total_appointments=stats["total"],
+            confirmed=stats["confirmed"],
+            cancelled=stats["cancelled"],
+            completed=stats["completed"],
+            no_show=stats["no_show"],
+            conversion_rate=conversion_rate,
+        ))
+
+    # Sort by total appointments descending
+    result_list.sort(key=lambda x: x.total_appointments, reverse=True)
+    
+    return result_list

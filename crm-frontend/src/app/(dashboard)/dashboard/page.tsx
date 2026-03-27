@@ -1,12 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { useStats, useTrends, useUpcoming } from '@/hooks/useDashboard';
+import { useStats, useTrends, useUpcoming, useChannelStats } from '@/hooks/useDashboard';
 import StatsCards from '@/components/dashboard/StatsCards';
 import TrendChart from '@/components/dashboard/TrendChart';
 import UpcomingList from '@/components/dashboard/UpcomingList';
 import AppointmentDistribution from '@/components/dashboard/AppointmentDistribution';
 import WeeklyPerformance from '@/components/dashboard/WeeklyPerformance';
+import ChannelComparison from '@/components/dashboard/ChannelComparison';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { Button } from '@/components/ui/Button';
 import { RefreshCw } from 'lucide-react';
@@ -16,11 +17,13 @@ export default function DashboardPage() {
   const { data: stats, isLoading: statsLoading, error: statsError } = useStats();
   const { data: trends, isLoading: trendsLoading, error: trendsError } = useTrends(range);
   const { data: upcoming, isLoading: upcomingLoading, error: upcomingError } = useUpcoming(50);
+  const { data: channels, isLoading: channelsLoading } = useChannelStats();
 
   // Debug logging
   console.log('Dashboard - Stats:', stats, statsError);
   console.log('Dashboard - Trends:', trends, trendsError);
   console.log('Dashboard - Upcoming:', upcoming, upcomingError);
+  console.log('Dashboard - Channels:', channels);
 
   if (statsLoading) {
     return (
@@ -96,6 +99,11 @@ export default function DashboardPage() {
         <div>
           {stats && <AppointmentDistribution stats={stats} />}
         </div>
+      </div>
+
+      {/* Channel Performance Comparison */}
+      <div>
+        {!channelsLoading && channels && <ChannelComparison channels={channels} />}
       </div>
 
       {/* Charts Row 2 */}

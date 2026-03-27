@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
-import type { DashboardStats, TrendResponse, UpcomingAppointment } from '@/types/dashboard';
+import type { DashboardStats, TrendResponse, UpcomingAppointment, ChannelStats } from '@/types/dashboard';
 
 export function useStats() {
   return useQuery({
@@ -35,6 +35,16 @@ export function useUpcoming(limit = 10) {
         return false;
       }
       return failureCount < 3;
+    },
+  });
+}
+
+export function useChannelStats() {
+  return useQuery({
+    queryKey: ['dashboard', 'channels'],
+    queryFn: async () => {
+      const res = await api.get<ChannelStats[]>('/api/v1/dashboard/channels');
+      return res.data;
     },
   });
 }

@@ -61,6 +61,7 @@ export function useCreateAppointment() {
       slot_id: string;
       provider_id?: string;
       notes?: string;
+      source?: string;
     }) => {
       const res = await api.post<Appointment>('/api/v1/appointments', data);
       return res.data;
