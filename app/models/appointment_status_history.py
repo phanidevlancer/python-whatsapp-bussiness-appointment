@@ -25,6 +25,8 @@ class AppointmentStatusHistory(Base):
         SQLEnum(AppointmentSource, name="appointmentsource", values_callable=lambda x: [e.value for e in x]),
         nullable=True,
     )
+    slot_start_time: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    old_slot_start_time: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
     appointment = relationship("Appointment", back_populates="status_history")

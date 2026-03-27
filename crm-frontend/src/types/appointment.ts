@@ -65,6 +65,8 @@ export interface AppointmentStatusHistory {
   reason: string | null;
   source: string | null;
   reschedule_source: string | null;
+  slot_start_time: string | null;
+  old_slot_start_time: string | null;
   created_at: string;
 }
 

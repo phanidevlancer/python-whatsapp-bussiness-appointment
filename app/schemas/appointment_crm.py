@@ -69,6 +69,8 @@ class AppointmentStatusHistoryRead(BaseModel):
     reason: str | None
     source: AppointmentSource | None
     reschedule_source: AppointmentSource | None
+    slot_start_time: datetime | None
+    old_slot_start_time: datetime | None
     created_at: datetime
 
 

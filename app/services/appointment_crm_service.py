@@ -42,6 +42,8 @@ async def _write_status_history(
     reason: str | None = None,
     source: AppointmentSource | None = None,
     reschedule_source: AppointmentSource | None = None,
+    slot_start_time=None,
+    old_slot_start_time=None,
 ) -> None:
     entry = AppointmentStatusHistory(
         appointment_id=appointment_id,
@@ -51,6 +53,8 @@ async def _write_status_history(
         reason=reason,
         source=source,
         reschedule_source=reschedule_source,
+        slot_start_time=slot_start_time,
+        old_slot_start_time=old_slot_start_time,
     )
     db.add(entry)
     await db.flush()
@@ -106,6 +110,7 @@ async def create_appointment(
             new_status=AppointmentStatus.CONFIRMED.value,
             changed_by_id=created_by.id,
             source=payload.source,
+            slot_start_time=slot.start_time,
         )
 
         await db.flush()
@@ -184,8 +189,8 @@ async def cancel_appointment(
         new_status=AppointmentStatus.CANCELLED.value,
         changed_by_id=cancelled_by.id,
         reason=reason,
-        # Use the cancellation_source from the request (who triggered this cancellation)
         source=cancellation_source,
+        slot_start_time=slot_start,
     )
 
     # 6. Release Redis lock if present (harmless if not held)
@@ -265,9 +270,11 @@ async def reschedule_appointment(
             old_status=AppointmentStatus.CONFIRMED.value,
             new_status=AppointmentStatus.CONFIRMED.value,  # Status remains confirmed
             changed_by_id=rescheduled_by.id,
-            reason=reason or f"Rescheduled to new slot",
+            reason=reason or "Rescheduled to new slot",
             source=reschedule_source,
             reschedule_source=reschedule_source,
+            slot_start_time=new_slot.start_time,
+            old_slot_start_time=old_slot_start,
         )
 
         # 6. Release Redis lock on old slot (freed when we updated the appointment)
@@ -362,14 +369,15 @@ async def mark_completed(
             detail=f"Cannot mark as completed from status '{appointment.status.value}'",
         )
     old_status = appointment.status.value
+    slot_start = appointment.slot.start_time if appointment.slot else None
     await _write_status_history(
         db,
         appointment_id,
         old_status,
         AppointmentStatus.COMPLETED.value,
         updated_by.id,
-        # Mark as completed via Admin (API action)
         source=AppointmentSource.ADMIN_DASHBOARD,
+        slot_start_time=slot_start,
     )
     return await appt_repo.update_appointment_fields(
         db, appointment_id, status=AppointmentStatus.COMPLETED
@@ -390,14 +398,15 @@ async def mark_no_show(
             detail=f"Cannot mark as no-show from status '{appointment.status.value}'",
         )
     old_status = appointment.status.value
+    slot_start = appointment.slot.start_time if appointment.slot else None
     await _write_status_history(
         db,
         appointment_id,
         old_status,
         AppointmentStatus.NO_SHOW.value,
         updated_by.id,
-        # Mark as no-show via Admin (API action)
         source=AppointmentSource.ADMIN_DASHBOARD,
+        slot_start_time=slot_start,
     )
     return await appt_repo.update_appointment_fields(
         db, appointment_id, status=AppointmentStatus.NO_SHOW
