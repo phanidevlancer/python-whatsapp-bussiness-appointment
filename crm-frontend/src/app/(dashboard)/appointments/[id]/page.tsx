@@ -78,7 +78,7 @@ export default function AppointmentDetailPage() {
   }
 
   const isConfirmed = appt.status === 'confirmed';
-  const isSlotPast = appt.slot ? new Date(appt.slot.start_time) < new Date() : false;
+  const isSlotPast = true; // TODO: restore to: appt.slot ? new Date(appt.slot.start_time) < new Date() : false
 
   return (
     <div className="max-w-4xl space-y-6">
