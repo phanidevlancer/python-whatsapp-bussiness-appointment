@@ -38,7 +38,12 @@ export default function RescheduleDialog({ appointmentId, serviceId, onClose }: 
       return;
     }
     reschedule(
-      { id: appointmentId, new_slot_id: selectedSlotId, reason: reason || undefined },
+      { 
+        id: appointmentId, 
+        new_slot_id: selectedSlotId, 
+        reason: reason || undefined,
+        reschedule_source: 'admin_dashboard',
+      },
       {
         onSuccess: () => {
           toast.success('Appointment rescheduled. WhatsApp notification sent to customer.');

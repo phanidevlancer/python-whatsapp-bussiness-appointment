@@ -184,6 +184,7 @@ async def cancel_appointment(
         new_status=AppointmentStatus.CANCELLED.value,
         changed_by_id=cancelled_by.id,
         reason=reason,
+        # Use the cancellation_source from the request (who triggered this cancellation)
         source=cancellation_source,
     )
 

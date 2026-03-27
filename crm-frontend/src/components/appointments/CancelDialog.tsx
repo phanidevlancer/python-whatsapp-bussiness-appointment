@@ -16,7 +16,11 @@ export default function CancelDialog({ appointmentId, onClose, onSuccess }: Prop
 
   const handleSubmit = () => {
     cancel(
-      { id: appointmentId, reason: reason || undefined },
+      { 
+        id: appointmentId, 
+        reason: reason || undefined,
+        cancellation_source: 'admin_dashboard',
+      },
       {
         onSuccess: () => {
           toast.success('Appointment cancelled. WhatsApp notification sent to customer.');
