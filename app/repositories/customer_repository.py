@@ -12,14 +12,13 @@ def normalize_phone(phone: str) -> str:
 
 async def get_by_phone(db: AsyncSession, phone: str) -> Customer | None:
     normalized = normalize_phone(phone)
-    result = await db.execute(
-        select(Customer).where(
-            or_(
-                Customer.phone == normalized,
-                Customer.phone == '+' + normalized,
-            )
-        )
-    )
+    # First try to find exact normalized match (without +)
+    result = await db.execute(select(Customer).where(Customer.phone == normalized))
+    customer = result.scalar_one_or_none()
+    if customer:
+        return customer
+    # Then try with + prefix
+    result = await db.execute(select(Customer).where(Customer.phone == '+' + normalized))
     return result.scalar_one_or_none()
 
 
