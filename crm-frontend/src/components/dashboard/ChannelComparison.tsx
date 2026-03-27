@@ -16,6 +16,12 @@ function ChannelCard({ channel, stats, cancellationStats, rescheduleStats, isBes
   const bgColor = isWhatsapp ? 'bg-green-50' : 'bg-blue-50';
   const borderColor = isBest ? 'border-2 border-orange-500' : 'border border-gray-200';
 
+  // Calculate cancellation rate for this channel
+  const cancellationRate = stats.total_appointments > 0
+    ? ((stats.cancelled / stats.total_appointments) * 100).toFixed(1)
+    : '0';
+  const highCancellationRate = parseFloat(cancellationRate) > 15; // Flag if > 15% cancellation rate
+
   return (
     <div className={`bg-white rounded-lg border ${borderColor} p-4 hover:shadow-md transition-shadow duration-200 ${isBest ? 'ring-2 ring-orange-500 ring-opacity-50' : ''}`}>
       <div className="flex items-center justify-between mb-3">
@@ -28,7 +34,12 @@ function ChannelCard({ channel, stats, cancellationStats, rescheduleStats, isBes
               {channel.replace('_', ' ')}
             </h3>
             {isBest && (
-              <span className="text-xs text-orange-600 font-medium">Best Performer</span>
+              <span className="text-xs text-orange-600 font-medium">More User Engagement</span>
+            )}
+            {highCancellationRate && (
+              <div className="flex items-center gap-1 mt-0.5">
+                <span className="text-xs text-red-600 font-medium">⚠️ Needs Attention</span>
+              </div>
             )}
           </div>
         </div>
@@ -86,13 +97,20 @@ function ChannelCard({ channel, stats, cancellationStats, rescheduleStats, isBes
         <div className="mt-3 pt-3 border-t border-gray-100">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5">
-              <XCircle size={14} className="text-red-600" />
-              <span className="text-xs text-gray-600">Cancellations</span>
+              <XCircle size={14} className={highCancellationRate ? 'text-red-600' : 'text-red-500'} />
+              <span className={`text-xs ${highCancellationRate ? 'font-medium text-red-700' : 'text-gray-600'}`}>
+                Cancellations
+              </span>
             </div>
             <div className="text-right">
-              <span className="text-sm font-bold text-red-600">{cancellationStats.cancellations}</span>
+              <span className={`text-sm font-bold ${highCancellationRate ? 'text-red-600' : 'text-red-500'}`}>
+                {cancellationStats.cancellations}
+              </span>
               {cancellationStats.percentage > 0 && (
                 <p className="text-xs text-gray-500">{cancellationStats.percentage}% of total</p>
+              )}
+              {highCancellationRate && (
+                <p className="text-xs text-red-600 font-medium">{cancellationRate}% rate</p>
               )}
             </div>
           </div>
