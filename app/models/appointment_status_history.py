@@ -17,6 +17,10 @@ class AppointmentStatusHistory(Base):
     new_status: Mapped[str] = mapped_column(String(50), nullable=False)
     changed_by_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("admin_users.id", ondelete="SET NULL"), nullable=True)
     reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+    source: Mapped[AppointmentSource | None] = mapped_column(
+        SQLEnum(AppointmentSource, name="appointmentsource", values_callable=lambda x: [e.value for e in x]),
+        nullable=True,
+    )
     reschedule_source: Mapped[AppointmentSource | None] = mapped_column(
         SQLEnum(AppointmentSource, name="appointmentsource", values_callable=lambda x: [e.value for e in x]),
         nullable=True,

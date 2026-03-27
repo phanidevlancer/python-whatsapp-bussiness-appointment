@@ -40,6 +40,7 @@ async def _write_status_history(
     new_status: str,
     changed_by_id: uuid.UUID | None = None,
     reason: str | None = None,
+    source: AppointmentSource | None = None,
     reschedule_source: AppointmentSource | None = None,
 ) -> None:
     entry = AppointmentStatusHistory(
@@ -48,6 +49,7 @@ async def _write_status_history(
         new_status=new_status,
         changed_by_id=changed_by_id,
         reason=reason,
+        source=source,
         reschedule_source=reschedule_source,
     )
     db.add(entry)
@@ -103,6 +105,7 @@ async def create_appointment(
             old_status=None,
             new_status=AppointmentStatus.CONFIRMED.value,
             changed_by_id=created_by.id,
+            source=payload.source,
         )
 
         await db.flush()
@@ -181,6 +184,7 @@ async def cancel_appointment(
         new_status=AppointmentStatus.CANCELLED.value,
         changed_by_id=cancelled_by.id,
         reason=reason,
+        source=cancellation_source,
     )
 
     # 6. Release Redis lock if present (harmless if not held)
@@ -257,6 +261,7 @@ async def reschedule_appointment(
             new_status=AppointmentStatus.CANCELLED.value,
             changed_by_id=rescheduled_by.id,
             reason=f"Rescheduled to slot {new_slot_id}",
+            source=reschedule_source,
         )
 
         # 5. Create new appointment
@@ -280,6 +285,7 @@ async def reschedule_appointment(
             new_status=AppointmentStatus.CONFIRMED.value,
             changed_by_id=rescheduled_by.id,
             reason=reason,
+            source=reschedule_source,
             reschedule_source=reschedule_source,
         )
 
@@ -340,6 +346,7 @@ async def update_appointment(
             old_status=old_status,
             new_status=payload.status.value,
             changed_by_id=updated_by.id,
+            source=appointment.source,
         )
         await event_dispatcher.dispatch(
             AppointmentStatusChangedEvent(
@@ -373,7 +380,12 @@ async def mark_completed(
         )
     old_status = appointment.status.value
     await _write_status_history(
-        db, appointment_id, old_status, AppointmentStatus.COMPLETED.value, updated_by.id
+        db,
+        appointment_id,
+        old_status,
+        AppointmentStatus.COMPLETED.value,
+        updated_by.id,
+        source=appointment.source,
     )
     return await appt_repo.update_appointment_fields(
         db, appointment_id, status=AppointmentStatus.COMPLETED
@@ -395,7 +407,12 @@ async def mark_no_show(
         )
     old_status = appointment.status.value
     await _write_status_history(
-        db, appointment_id, old_status, AppointmentStatus.NO_SHOW.value, updated_by.id
+        db,
+        appointment_id,
+        old_status,
+        AppointmentStatus.NO_SHOW.value,
+        updated_by.id,
+        source=appointment.source,
     )
     return await appt_repo.update_appointment_fields(
         db, appointment_id, status=AppointmentStatus.NO_SHOW

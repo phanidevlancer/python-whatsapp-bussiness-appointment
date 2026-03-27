@@ -67,6 +67,7 @@ class AppointmentStatusHistoryRead(BaseModel):
     new_status: str
     changed_by_id: uuid.UUID | None
     reason: str | None
+    source: AppointmentSource | None
     reschedule_source: AppointmentSource | None
     created_at: datetime
 

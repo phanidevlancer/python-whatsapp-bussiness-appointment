@@ -11,7 +11,7 @@ const statusConfig: Record<string, { color: string; icon: React.ReactNode; label
   pending: { color: 'bg-amber-500', icon: <Clock size={14} />, label: 'Pending' },
 };
 
-export default function StatusTimeline({ history, source }: { history: AppointmentStatusHistory[]; source?: string }) {
+export default function StatusTimeline({ history }: { history: AppointmentStatusHistory[] }) {
   if (!history.length) {
     return (
       <div className="text-center py-8">
@@ -22,12 +22,19 @@ export default function StatusTimeline({ history, source }: { history: Appointme
   }
 
   const getEventDescription = (entry: AppointmentStatusHistory) => {
+    // Get source display name
+    const getSourceName = (src: string | null) => {
+      if (src === 'whatsapp') return 'WhatsApp';
+      if (src === 'admin_dashboard') return 'Admin';
+      return null;
+    };
+
     // Handle reschedule events
     if (entry.reschedule_source) {
-      const rescheduleSource = entry.reschedule_source === 'whatsapp' ? 'WhatsApp' : 'Admin';
+      const rescheduleSource = getSourceName(entry.reschedule_source);
       return {
         title: 'Rescheduled',
-        description: `Rescheduled via ${rescheduleSource}`,
+        description: rescheduleSource ? `Rescheduled via ${rescheduleSource}` : 'Rescheduled',
         icon: <RotateCcw size={14} className="text-indigo-600" />,
         color: 'border-indigo-500',
       };
@@ -35,20 +42,21 @@ export default function StatusTimeline({ history, source }: { history: Appointme
 
     // Handle booking event (first entry with no old_status)
     if (!entry.old_status) {
-      const bookingSource = source === 'whatsapp' ? 'WhatsApp' : source === 'admin_dashboard' ? 'Admin' : 'Unknown';
+      const bookingSource = getSourceName(entry.source);
       return {
         title: 'Booked',
-        description: `Appointment created via ${bookingSource}`,
+        description: bookingSource ? `Appointment created via ${bookingSource}` : 'Appointment created',
         icon: <Calendar size={14} className="text-blue-600" />,
         color: 'border-blue-500',
       };
     }
 
-    // Handle status changes
+    // Handle status changes with source
     const config = statusConfig[entry.new_status] || statusConfig.pending;
+    const eventSource = getSourceName(entry.source);
     return {
       title: config.label,
-      description: entry.reason || `Status changed to ${entry.new_status}`,
+      description: entry.reason || (eventSource ? `Status changed via ${eventSource}` : `Status changed to ${entry.new_status}`),
       icon: config.icon,
       color: config.color.replace('bg-', 'border-'),
     };

@@ -63,6 +63,7 @@ export interface AppointmentStatusHistory {
   new_status: string;
   changed_by_id: string | null;
   reason: string | null;
+  source: string | null;
   reschedule_source: string | null;
   created_at: string;
 }
