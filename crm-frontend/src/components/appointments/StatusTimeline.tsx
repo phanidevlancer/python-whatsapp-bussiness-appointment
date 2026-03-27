@@ -90,7 +90,7 @@ export default function StatusTimeline({ history, appointmentSource }: { history
           <div key={entry.id} className="relative flex gap-3">
             {/* Timeline line */}
             {!isLast && (
-              <div className="absolute left-[19px] top-8 bottom-0 w-px bg-gray-200" />
+              <div className="absolute left-[19px] top-10 -bottom-4 w-px bg-gray-200" />
             )}
 
             {/* Icon */}
