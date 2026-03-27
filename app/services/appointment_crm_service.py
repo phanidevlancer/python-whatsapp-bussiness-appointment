@@ -292,15 +292,15 @@ async def reschedule_appointment(
                 service_name=service_name,
                 old_slot_start_time=old_slot_start,
                 new_slot_start_time=new_slot.start_time,
-                booking_ref=str(new_appointment.id),
+                booking_ref=str(appointment_id),
             )
         )
 
     logger.info(
-        "CRM rescheduled appointment %s → new appointment %s (by %s)",
-        appointment_id, new_appointment.id, rescheduled_by.email,
+        "CRM rescheduled appointment %s (by %s)",
+        appointment_id, rescheduled_by.email,
     )
-    return new_appointment
+    return updated_appointment
 
 
 async def update_appointment(
