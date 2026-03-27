@@ -12,7 +12,7 @@ engine = create_async_engine(
     settings.DATABASE_URL,
     pool_size=settings.DATABASE_POOL_SIZE,
     max_overflow=settings.DATABASE_MAX_OVERFLOW,
-    echo=settings.APP_ENV == "development",
+    echo=False,
     pool_pre_ping=True,
     pool_recycle=60,  # Discard connections older than 60s
 )

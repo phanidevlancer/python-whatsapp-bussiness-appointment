@@ -15,3 +15,16 @@ class ServiceRead(BaseModel):
 
 class ServiceList(BaseModel):
     services: list[ServiceRead]
+
+
+class ServiceCreate(BaseModel):
+    name: str
+    description: str | None = None
+    duration_minutes: int
+
+
+class ServiceUpdate(BaseModel):
+    name: str | None = None
+    description: str | None = None
+    duration_minutes: int | None = None
+    is_active: bool | None = None

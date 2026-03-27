@@ -1,0 +1,102 @@
+import uuid
+from datetime import date
+from typing import Optional
+
+from fastapi import APIRouter, Depends, Query, status
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.deps import get_current_admin_user, require_admin
+from app.db.session import get_db
+from app.repositories import provider_repository as provider_repo
+from app.schemas.provider import ProviderCreate, ProviderRead, ProviderUpdate
+from app.schemas.slot_crm import SlotListResponse, SlotRead
+
+router = APIRouter()
+
+
+@router.get("/", response_model=list[ProviderRead])
+async def list_providers(
+    active_only: bool = Query(True),
+    db: AsyncSession = Depends(get_db),
+    _=Depends(get_current_admin_user),
+):
+    providers = await provider_repo.list_providers(db, active_only=active_only)
+    result = []
+    for p in providers:
+        data = ProviderRead.model_validate(p)
+        result.append(data)
+    return result
+
+
+@router.post("/", response_model=ProviderRead, status_code=status.HTTP_201_CREATED)
+async def create_provider(
+    payload: ProviderCreate,
+    db: AsyncSession = Depends(get_db),
+    _=Depends(require_admin),
+):
+    provider = await provider_repo.create_provider(
+        db,
+        name=payload.name,
+        email=str(payload.email) if payload.email else None,
+        phone=payload.phone,
+    )
+    return ProviderRead.model_validate(provider)
+
+
+@router.patch("/{provider_id}", response_model=ProviderRead)
+async def update_provider(
+    provider_id: uuid.UUID,
+    payload: ProviderUpdate,
+    db: AsyncSession = Depends(get_db),
+    _=Depends(require_admin),
+):
+    from fastapi import HTTPException
+    updates = payload.model_dump(exclude_none=True)
+    if "email" in updates and updates["email"]:
+        updates["email"] = str(updates["email"])
+    provider = await provider_repo.update_provider(db, provider_id, **updates)
+    if not provider:
+        raise HTTPException(status_code=404, detail="Provider not found")
+    return ProviderRead.model_validate(provider)
+
+
+@router.get("/{provider_id}/slots", response_model=SlotListResponse)
+async def get_provider_slots(
+    provider_id: uuid.UUID,
+    filter_date: Optional[date] = Query(None),
+    db: AsyncSession = Depends(get_db),
+    _=Depends(get_current_admin_user),
+):
+    slots = await provider_repo.get_provider_slots(db, provider_id, filter_date=filter_date)
+    return SlotListResponse(
+        items=[SlotRead.model_validate(s) for s in slots],
+        total=len(slots),
+    )
+
+
+@router.post("/{provider_id}/services", response_model=ProviderRead)
+async def assign_service_to_provider(
+    provider_id: uuid.UUID,
+    body: dict,
+    db: AsyncSession = Depends(get_db),
+    _=Depends(require_admin),
+):
+    from fastapi import HTTPException
+    service_id = body.get("service_id")
+    if not service_id:
+        raise HTTPException(status_code=422, detail="service_id required")
+    await provider_repo.assign_service(db, provider_id, uuid.UUID(str(service_id)))
+    provider = await provider_repo.get_by_id(db, provider_id)
+    if not provider:
+        raise HTTPException(status_code=404, detail="Provider not found")
+    return ProviderRead.model_validate(provider)
+
+
+@router.delete("/{provider_id}/services/{service_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def remove_service_from_provider(
+    provider_id: uuid.UUID,
+    service_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    _=Depends(require_admin),
+):
+    await provider_repo.remove_service(db, provider_id, service_id)

@@ -24,6 +24,14 @@ class Settings(BaseSettings):
     SESSION_TTL_SECONDS: int = 3600        # 1 hour idle timeout
     IDEMPOTENCY_TTL_SECONDS: int = 86400   # 24 hour dedup window
 
+    # JWT
+    JWT_SECRET_KEY: str = "change-me-in-production-use-a-long-random-string"
+    JWT_ALGORITHM: str = "HS256"
+    JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 480  # 8 hours
+
+    # CORS
+    FRONTEND_CORS_ORIGINS: list[str] = ["http://localhost:3000"]
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

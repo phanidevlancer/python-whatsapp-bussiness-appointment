@@ -80,7 +80,7 @@ async def cancel_appointment(
 
     stmt = (
         select(Appointment)
-        .options(selectinload(Appointment.slot))
+        .options(selectinload(Appointment.service), selectinload(Appointment.slot))
         .where(
             Appointment.id == appointment_id,
             Appointment.status == AppointmentStatus.CONFIRMED,
@@ -101,3 +101,124 @@ async def cancel_appointment(
         slot.booked_at = None
 
     return appointment
+
+
+# ─── CRM Extensions ────────────────────────────────────────────────────────
+
+async def list_appointments_crm(
+    db: AsyncSession,
+    date_from=None,
+    date_to=None,
+    status=None,
+    service_id=None,
+    provider_id=None,
+    search: str | None = None,
+    page: int = 1,
+    page_size: int = 20,
+) -> tuple:
+    from sqlalchemy import func, or_
+    from datetime import datetime, timezone, timedelta
+    from app.models.customer import Customer
+
+    query = (
+        select(Appointment)
+        .options(
+            selectinload(Appointment.service),
+            selectinload(Appointment.slot),
+            selectinload(Appointment.provider),
+            selectinload(Appointment.customer),
+        )
+    )
+    if date_from:
+        day_start = datetime(date_from.year, date_from.month, date_from.day, tzinfo=timezone.utc)
+        query = query.where(Appointment.created_at >= day_start)
+    if date_to:
+        day_end = datetime(date_to.year, date_to.month, date_to.day, tzinfo=timezone.utc) + timedelta(days=1)
+        query = query.where(Appointment.created_at < day_end)
+    if status:
+        query = query.where(Appointment.status == status)
+    if service_id:
+        query = query.where(Appointment.service_id == service_id)
+    if provider_id:
+        query = query.where(Appointment.provider_id == provider_id)
+    if search:
+        like = f"%{search}%"
+        query = query.join(Customer, Appointment.customer_id == Customer.id, isouter=True).where(
+            or_(Appointment.user_phone.ilike(like), Customer.name.ilike(like))
+        )
+
+    count_q = select(func.count()).select_from(query.subquery())
+    count_result = await db.execute(count_q)
+    total = count_result.scalar_one()
+    query = query.order_by(Appointment.created_at.desc()).offset((page - 1) * page_size).limit(page_size)
+    result = await db.execute(query)
+    return list(result.scalars().all()), total
+
+
+async def create_appointment_crm(
+    db: AsyncSession,
+    user_phone: str,
+    service_id: uuid.UUID,
+    slot_id: uuid.UUID,
+    provider_id: uuid.UUID | None = None,
+    customer_id: uuid.UUID | None = None,
+    notes: str | None = None,
+) -> Appointment:
+    appointment = Appointment(
+        user_phone=user_phone,
+        service_id=service_id,
+        slot_id=slot_id,
+        provider_id=provider_id,
+        customer_id=customer_id,
+        notes=notes,
+        status=AppointmentStatus.CONFIRMED,
+    )
+    db.add(appointment)
+    await db.flush()
+    return appointment
+
+
+async def get_appointment_history(db: AsyncSession, appointment_id: uuid.UUID) -> list:
+    from app.models.appointment_status_history import AppointmentStatusHistory
+    result = await db.execute(
+        select(AppointmentStatusHistory)
+        .where(AppointmentStatusHistory.appointment_id == appointment_id)
+        .order_by(AppointmentStatusHistory.created_at)
+    )
+    return list(result.scalars().all())
+
+
+async def update_appointment_fields(db: AsyncSession, appointment_id: uuid.UUID, **kwargs) -> Appointment | None:
+    stmt = (
+        select(Appointment)
+        .options(
+            selectinload(Appointment.service),
+            selectinload(Appointment.slot),
+            selectinload(Appointment.provider),
+            selectinload(Appointment.customer),
+        )
+        .where(Appointment.id == appointment_id)
+    )
+    result = await db.execute(stmt)
+    appointment = result.scalar_one_or_none()
+    if not appointment:
+        return None
+    for key, value in kwargs.items():
+        setattr(appointment, key, value)
+    await db.flush()
+    return appointment
+
+
+async def get_appointment_crm_by_id(db: AsyncSession, appointment_id: uuid.UUID) -> Appointment | None:
+    stmt = (
+        select(Appointment)
+        .options(
+            selectinload(Appointment.service),
+            selectinload(Appointment.slot),
+            selectinload(Appointment.provider),
+            selectinload(Appointment.customer),
+        )
+        .where(Appointment.id == appointment_id)
+    )
+    result = await db.execute(stmt)
+    return result.scalar_one_or_none()

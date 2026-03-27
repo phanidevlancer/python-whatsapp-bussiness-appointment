@@ -1,5 +1,4 @@
 import logging
-import traceback
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import PlainTextResponse
@@ -52,12 +51,8 @@ async def receive_webhook(
     try:
         async with AsyncSessionLocal() as db:
             await handle_incoming_message(payload, db, session_svc, wa_client)
-            logger.info("About to commit, session dirty=%s new=%s", db.dirty, db.new)
             await db.commit()
-            logger.info("Committed successfully")
     except Exception as e:
-        print(f"WEBHOOK ERROR: {e}", flush=True)
-        traceback.print_exc()
-        logger.exception("Error processing webhook")
+        logger.exception("Error processing webhook: %s", e)
 
     return {"status": "ok"}
