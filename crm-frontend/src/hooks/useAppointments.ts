@@ -83,6 +83,7 @@ export function useCancelAppointment() {
     onSuccess: (_, { id }) => {
       qc.invalidateQueries({ queryKey: ['appointments'] });
       qc.invalidateQueries({ queryKey: ['appointment', id] });
+      qc.invalidateQueries({ queryKey: ['appointment', id, 'history'] });
       qc.invalidateQueries({ queryKey: ['dashboard', 'stats'] });
     },
   });
@@ -99,9 +100,12 @@ export function useRescheduleAppointment() {
       });
       return res.data;
     },
-    onSuccess: () => {
+    onSuccess: (_, { id }) => {
       qc.invalidateQueries({ queryKey: ['appointments'] });
+      qc.invalidateQueries({ queryKey: ['appointment', id] });
+      qc.invalidateQueries({ queryKey: ['appointment', id, 'history'] });
       qc.invalidateQueries({ queryKey: ['dashboard'] });
+      qc.invalidateQueries({ queryKey: ['slots'] });
     },
   });
 }
@@ -113,8 +117,10 @@ export function useCompleteAppointment() {
       const res = await api.post<Appointment>(`/api/v1/appointments/${id}/complete`);
       return res.data;
     },
-    onSuccess: () => {
+    onSuccess: (_, id) => {
       qc.invalidateQueries({ queryKey: ['appointments'] });
+      qc.invalidateQueries({ queryKey: ['appointment', id] });
+      qc.invalidateQueries({ queryKey: ['appointment', id, 'history'] });
       qc.invalidateQueries({ queryKey: ['dashboard', 'stats'] });
     },
   });
@@ -127,8 +133,11 @@ export function useNoShowAppointment() {
       const res = await api.post<Appointment>(`/api/v1/appointments/${id}/no-show`);
       return res.data;
     },
-    onSuccess: () => {
+    onSuccess: (_, id) => {
       qc.invalidateQueries({ queryKey: ['appointments'] });
+      qc.invalidateQueries({ queryKey: ['appointment', id] });
+      qc.invalidateQueries({ queryKey: ['appointment', id, 'history'] });
+      qc.invalidateQueries({ queryKey: ['dashboard', 'stats'] });
     },
   });
 }
