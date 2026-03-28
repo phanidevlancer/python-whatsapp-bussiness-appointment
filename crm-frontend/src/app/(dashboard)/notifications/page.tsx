@@ -30,7 +30,7 @@ export default function NotificationsPage() {
       case 'failed':
         return <AlertCircle size={16} className="text-error-600" />;
       default:
-        return <MessageSquare size={16} className="text-gray-400" />;
+        return <MessageSquare size={16} className="text-slate-400" />;
     }
   };
 
@@ -39,8 +39,8 @@ export default function NotificationsPage() {
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-bold text-gray-900">Notifications</h2>
-          <p className="text-sm text-gray-500 mt-0.5">Track WhatsApp message delivery status</p>
+          <h2 className="text-xl font-bold text-slate-900">Notifications</h2>
+          <p className="text-sm text-slate-500 mt-0.5">Track WhatsApp message delivery status</p>
         </div>
         <div className="flex items-center gap-3">
           <Badge variant="primary" size="md">
@@ -66,11 +66,11 @@ export default function NotificationsPage() {
           </div>
         ) : !data?.items.length ? (
           <div className="text-center py-16">
-            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <MessageSquare size={32} className="text-gray-400" />
+            <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <MessageSquare size={32} className="text-slate-400" />
             </div>
-            <h3 className="text-sm font-medium text-gray-900 mb-1">No notification logs</h3>
-            <p className="text-sm text-gray-500">WhatsApp messages will appear here</p>
+            <h3 className="text-sm font-medium text-slate-900 mb-1">No notification logs</h3>
+            <p className="text-sm text-slate-500">WhatsApp messages will appear here</p>
           </div>
         ) : (
           <Table>
@@ -89,12 +89,12 @@ export default function NotificationsPage() {
                 <TableRow key={log.id}>
                   <TableCell>
                     <div className="flex items-center gap-2">
-                      <MessageSquare size={16} className="text-gray-400" />
-                      <span className="text-sm text-gray-700">{log.customer_phone}</span>
+                      <MessageSquare size={16} className="text-slate-400" />
+                      <span className="text-sm text-slate-700">{log.customer_phone}</span>
                     </div>
                   </TableCell>
                   <TableCell>
-                    <span className="text-sm text-gray-700 capitalize">
+                    <span className="text-sm text-slate-700 capitalize">
                       {log.message_type.replace(/_/g, ' ')}
                     </span>
                   </TableCell>
@@ -116,7 +116,7 @@ export default function NotificationsPage() {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <span className="text-sm text-gray-500">
+                    <span className="text-sm text-slate-500">
                       {log.sent_at ? format(new Date(log.sent_at), 'MMM d, h:mm a') : '—'}
                     </span>
                   </TableCell>
@@ -129,7 +129,7 @@ export default function NotificationsPage() {
                         </span>
                       </div>
                     ) : (
-                      <span className="text-sm text-gray-400">—</span>
+                      <span className="text-sm text-slate-400">—</span>
                     )}
                   </TableCell>
                   <TableCell align="right">
@@ -144,7 +144,7 @@ export default function NotificationsPage() {
                             onError: () => toast.error('Failed to resend notification'),
                           })
                         }
-                        className="text-gray-400 hover:text-primary-600"
+                        className="text-slate-400 hover:text-primary-600"
                       >
                         Resend
                       </Button>
@@ -161,9 +161,9 @@ export default function NotificationsPage() {
       {data && data.total > data.page_size && (
         <Card className="p-4" variant="default">
           <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-500">
-              Page <span className="font-medium text-gray-900">{page}</span> of{' '}
-              <span className="font-medium text-gray-900">{Math.ceil(data.total / data.page_size)}</span>
+            <span className="text-sm text-slate-500">
+              Page <span className="font-medium text-slate-900">{page}</span> of{' '}
+              <span className="font-medium text-slate-900">{Math.ceil(data.total / data.page_size)}</span>
             </span>
             <div className="flex gap-2">
               <Button

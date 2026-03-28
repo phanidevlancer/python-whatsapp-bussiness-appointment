@@ -26,7 +26,7 @@ function ProviderHistoryRow({ providerId }: { providerId: string }) {
   const { data: history = [], isLoading } = useProviderHistory(providerId);
   return (
     <tr>
-      <td colSpan={6} className="px-4 pb-4 bg-gray-50/70">
+      <td colSpan={6} className="px-4 pb-4 bg-slate-50/70">
         <ChangeHistoryPanel history={history} isLoading={isLoading} />
       </td>
     </tr>
@@ -95,15 +95,15 @@ function ProviderRow({ p }: { p: Provider }) {
           {editing ? (
             <Input value={editName} onChange={(e) => setEditName(e.target.value)} className="max-w-[160px]" />
           ) : (
-            <span className="font-medium text-gray-900">{p.name}</span>
+            <span className="font-medium text-slate-900">{p.name}</span>
           )}
         </TableCell>
         <TableCell>
           {editing ? (
             <Input type="email" value={editEmail} onChange={(e) => setEditEmail(e.target.value)} className="max-w-[200px]" />
           ) : (
-            <div className="flex items-center gap-2 text-sm text-gray-500">
-              <Mail size={14} className="text-gray-400" />
+            <div className="flex items-center gap-2 text-sm text-slate-500">
+              <Mail size={14} className="text-slate-400" />
               {p.email ?? '—'}
             </div>
           )}
@@ -112,8 +112,8 @@ function ProviderRow({ p }: { p: Provider }) {
           {editing ? (
             <Input value={editPhone} onChange={(e) => setEditPhone(e.target.value)} className="max-w-[140px]" />
           ) : (
-            <div className="flex items-center gap-2 text-sm text-gray-500">
-              <Phone size={14} className="text-gray-400" />
+            <div className="flex items-center gap-2 text-sm text-slate-500">
+              <Phone size={14} className="text-slate-400" />
               {p.phone ?? '—'}
             </div>
           )}
@@ -132,12 +132,12 @@ function ProviderRow({ p }: { p: Provider }) {
               </>
             ) : (
               <>
-                <Button variant="ghost" size="sm" leftIcon={<Pencil size={14} />} onClick={startEdit} className="text-gray-400 hover:text-gray-700">Edit</Button>
+                <Button variant="ghost" size="sm" leftIcon={<Pencil size={14} />} onClick={startEdit} className="text-slate-400 hover:text-slate-700">Edit</Button>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => setShowHistory((v) => !v)}
-                  className="text-gray-400 hover:text-gray-700"
+                  className="text-slate-400 hover:text-slate-700"
                   title="Show history"
                 >
                   {showHistory ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
@@ -151,7 +151,7 @@ function ProviderRow({ p }: { p: Provider }) {
                       { onSuccess: () => toast.success(`Provider ${p.is_active ? 'deactivated' : 'activated'}`) }
                     )
                   }
-                  className={p.is_active ? 'text-gray-400 hover:text-error-600' : 'text-gray-400 hover:text-success-600'}
+                  className={p.is_active ? 'text-slate-400 hover:text-error-600' : 'text-slate-400 hover:text-success-600'}
                 >
                   {p.is_active ? 'Deactivate' : 'Activate'}
                 </Button>
@@ -203,8 +203,8 @@ export default function ProvidersPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-bold text-gray-900">Providers</h2>
-          <p className="text-sm text-gray-500 mt-0.5">Manage your clinic staff and providers</p>
+          <h2 className="text-xl font-bold text-slate-900">Providers</h2>
+          <p className="text-sm text-slate-500 mt-0.5">Manage your clinic staff and providers</p>
         </div>
         <Button variant="primary" size="md" leftIcon={<Plus size={18} />} onClick={() => setShowCreate(true)}>
           Add Provider
@@ -221,7 +221,7 @@ export default function ProvidersPage() {
             <Input placeholder="Email (optional)" type="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} leftIcon={<Mail size={16} />} />
             <Input placeholder="Phone (optional)" value={newPhone} onChange={(e) => setNewPhone(e.target.value)} leftIcon={<Phone size={16} />} />
           </div>
-          <div className="flex gap-3 mt-4 pt-4 border-t border-gray-100">
+          <div className="flex gap-3 mt-4 pt-4 border-t border-slate-100">
             <Button variant="primary" size="md" onClick={handleCreate} isLoading={creating}>
               {creating ? 'Creating...' : 'Add Provider'}
             </Button>
@@ -247,11 +247,11 @@ export default function ProvidersPage() {
           </div>
         ) : !providers?.length ? (
           <div className="text-center py-16">
-            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <User size={32} className="text-gray-400" />
+            <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <User size={32} className="text-slate-400" />
             </div>
-            <h3 className="text-sm font-medium text-gray-900 mb-1">No providers found</h3>
-            <p className="text-sm text-gray-500">Add your first provider to get started</p>
+            <h3 className="text-sm font-medium text-slate-900 mb-1">No providers found</h3>
+            <p className="text-sm text-slate-500">Add your first provider to get started</p>
           </div>
         ) : (
           <Table>

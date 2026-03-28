@@ -3,7 +3,7 @@ import { twMerge } from 'tailwind-merge';
 import { forwardRef, HTMLAttributes, ReactNode } from 'react';
 
 export interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
-  variant?: 'default' | 'primary' | 'success' | 'warning' | 'error' | 'info';
+  variant?: 'default' | 'primary' | 'success' | 'warning' | 'error' | 'info' | 'teal';
   size?: 'sm' | 'md' | 'lg';
   children: ReactNode;
   dot?: boolean;
@@ -22,38 +22,40 @@ const Badge = forwardRef<HTMLSpanElement, BadgeProps>(
     ref
   ) => {
     const baseStyles = `
-      inline-flex items-center gap-1.5 font-medium
-      rounded-full transition-all duration-200
+      inline-flex items-center gap-1 font-medium
+      rounded transition-all duration-200
     `;
 
     const variants = {
-      default: 'bg-gray-100 text-gray-700',
-      primary: 'bg-primary-100 text-primary-700',
-      success: 'bg-success-100 text-success-700',
-      warning: 'bg-warning-100 text-warning-700',
-      error: 'bg-error-100 text-error-700',
-      info: 'bg-info-100 text-info-700',
+      default:  'bg-slate-100 text-slate-600',
+      primary:  'bg-blue-50 text-blue-600',
+      success:  'bg-green-50 text-green-600',
+      warning:  'bg-amber-50 text-amber-600',
+      error:    'bg-red-50 text-red-600',
+      info:     'bg-blue-50 text-blue-600',
+      teal:     'bg-teal-50 text-teal-600',
     };
 
     const sizes = {
-      sm: 'px-2 py-0.5 text-xs',
-      md: 'px-2.5 py-1 text-xs',
-      lg: 'px-3 py-1 text-sm',
+      sm: 'px-1.5 py-0.5 text-[10px]',
+      md: 'px-2 py-0.5 text-xs',
+      lg: 'px-2.5 py-1 text-xs',
     };
 
     const dotSizes = {
-      sm: 'w-1.5 h-1.5',
-      md: 'w-2 h-2',
-      lg: 'w-2.5 h-2.5',
+      sm: 'w-1 h-1',
+      md: 'w-1.5 h-1.5',
+      lg: 'w-2 h-2',
     };
 
     const dotColors = {
-      default: 'bg-gray-500',
-      primary: 'bg-primary-500',
-      success: 'bg-success-500',
-      warning: 'bg-warning-500',
-      error: 'bg-error-500',
-      info: 'bg-info-500',
+      default:  'bg-slate-500',
+      primary:  'bg-blue-500',
+      success:  'bg-green-600',
+      warning:  'bg-amber-500',
+      error:    'bg-red-500',
+      info:     'bg-blue-500',
+      teal:     'bg-teal-500',
     };
 
     return (

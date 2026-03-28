@@ -27,9 +27,9 @@ const Card = forwardRef<HTMLDivElement, CardProps>(
     `;
 
     const variants = {
-      default: 'shadow-sm border border-gray-200',
-      elevated: 'shadow-lg border border-gray-100',
-      outlined: 'border-2 border-gray-200 shadow-none',
+      default: 'shadow-sm border border-slate-200',
+      elevated: 'shadow-lg border border-slate-100',
+      outlined: 'border-2 border-slate-200 shadow-none',
     };
 
     const paddings = {
@@ -65,7 +65,7 @@ function CardHeader({ className, children, ...props }: CardHeaderProps) {
   return (
     <div
       className={twMerge(
-        'flex items-center justify-between pb-4 border-b border-gray-100',
+        'flex items-center justify-between pb-4 border-b border-slate-100',
         className
       )}
       {...props}
@@ -83,7 +83,7 @@ function CardTitle({ className, children, ...props }: CardTitleProps) {
   return (
     <h3
       className={twMerge(
-        'text-base font-semibold text-gray-900',
+        'text-base font-semibold text-slate-900',
         className
       )}
       {...props}
@@ -101,7 +101,7 @@ function CardSubtitle({ className, children, ...props }: CardSubtitleProps) {
   return (
     <p
       className={twMerge(
-        'text-sm text-gray-500 mt-0.5',
+        'text-sm text-slate-500 mt-0.5',
         className
       )}
       {...props}
@@ -131,7 +131,7 @@ function CardFooter({ className, children, ...props }: CardFooterProps) {
   return (
     <div
       className={twMerge(
-        'flex items-center gap-3 pt-4 border-t border-gray-100',
+        'flex items-center gap-3 pt-4 border-t border-slate-100',
         className
       )}
       {...props}

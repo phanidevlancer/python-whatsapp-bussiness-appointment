@@ -80,19 +80,19 @@ export default function CustomerDetailPage() {
     );
   };
 
-  if (isLoading) return <div className="text-gray-400 text-sm p-8 text-center">Loading…</div>;
-  if (!customer) return <div className="text-gray-400 text-sm p-8 text-center">Not found</div>;
+  if (isLoading) return <div className="text-slate-400 text-sm p-8 text-center">Loading…</div>;
+  if (!customer) return <div className="text-slate-400 text-sm p-8 text-center">Not found</div>;
 
   return (
     <div className="max-w-3xl space-y-5">
-      <button onClick={() => router.back()} className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-800 transition-colors">
+      <button onClick={() => router.back()} className="flex items-center gap-2 text-sm text-slate-500 hover:text-slate-800 transition-colors">
         <ArrowLeft size={15} /> Back
       </button>
 
       {/* Details card */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6">
+      <div className="bg-white rounded-xl border border-slate-200 p-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold text-gray-900">{customer.name ?? 'Unknown'}</h2>
+          <h2 className="text-xl font-semibold text-slate-900">{customer.name ?? 'Unknown'}</h2>
           {!editing ? (
             <Button variant="outline" size="sm" leftIcon={<Pencil size={14} />} onClick={startEdit}>
               Edit
@@ -112,20 +112,20 @@ export default function CustomerDetailPage() {
         {!editing ? (
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
-              <p className="text-gray-400 text-xs">Phone</p>
+              <p className="text-slate-400 text-xs">Phone</p>
               <p className="font-medium">{customer.phone}</p>
             </div>
             <div>
-              <p className="text-gray-400 text-xs">Email</p>
+              <p className="text-slate-400 text-xs">Email</p>
               <p className="font-medium">{customer.email ?? '—'}</p>
             </div>
             <div>
-              <p className="text-gray-400 text-xs">Customer since</p>
+              <p className="text-slate-400 text-xs">Customer since</p>
               <p className="font-medium">{format(new Date(customer.created_at), 'MMM d, yyyy')}</p>
             </div>
             {customer.notes && (
               <div>
-                <p className="text-gray-400 text-xs">Notes</p>
+                <p className="text-slate-400 text-xs">Notes</p>
                 <p className="font-medium">{customer.notes}</p>
               </div>
             )}
@@ -152,8 +152,8 @@ export default function CustomerDetailPage() {
               rows={3}
             />
             <div>
-              <p className="text-xs text-gray-400">Phone (cannot be changed)</p>
-              <p className="text-sm font-medium text-gray-500 mt-0.5">{customer.phone}</p>
+              <p className="text-xs text-slate-400">Phone (cannot be changed)</p>
+              <p className="text-sm font-medium text-slate-500 mt-0.5">{customer.phone}</p>
             </div>
           </div>
         )}
@@ -163,17 +163,17 @@ export default function CustomerDetailPage() {
       <ChangeHistoryPanel history={history} isLoading={historyLoading} />
 
       {/* Appointments */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6">
-        <h3 className="text-sm font-semibold text-gray-700 mb-4">Appointment History ({appts?.total ?? 0})</h3>
+      <div className="bg-white rounded-xl border border-slate-200 p-6">
+        <h3 className="text-sm font-semibold text-slate-700 mb-4">Appointment History ({appts?.total ?? 0})</h3>
         {!appts?.items.length ? (
-          <p className="text-sm text-gray-400">No appointments</p>
+          <p className="text-sm text-slate-400">No appointments</p>
         ) : (
-          <div className="divide-y divide-gray-100">
+          <div className="divide-y divide-slate-100">
             {appts.items.map((a) => (
-              <Link key={a.id} href={`/appointments/${a.id}`} className="flex items-center justify-between py-3 hover:bg-gray-50 -mx-2 px-2 rounded transition-colors">
+              <Link key={a.id} href={`/appointments/${a.id}`} className="flex items-center justify-between py-3 hover:bg-slate-50 -mx-2 px-2 rounded transition-colors">
                 <div>
-                  <p className="text-sm font-medium text-gray-900">{a.service?.name ?? '—'}</p>
-                  <p className="text-xs text-gray-400">
+                  <p className="text-sm font-medium text-slate-900">{a.service?.name ?? '—'}</p>
+                  <p className="text-xs text-slate-400">
                     {a.slot ? format(new Date(a.slot.start_time), 'MMM d, h:mm a') : '—'}
                   </p>
                 </div>

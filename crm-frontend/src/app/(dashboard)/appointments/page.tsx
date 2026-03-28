@@ -29,8 +29,8 @@ export default function AppointmentsPage() {
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-bold text-gray-900">Appointments</h2>
-          <p className="text-sm text-gray-500 mt-0.5">Manage and track all clinic appointments</p>
+          <h2 className="text-xl font-bold text-slate-800">Appointments</h2>
+          <p className="text-sm text-slate-500 mt-0.5">Manage and track all clinic appointments</p>
         </div>
         <Button
           variant="primary"
@@ -79,7 +79,7 @@ export default function AppointmentsPage() {
               onChange={(e) => setFilter('date_from', e.target.value)}
               className="w-40"
             />
-            <span className="text-gray-400 text-sm">to</span>
+            <span className="text-slate-400 text-sm">to</span>
             <Input
               type="date"
               value={filters.date_to ?? ''}
@@ -117,10 +117,10 @@ export default function AppointmentsPage() {
         <Card className="p-4" variant="default">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <span className="text-sm text-gray-500">
-                Showing <span className="font-medium text-gray-900">{((filters.page ?? 1) - 1) * (filters.page_size ?? 20) + 1}</span> to{' '}
-                <span className="font-medium text-gray-900">{Math.min((filters.page ?? 1) * (filters.page_size ?? 20), data.total)}</span> of{' '}
-                <span className="font-medium text-gray-900">{data.total}</span> results
+              <span className="text-sm text-slate-500">
+                Showing <span className="font-medium text-slate-900">{((filters.page ?? 1) - 1) * (filters.page_size ?? 20) + 1}</span> to{' '}
+                <span className="font-medium text-slate-900">{Math.min((filters.page ?? 1) * (filters.page_size ?? 20), data.total)}</span> of{' '}
+                <span className="font-medium text-slate-900">{data.total}</span> results
               </span>
             </div>
             <div className="flex gap-2">

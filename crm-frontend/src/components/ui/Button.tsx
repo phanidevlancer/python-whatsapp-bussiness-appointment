@@ -37,9 +37,9 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 
     const variants = {
       primary: `
-        bg-orange-600 text-white
-        hover:bg-orange-700
-        focus-visible:ring-orange-500
+        bg-teal-500 text-white
+        hover:bg-teal-600
+        focus-visible:ring-teal-500
         shadow-sm hover:shadow-md
       `,
       secondary: `

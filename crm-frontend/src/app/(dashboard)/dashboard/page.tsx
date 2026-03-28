@@ -9,29 +9,26 @@ import AppointmentDistribution from '@/components/dashboard/AppointmentDistribut
 import WeeklyPerformance from '@/components/dashboard/WeeklyPerformance';
 import ChannelComparison from '@/components/dashboard/ChannelComparison';
 import { Skeleton } from '@/components/ui/Skeleton';
-import { Button } from '@/components/ui/Button';
-import { RefreshCw } from 'lucide-react';
+
+function getGreeting(): string {
+  const hour = new Date().getHours();
+  if (hour < 12) return 'Good morning';
+  if (hour < 17) return 'Good afternoon';
+  return 'Good evening';
+}
 
 export default function DashboardPage() {
   const [range, setRange] = useState<'7d' | '30d' | '90d'>('30d');
-  const { data: stats, isLoading: statsLoading, error: statsError } = useStats();
-  const { data: trends, isLoading: trendsLoading, error: trendsError } = useTrends(range);
-  const { data: upcoming, isLoading: upcomingLoading, error: upcomingError } = useUpcoming(50);
+  const { data: stats, isLoading: statsLoading } = useStats();
+  const { data: trends, isLoading: trendsLoading } = useTrends(range);
+  const { data: upcoming, isLoading: upcomingLoading } = useUpcoming(50);
   const { data: channels, isLoading: channelsLoading } = useChannelStats();
   const { data: cancellations, isLoading: cancellationsLoading } = useCancellationStats();
   const { data: reschedules, isLoading: reschedulesLoading } = useRescheduleStats();
 
-  // Debug logging
-  console.log('Dashboard - Stats:', stats, statsError);
-  console.log('Dashboard - Trends:', trends, trendsError);
-  console.log('Dashboard - Upcoming:', upcoming, upcomingError);
-  console.log('Dashboard - Channels:', channels);
-  console.log('Dashboard - Cancellations:', cancellations);
-  console.log('Dashboard - Reschedules:', reschedules);
-
   if (statsLoading) {
     return (
-      <div className="space-y-4">
+      <div className="space-y-6">
         <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
           {Array.from({ length: 6 }).map((_, i) => (
             <div key={i} className="bg-white rounded-lg border border-gray-200 p-4">
@@ -50,24 +47,14 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="space-y-4">
-      {/* Page Header - Zoho Style */}
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <h1 className="text-xl font-semibold text-gray-900">Dashboard</h1>
-          <p className="text-sm text-gray-500 mt-0.5">Overview of your clinic performance</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-gray-500 hidden sm:inline">
-            Last updated: Just now
-          </span>
-          <Button
-            variant="outline"
-            size="sm"
-            leftIcon={<RefreshCw size={14} />}
-          >
-            Refresh
-          </Button>
+    <div>
+      {/* Greeting Row */}
+      <div className="flex justify-end items-center mb-6">
+        <h2 className="text-lg text-slate-700 mr-3">
+          {getGreeting()}, <span className="font-bold text-slate-900">Admin</span>
+        </h2>
+        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-sm font-semibold border-2 border-white shadow-sm">
+          A
         </div>
       </div>
 
@@ -75,52 +62,30 @@ export default function DashboardPage() {
       {stats && <StatsCards stats={stats} />}
 
       {/* Charts Row 1 */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Trend Chart */}
-        <div>
-          <div className="flex items-center justify-between mb-2">
-            <h2 className="text-sm font-semibold text-gray-700">Appointment Trends</h2>
-            <div className="flex gap-1">
-              {(['7d', '30d', '90d'] as const).map((r) => (
-                <button
-                  key={r}
-                  onClick={() => setRange(r)}
-                  className={`text-xs px-3 py-1 rounded-md font-medium transition-all ${
-                    range === r
-                      ? 'bg-orange-600 text-white'
-                      : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
-                  }`}
-                >
-                  {r}
-                </button>
-              ))}
-            </div>
-          </div>
-          {trends && !trendsLoading && <TrendChart data={trends.data} />}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+        <div className="lg:col-span-2 flex flex-col">
+          {trends && !trendsLoading && (
+            <TrendChart data={trends.data} range={range} onRangeChange={setRange} />
+          )}
         </div>
-
-        {/* Appointment Distribution */}
         <div>
           {stats && <AppointmentDistribution stats={stats} />}
         </div>
       </div>
 
       {/* Channel Performance Comparison */}
-      <div>
+      <div className="mb-6">
         {!channelsLoading && !cancellationsLoading && !reschedulesLoading && channels && (
           <ChannelComparison channels={channels} cancellations={cancellations} reschedules={reschedules} />
         )}
       </div>
 
-      {/* Charts Row 2 */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Weekly Performance */}
+      {/* Bottom Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pb-6 items-start">
         <div className="lg:col-span-2">
           {stats && <WeeklyPerformance stats={stats} />}
         </div>
-
-        {/* Upcoming Appointments */}
-        <div>
+        <div className="lg:self-stretch">
           {upcoming && !upcomingLoading && <UpcomingList items={upcoming} />}
         </div>
       </div>

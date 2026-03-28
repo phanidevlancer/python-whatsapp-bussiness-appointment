@@ -26,11 +26,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   if (!hydrated || !token) return null;
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-50">
+    <div className="flex h-screen overflow-hidden bg-slate-100">
       <Sidebar />
-      <div className="flex flex-col flex-1 overflow-hidden">
+      <div className="flex flex-col flex-1 overflow-hidden relative">
+        <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-br from-blue-50/50 to-purple-50/50 pointer-events-none -z-10 rounded-br-3xl" />
         <Header />
-        <main className="flex-1 overflow-y-auto p-6">{children}</main>
+        <main className="flex-1 overflow-y-auto p-6 pt-2 relative z-10">{children}</main>
       </div>
     </div>
   );

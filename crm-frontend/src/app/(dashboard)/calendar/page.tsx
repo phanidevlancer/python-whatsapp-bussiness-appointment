@@ -145,27 +145,27 @@ export default function CalendarPage() {
     const labelDate = getLabel();
 
     return (
-      <div className="flex items-center justify-between mb-0 p-4 bg-white border-b border-gray-200">
+      <div className="flex items-center justify-between mb-0 p-4 bg-white border-b border-slate-200">
         <div className="flex items-center gap-3">
           <button
             onClick={goToToday}
-            className="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded hover:bg-gray-50"
+            className="px-4 py-2 text-sm font-medium text-slate-700 border border-slate-300 rounded hover:bg-slate-50"
           >
             Today
           </button>
           <div className="flex items-center gap-1">
-            <button onClick={goToBack} className="p-2 hover:bg-gray-100 rounded-full">
+            <button onClick={goToBack} className="p-2 hover:bg-slate-100 rounded-full">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M15 18l-6-6 6-6" />
               </svg>
             </button>
-            <button onClick={goToNext} className="p-2 hover:bg-gray-100 rounded-full">
+            <button onClick={goToNext} className="p-2 hover:bg-slate-100 rounded-full">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M9 18l6-6-6-6" />
               </svg>
             </button>
           </div>
-          <h2 className="ml-2 text-xl font-semibold text-gray-900">
+          <h2 className="ml-2 text-xl font-semibold text-slate-900">
             {isValid(labelDate) ? format(labelDate, 'MMMM yyyy') : 'Calendar'}
           </h2>
         </div>
@@ -177,7 +177,7 @@ export default function CalendarPage() {
               className={`px-4 py-2 text-sm font-medium rounded transition-colors ${
                 toolbar.view === v
                   ? 'bg-blue-100 text-blue-700'
-                  : 'text-gray-600 hover:bg-gray-100'
+                  : 'text-slate-600 hover:bg-slate-100'
               }`}
             >
               {v.charAt(0).toUpperCase() + v.slice(1)}
@@ -208,8 +208,8 @@ export default function CalendarPage() {
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Calendar</h2>
-          <p className="text-sm text-gray-500 mt-1">View and manage your appointments</p>
+          <h2 className="text-2xl font-bold text-slate-900">Calendar</h2>
+          <p className="text-sm text-slate-500 mt-1">View and manage your appointments</p>
         </div>
         <Badge variant="primary" size="lg">
           <CalendarIcon size={18} />
@@ -385,22 +385,22 @@ export default function CalendarPage() {
         `}</style>
 
         {isLoading ? (
-          <div className="text-center py-16 text-gray-400">
+          <div className="text-center py-16 text-slate-400">
             <div className="animate-pulse flex flex-col items-center">
-              <div className="w-16 h-16 bg-gray-200 rounded-full mb-4"></div>
-              <div className="w-40 h-5 bg-gray-200 rounded mb-2"></div>
+              <div className="w-16 h-16 bg-slate-200 rounded-full mb-4"></div>
+              <div className="w-40 h-5 bg-slate-200 rounded mb-2"></div>
             </div>
           </div>
         ) : error ? (
           <div className="text-center py-16">
             <p className="text-red-600 font-medium mb-2">Error loading calendar</p>
-            <p className="text-sm text-gray-500">{getErrorMessage()}</p>
+            <p className="text-sm text-slate-500">{getErrorMessage()}</p>
           </div>
         ) : events.length === 0 ? (
           <div className="text-center py-16">
-            <CalendarIcon size={48} className="mx-auto text-gray-300 mb-4" />
-            <h3 className="text-sm font-medium text-gray-900 mb-1">No appointments</h3>
-            <p className="text-sm text-gray-500">
+            <CalendarIcon size={48} className="mx-auto text-slate-300 mb-4" />
+            <h3 className="text-sm font-medium text-slate-900 mb-1">No appointments</h3>
+            <p className="text-sm text-slate-500">
               {data?.total ? `${data.total} appointments exist but may not have time slots` : 'Create an appointment'}
             </p>
           </div>

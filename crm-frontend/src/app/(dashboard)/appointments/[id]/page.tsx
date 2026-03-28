@@ -65,10 +65,10 @@ export default function AppointmentDetailPage() {
     return (
       <div className="max-w-4xl">
         <div className="text-center py-16">
-          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <AlertCircle size={32} className="text-gray-400" />
+          <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <AlertCircle size={32} className="text-slate-400" />
           </div>
-          <h3 className="text-sm font-medium text-gray-900 mb-1">Appointment not found</h3>
+          <h3 className="text-sm font-medium text-slate-900 mb-1">Appointment not found</h3>
           <Button variant="outline" size="sm" onClick={() => router.back()} className="mt-4">
             Go Back
           </Button>
@@ -85,7 +85,7 @@ export default function AppointmentDetailPage() {
       {/* Back Button */}
       <button
         onClick={() => router.back()}
-        className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-800 transition-colors"
+        className="flex items-center gap-2 text-sm text-slate-500 hover:text-slate-800 transition-colors"
       >
         <ArrowLeft size={15} /> Back
       </button>
@@ -99,10 +99,10 @@ export default function AppointmentDetailPage() {
               size="lg"
             />
             <div>
-              <h2 className="text-xl font-semibold text-gray-900">
+              <h2 className="text-xl font-semibold text-slate-900">
                 {appt.customer?.name ?? appt.user_phone}
               </h2>
-              <p className="text-sm text-gray-500 mt-0.5 flex items-center gap-1">
+              <p className="text-sm text-slate-500 mt-0.5 flex items-center gap-1">
                 <MessageSquare size={14} />
                 {appt.user_phone}
               </p>
@@ -113,35 +113,35 @@ export default function AppointmentDetailPage() {
 
         {/* Info Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="p-3 bg-gray-50 rounded-xl">
-            <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
+          <div className="p-3 bg-slate-50 rounded-xl">
+            <div className="flex items-center gap-2 text-xs text-slate-500 mb-1">
               <Stethoscope size={14} />
               <span>Service</span>
             </div>
-            <p className="font-medium text-gray-900">{appt.service?.name ?? '—'}</p>
+            <p className="font-medium text-slate-900">{appt.service?.name ?? '—'}</p>
           </div>
-          <div className="p-3 bg-gray-50 rounded-xl">
-            <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
+          <div className="p-3 bg-slate-50 rounded-xl">
+            <div className="flex items-center gap-2 text-xs text-slate-500 mb-1">
               <Clock size={14} />
               <span>Date/Time</span>
             </div>
-            <p className="font-medium text-gray-900">
+            <p className="font-medium text-slate-900">
               {appt.slot ? format(new Date(appt.slot.start_time), 'MMM d, h:mm a') : '—'}
             </p>
           </div>
-          <div className="p-3 bg-gray-50 rounded-xl">
-            <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
+          <div className="p-3 bg-slate-50 rounded-xl">
+            <div className="flex items-center gap-2 text-xs text-slate-500 mb-1">
               <User size={14} />
               <span>Provider</span>
             </div>
-            <p className="font-medium text-gray-900">{appt.provider?.name ?? '—'}</p>
+            <p className="font-medium text-slate-900">{appt.provider?.name ?? '—'}</p>
           </div>
-          <div className="p-3 bg-gray-50 rounded-xl">
-            <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
+          <div className="p-3 bg-slate-50 rounded-xl">
+            <div className="flex items-center gap-2 text-xs text-slate-500 mb-1">
               <CalendarIcon size={14} />
               <span>Booked</span>
             </div>
-            <p className="font-medium text-gray-900">
+            <p className="font-medium text-slate-900">
               {format(new Date(appt.created_at), 'MMM d, yyyy')}
             </p>
           </div>
@@ -163,7 +163,7 @@ export default function AppointmentDetailPage() {
 
         {/* Action Buttons */}
         {isConfirmed && (
-          <div className="flex flex-wrap gap-3 mt-6 pt-6 border-t border-gray-100">
+          <div className="flex flex-wrap gap-3 mt-6 pt-6 border-t border-slate-100">
             <Button
               variant="outline"
               size="md"
@@ -224,21 +224,21 @@ export default function AppointmentDetailPage() {
           <CardContent className="pt-0">
             {!notifLogs?.items.length ? (
               <div className="text-center py-8">
-                <MessageSquare size={40} className="mx-auto text-gray-300 mb-2" />
-                <p className="text-sm text-gray-500">No notifications sent</p>
+                <MessageSquare size={40} className="mx-auto text-slate-300 mb-2" />
+                <p className="text-sm text-slate-500">No notifications sent</p>
               </div>
             ) : (
               <div className="space-y-3">
                 {notifLogs.items.map((log) => (
                   <div
                     key={log.id}
-                    className="flex items-center justify-between p-3 bg-gray-50 rounded-xl"
+                    className="flex items-center justify-between p-3 bg-slate-50 rounded-xl"
                   >
                     <div>
-                      <p className="text-sm font-medium text-gray-900 capitalize">
+                      <p className="text-sm font-medium text-slate-900 capitalize">
                         {log.message_type.replace(/_/g, ' ')}
                       </p>
-                      <p className="text-xs text-gray-500 mt-0.5">
+                      <p className="text-xs text-slate-500 mt-0.5">
                         {log.sent_at
                           ? format(new Date(log.sent_at), 'MMM d, h:mm a')
                           : format(new Date(log.created_at), 'MMM d, h:mm a')}
@@ -284,7 +284,7 @@ export default function AppointmentDetailPage() {
           </ModalTitle>
         </ModalHeader>
         <ModalContent>
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-slate-600">
             {confirmAction === 'complete'
               ? 'This will mark the appointment as completed. This action cannot be undone.'
               : 'This will mark the patient as a no show. This action cannot be undone.'}

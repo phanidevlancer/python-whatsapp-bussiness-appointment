@@ -52,11 +52,11 @@ export default function AppointmentsTable({ appointments, isLoading }: Props) {
   if (appointments.length === 0) {
     return (
       <div className="text-center py-16">
-        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <Eye size={32} className="text-gray-400" />
+        <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <Eye size={32} className="text-slate-400" />
         </div>
-        <h3 className="text-sm font-medium text-gray-900 mb-1">No appointments found</h3>
-        <p className="text-sm text-gray-500">Try adjusting your search or filters</p>
+        <h3 className="text-sm font-medium text-slate-900 mb-1">No appointments found</h3>
+        <p className="text-sm text-slate-500">Try adjusting your search or filters</p>
       </div>
     );
   }
@@ -86,30 +86,30 @@ export default function AppointmentsTable({ appointments, isLoading }: Props) {
             </TableCell>
             <TableCell>
               <div>
-                <p className="font-medium text-gray-900">
+                <p className="font-medium text-slate-900">
                   {appt.customer?.name ?? 'Walk-in Customer'}
                 </p>
-                <p className="text-xs text-gray-500">{appt.user_phone}</p>
+                <p className="text-xs text-slate-500">{appt.user_phone}</p>
               </div>
             </TableCell>
             <TableCell>
               <div>
-                <p className="text-sm text-gray-900">{appt.service?.name ?? '—'}</p>
+                <p className="text-sm text-slate-900">{appt.service?.name ?? '—'}</p>
                 {appt.service?.duration_minutes && (
-                  <p className="text-xs text-gray-500">{appt.service.duration_minutes} min</p>
+                  <p className="text-xs text-slate-500">{appt.service.duration_minutes} min</p>
                 )}
               </div>
             </TableCell>
             <TableCell>
               <div className="flex items-center gap-2">
                 <div className="w-1.5 h-1.5 rounded-full bg-primary-500" />
-                <span className="text-sm text-gray-700 whitespace-nowrap">
+                <span className="text-sm text-slate-700 whitespace-nowrap">
                   {appt.slot ? format(new Date(appt.slot.start_time), 'MMM d, h:mm a') : '—'}
                 </span>
               </div>
             </TableCell>
             <TableCell>
-              <span className="text-sm text-gray-700">{appt.provider?.name ?? '—'}</span>
+              <span className="text-sm text-slate-700">{appt.provider?.name ?? '—'}</span>
             </TableCell>
             <TableCell>
               <SourceBadge source={appt.source} size="sm" />
@@ -121,7 +121,7 @@ export default function AppointmentsTable({ appointments, isLoading }: Props) {
               <div className="flex items-center justify-end gap-1">
                 <Link
                   href={`/appointments/${appt.id}`}
-                  className="text-gray-400 hover:text-primary-600 hover:bg-primary-50 p-2 rounded-lg transition-colors"
+                  className="text-slate-400 hover:text-primary-600 hover:bg-primary-50 p-2 rounded-lg transition-colors"
                   title="View details"
                 >
                   <Eye size={16} />

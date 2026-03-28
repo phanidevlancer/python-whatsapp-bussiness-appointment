@@ -2,11 +2,11 @@ import { clsx } from 'clsx';
 import type { AppointmentStatus } from '@/types/appointment';
 import { Badge } from '@/components/ui/Badge';
 
-const config: Record<AppointmentStatus, { label: string; variant: 'success' | 'warning' | 'error' | 'primary' | 'default' }> = {
+const config: Record<AppointmentStatus, { label: string; variant: 'success' | 'warning' | 'error' | 'primary' | 'default' | 'info' | 'teal' }> = {
   confirmed:  { label: 'Confirmed',  variant: 'success' },
   pending:    { label: 'Pending',    variant: 'warning' },
   cancelled:  { label: 'Cancelled',  variant: 'error' },
-  completed:  { label: 'Completed',  variant: 'primary' },
+  completed:  { label: 'Completed',  variant: 'teal' },
   no_show:    { label: 'No Show',    variant: 'default' },
 };
 

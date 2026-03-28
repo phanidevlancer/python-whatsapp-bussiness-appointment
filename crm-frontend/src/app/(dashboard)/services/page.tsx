@@ -26,7 +26,7 @@ function ServiceHistoryRow({ serviceId }: { serviceId: string }) {
   const { data: history = [], isLoading } = useServiceHistory(serviceId);
   return (
     <tr>
-      <td colSpan={6} className="px-4 pb-4 bg-gray-50/70">
+      <td colSpan={6} className="px-4 pb-4 bg-slate-50/70">
         <ChangeHistoryPanel history={history} isLoading={isLoading} />
       </td>
     </tr>
@@ -107,14 +107,14 @@ function ServiceRow({
           {editing ? (
             <Input value={editName} onChange={(e) => setEditName(e.target.value)} className="max-w-[180px]" />
           ) : (
-            <span className="font-medium text-gray-900">{s.name}</span>
+            <span className="font-medium text-slate-900">{s.name}</span>
           )}
         </TableCell>
         <TableCell>
           {editing ? (
             <Textarea value={editDesc} onChange={(e) => setEditDesc(e.target.value)} rows={1} resize="none" className="max-w-[220px] text-sm" />
           ) : (
-            <span className="text-sm text-gray-500">{s.description ?? '—'}</span>
+            <span className="text-sm text-slate-500">{s.description ?? '—'}</span>
           )}
         </TableCell>
         <TableCell>
@@ -122,8 +122,8 @@ function ServiceRow({
             <Input type="number" value={editDuration} onChange={(e) => setEditDuration(e.target.value)} className="max-w-[90px]" />
           ) : (
             <div className="flex items-center gap-2">
-              <Clock size={14} className="text-gray-400" />
-              <span className="text-sm text-gray-700">{s.duration_minutes} min</span>
+              <Clock size={14} className="text-slate-400" />
+              <span className="text-sm text-slate-700">{s.duration_minutes} min</span>
             </div>
           )}
         </TableCell>
@@ -141,22 +141,22 @@ function ServiceRow({
               </>
             ) : (
               <>
-                <Button variant="ghost" size="sm" leftIcon={<Pencil size={14} />} onClick={startEdit} className="text-gray-400 hover:text-gray-700">Edit</Button>
+                <Button variant="ghost" size="sm" leftIcon={<Pencil size={14} />} onClick={startEdit} className="text-slate-400 hover:text-slate-700">Edit</Button>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => setShowHistory((v) => !v)}
-                  className="text-gray-400 hover:text-gray-700"
+                  className="text-slate-400 hover:text-slate-700"
                   title="Show history"
                 >
                   {showHistory ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                 </Button>
                 {s.is_active ? (
-                  <Button variant="ghost" size="sm" leftIcon={<PowerOff size={14} />} onClick={() => onDeactivate(s.id)} className="text-gray-400 hover:text-error-600">
+                  <Button variant="ghost" size="sm" leftIcon={<PowerOff size={14} />} onClick={() => onDeactivate(s.id)} className="text-slate-400 hover:text-error-600">
                     Deactivate
                   </Button>
                 ) : (
-                  <Button variant="ghost" size="sm" onClick={() => onActivate(s.id)} className="text-gray-400 hover:text-success-600">
+                  <Button variant="ghost" size="sm" onClick={() => onActivate(s.id)} className="text-slate-400 hover:text-success-600">
                     Activate
                   </Button>
                 )}
@@ -210,8 +210,8 @@ export default function ServicesPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-bold text-gray-900">Services</h2>
-          <p className="text-sm text-gray-500 mt-0.5">Manage your clinic services and pricing</p>
+          <h2 className="text-xl font-bold text-slate-900">Services</h2>
+          <p className="text-sm text-slate-500 mt-0.5">Manage your clinic services and pricing</p>
         </div>
         <Button variant="primary" size="md" leftIcon={<Plus size={18} />} onClick={() => setShowCreate(true)}>
           New Service
@@ -228,7 +228,7 @@ export default function ServicesPage() {
             <Input placeholder="Duration (minutes)" type="number" value={newDuration} onChange={(e) => setNewDuration(e.target.value)} leftIcon={<Clock size={16} />} />
             <Textarea placeholder="Description (optional)" value={newDesc} onChange={(e) => setNewDesc(e.target.value)} resize="none" rows={1} />
           </div>
-          <div className="flex gap-3 mt-4 pt-4 border-t border-gray-100">
+          <div className="flex gap-3 mt-4 pt-4 border-t border-slate-100">
             <Button variant="primary" size="md" onClick={handleCreate} isLoading={creating}>
               {creating ? 'Creating...' : 'Create Service'}
             </Button>
@@ -254,11 +254,11 @@ export default function ServicesPage() {
           </div>
         ) : !services?.length ? (
           <div className="text-center py-16">
-            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Tag size={32} className="text-gray-400" />
+            <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Tag size={32} className="text-slate-400" />
             </div>
-            <h3 className="text-sm font-medium text-gray-900 mb-1">No services found</h3>
-            <p className="text-sm text-gray-500">Create your first service to get started</p>
+            <h3 className="text-sm font-medium text-slate-900 mb-1">No services found</h3>
+            <p className="text-sm text-slate-500">Create your first service to get started</p>
           </div>
         ) : (
           <Table>

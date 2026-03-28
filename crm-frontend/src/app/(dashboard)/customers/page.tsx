@@ -30,8 +30,8 @@ export default function CustomersPage() {
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-bold text-gray-900">Customers</h2>
-          <p className="text-sm text-gray-500 mt-0.5">Manage your customer relationships</p>
+          <h2 className="text-xl font-bold text-slate-900">Customers</h2>
+          <p className="text-sm text-slate-500 mt-0.5">Manage your customer relationships</p>
         </div>
         <Button
           variant="primary"
@@ -79,11 +79,11 @@ export default function CustomersPage() {
           </div>
         ) : !data?.items.length ? (
           <div className="text-center py-16">
-            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Users size={32} className="text-gray-400" />
+            <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Users size={32} className="text-slate-400" />
             </div>
-            <h3 className="text-sm font-medium text-gray-900 mb-1">No customers found</h3>
-            <p className="text-sm text-gray-500">Try adjusting your search</p>
+            <h3 className="text-sm font-medium text-slate-900 mb-1">No customers found</h3>
+            <p className="text-sm text-slate-500">Try adjusting your search</p>
           </div>
         ) : (
           <Table>
@@ -105,24 +105,24 @@ export default function CustomersPage() {
                   <TableCell>
                     <Link
                       href={`/customers/${c.id}`}
-                      className="font-medium text-gray-900 hover:text-primary-600 transition-colors"
+                      className="font-medium text-slate-900 hover:text-primary-600 transition-colors"
                     >
                       {c.name ?? '—'}
                     </Link>
                     {c.name && (
-                      <p className="text-xs text-gray-500">{c.phone}</p>
+                      <p className="text-xs text-slate-500">{c.phone}</p>
                     )}
                   </TableCell>
                   <TableCell>
-                    <span className="text-sm text-gray-700">{c.phone}</span>
+                    <span className="text-sm text-slate-700">{c.phone}</span>
                   </TableCell>
                   <TableCell>
-                    <span className="text-sm text-gray-700">{c.email ?? '—'}</span>
+                    <span className="text-sm text-slate-700">{c.email ?? '—'}</span>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
                       <div className="w-1.5 h-1.5 rounded-full bg-primary-500" />
-                      <span className="text-sm text-gray-700">
+                      <span className="text-sm text-slate-700">
                         {format(new Date(c.created_at), 'MMM d, yyyy')}
                       </span>
                     </div>
@@ -138,9 +138,9 @@ export default function CustomersPage() {
       {data && data.total > 20 && (
         <Card className="p-4" variant="default">
           <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-500">
-              Page <span className="font-medium text-gray-900">{page}</span> of{' '}
-              <span className="font-medium text-gray-900">{Math.ceil(data.total / 20)}</span>
+            <span className="text-sm text-slate-500">
+              Page <span className="font-medium text-slate-900">{page}</span> of{' '}
+              <span className="font-medium text-slate-900">{Math.ceil(data.total / 20)}</span>
             </span>
             <div className="flex gap-2">
               <Button

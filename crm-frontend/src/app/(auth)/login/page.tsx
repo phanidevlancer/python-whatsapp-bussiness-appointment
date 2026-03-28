@@ -33,7 +33,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 via-white to-primary-100 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-100 via-white to-blue-50 p-4">
       {/* Background Pattern */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary-200 rounded-full opacity-20 blur-3xl" />
@@ -46,8 +46,8 @@ export default function LoginPage() {
           <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-primary-600 to-primary-700 rounded-2xl shadow-lg mb-4">
             <MessageSquare size={32} className="text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900">Clinic CRM</h1>
-          <p className="text-gray-500 mt-2">Sign in to your admin account</p>
+          <h1 className="text-3xl font-bold text-slate-900">ORA Clinic</h1>
+          <p className="text-slate-500 mt-2">Sign in to your admin account</p>
         </div>
 
         {/* Login Form */}

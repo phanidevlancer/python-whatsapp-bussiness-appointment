@@ -1,13 +1,37 @@
 import Link from 'next/link';
 import { format, addDays, startOfDay, endOfDay } from 'date-fns';
-import { Clock, ChevronRight, Calendar } from 'lucide-react';
+import { CalendarDays, ChevronRight, Clock } from 'lucide-react';
 import type { UpcomingAppointment } from '@/types/dashboard';
-import StatusBadge from '@/components/appointments/StatusBadge';
-import type { AppointmentStatus } from '@/types/appointment';
-import { Avatar } from '@/components/ui/Avatar';
+
+function getPhonePrefix(phone: string): string {
+  const digits = phone.replace(/\D/g, '');
+  return digits.slice(0, 2) || phone.slice(0, 2).toUpperCase();
+}
+
+function statusBadgeClass(status: string): string {
+  const s = status.toLowerCase();
+  if (s === 'confirmed') return 'text-green-600 bg-green-50';
+  if (s === 'completed') return 'text-teal-600 bg-teal-50';
+  if (s === 'cancelled') return 'text-red-600 bg-red-50';
+  if (s === 'no_show' || s === 'no-show') return 'text-orange-600 bg-orange-50';
+  return 'text-slate-600 bg-slate-50';
+}
+
+function statusDotClass(status: string): string {
+  const s = status.toLowerCase();
+  if (s === 'confirmed') return 'bg-green-600';
+  if (s === 'completed') return 'bg-teal-600';
+  if (s === 'cancelled') return 'bg-red-600';
+  if (s === 'no_show' || s === 'no-show') return 'bg-orange-600';
+  return 'bg-slate-600';
+}
+
+function statusLabel(status: string): string {
+  return status.charAt(0).toUpperCase() + status.slice(1).toLowerCase().replace('_', ' ');
+}
 
 interface UpcomingAppointmentExtended extends UpcomingAppointment {
-  appointmentDate?: string; // Store the date for grouping
+  appointmentDate?: string;
 }
 
 export default function UpcomingList({ items }: { items: UpcomingAppointmentExtended[] }) {
@@ -15,152 +39,122 @@ export default function UpcomingList({ items }: { items: UpcomingAppointmentExte
   const tomorrow = startOfDay(addDays(new Date(), 1));
   const tomorrowEnd = endOfDay(tomorrow);
 
-  console.log('UpcomingList - Total items:', items.length);
-  console.log('UpcomingList - Today:', format(today, 'yyyy-MM-dd'));
-  console.log('UpcomingList - Tomorrow:', format(tomorrow, 'yyyy-MM-dd'));
-  
-  // Filter appointments for today and tomorrow
-  const todayAppointments = items.filter((appt) => {
-    const apptDate = new Date(appt.start_time);
-    const isToday = apptDate >= today && apptDate < tomorrow;
-    if (isToday) {
-      console.log('Today appt:', appt.service_name, format(apptDate, 'yyyy-MM-dd HH:mm'));
-    }
-    return isToday;
-  });
+  const todayAppointments = items
+    .filter((appt) => {
+      const d = new Date(appt.start_time);
+      return d >= today && d < tomorrow;
+    })
+    .sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime());
 
-  const tomorrowAppointments = items.filter((appt) => {
-    const apptDate = new Date(appt.start_time);
-    const isTomorrow = apptDate >= tomorrow && apptDate <= tomorrowEnd;
-    if (isTomorrow) {
-      console.log('Tomorrow appt:', appt.service_name, format(apptDate, 'yyyy-MM-dd HH:mm'));
-    }
-    return isTomorrow;
-  });
-
-  console.log('Today count:', todayAppointments.length);
-  console.log('Tomorrow count:', tomorrowAppointments.length);
-
-  // Sort by time
-  const sortByTime = (a: UpcomingAppointmentExtended, b: UpcomingAppointmentExtended) => {
-    return new Date(a.start_time).getTime() - new Date(b.start_time).getTime();
-  };
+  const tomorrowAppointments = items
+    .filter((appt) => {
+      const d = new Date(appt.start_time);
+      return d >= tomorrow && d <= tomorrowEnd;
+    })
+    .sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime());
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-4">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-          <Calendar size={16} className="text-orange-600" />
+    <div className="bg-slate-50/80 backdrop-blur border border-slate-200/60 rounded-2xl p-4 flex flex-col">
+      {/* Header — matches reference exactly */}
+      <div className="flex justify-between items-center mb-3">
+        <h3 className="text-sm font-semibold text-slate-900 flex items-center">
+          <CalendarDays size={15} className="mr-2 text-slate-500" />
           Upcoming Appointments
         </h3>
         <Link
           href="/appointments"
-          className="text-xs font-medium text-orange-600 hover:text-orange-700 flex items-center gap-1"
+          className="text-xs text-blue-500 hover:text-blue-600 font-medium flex items-center gap-0.5"
         >
-          View all
-          <ChevronRight size={14} />
+          View all <ChevronRight size={10} />
         </Link>
       </div>
-      
+
       {todayAppointments.length === 0 && tomorrowAppointments.length === 0 ? (
         <div className="text-center py-8">
-          <Clock size={40} className="mx-auto text-gray-300 mb-2" />
-          <p className="text-gray-500 text-sm">No appointments for today or tomorrow</p>
+          <Clock size={40} className="mx-auto text-slate-300 mb-2" />
+          <p className="text-slate-500 text-sm">No appointments for today or tomorrow</p>
         </div>
       ) : (
-        <div className="space-y-4">
-          {/* Today's Appointments */}
+        <div className="space-y-3 flex-1 overflow-y-auto pr-1">
+          {/* Today */}
           {todayAppointments.length > 0 && (
             <div>
-              <div className="flex items-center gap-2 mb-2">
-                <div className="w-2 h-2 rounded-full bg-orange-600" />
-                <h4 className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
-                  Today ({format(today, 'MMM d')})
-                </h4>
-                <span className="text-xs text-gray-400">
-                  {todayAppointments.length} {todayAppointments.length === 1 ? 'appt' : 'appts'}
-                </span>
+              {/* Date group header — exact reference style */}
+              <div className="text-xs font-bold text-slate-800 mb-3 flex items-center">
+                <span className="w-1.5 h-1.5 rounded-full bg-green-500 mr-2 shrink-0" />
+                TODAY ({format(today, 'MMM d').toUpperCase()})
+                <span className="text-slate-400 font-normal ml-1">{todayAppointments.length} appts</span>
               </div>
-              <div className="space-y-2">
-                {todayAppointments.sort(sortByTime).map((appt) => (
+              <div className="space-y-3">
+                {todayAppointments.map((appt) => (
                   <Link
                     key={appt.id}
                     href={`/appointments/${appt.id}`}
-                    className="flex items-center gap-3 p-3 rounded-md hover:bg-gray-50 transition-colors group border border-transparent hover:border-gray-200"
+                    className="bg-white border border-slate-100 rounded-xl p-3 shadow-sm flex items-center justify-between group cursor-pointer hover:border-blue-200 transition-colors"
                   >
-                    <Avatar name={appt.user_phone} size="sm" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900 truncate">
-                        {appt.service_name}
-                      </p>
-                      <p className="text-xs text-gray-500 truncate">
-                        {appt.user_phone}
-                        {appt.provider_name && ` • ${appt.provider_name}`}
-                      </p>
-                    </div>
-                    <div className="text-right flex items-center gap-3">
-                      <div>
-                        <p className="text-xs text-gray-500 whitespace-nowrap">
-                          {format(new Date(appt.start_time), 'h:mm a')}
-                        </p>
-                        <div className="mt-1">
-                          <StatusBadge status={appt.status as AppointmentStatus} size="sm" />
-                        </div>
+                    <div className="flex items-center">
+                      <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-600 font-bold text-xs flex items-center justify-center mr-3 shrink-0">
+                        {getPhonePrefix(appt.user_phone)}
                       </div>
-                      <ChevronRight
-                        size={16}
-                        className="text-gray-300 group-hover:text-gray-500 transition-colors"
-                      />
+                      <div>
+                        <h4 className="text-sm font-bold text-slate-800 group-hover:text-blue-600 transition-colors leading-tight">
+                          {appt.service_name}
+                        </h4>
+                        <p className="text-[10px] text-slate-500 leading-tight mt-0.5">{appt.user_phone}</p>
+                      </div>
                     </div>
+                    <div className="text-right ml-2">
+                      <p className="text-xs font-semibold text-slate-700 mb-1">
+                        {format(new Date(appt.start_time), 'h:mm a')}
+                      </p>
+                      <span className={`inline-flex items-center text-[10px] font-medium px-1.5 py-0.5 rounded ${statusBadgeClass(appt.status)}`}>
+                        <span className={`w-1 h-1 rounded-full mr-1 shrink-0 ${statusDotClass(appt.status)}`} />
+                        {statusLabel(appt.status)}
+                      </span>
+                    </div>
+                    <ChevronRight size={12} className="text-slate-300 ml-2 shrink-0" />
                   </Link>
                 ))}
               </div>
             </div>
           )}
 
-          {/* Tomorrow's Appointments */}
+          {/* Tomorrow */}
           {tomorrowAppointments.length > 0 && (
             <div>
-              <div className="flex items-center gap-2 mb-2">
-                <div className="w-2 h-2 rounded-full bg-blue-600" />
-                <h4 className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
-                  Tomorrow ({format(tomorrow, 'MMM d')})
-                </h4>
-                <span className="text-xs text-gray-400">
-                  {tomorrowAppointments.length} {tomorrowAppointments.length === 1 ? 'appt' : 'appts'}
-                </span>
+              <div className="text-xs font-bold text-slate-800 mb-3 flex items-center">
+                <span className="w-1.5 h-1.5 rounded-full bg-blue-500 mr-2 shrink-0" />
+                TOMORROW ({format(tomorrow, 'MMM d').toUpperCase()})
+                <span className="text-slate-400 font-normal ml-1">{tomorrowAppointments.length} appts</span>
               </div>
-              <div className="space-y-2">
-                {tomorrowAppointments.sort(sortByTime).map((appt) => (
+              <div className="space-y-3">
+                {tomorrowAppointments.map((appt) => (
                   <Link
                     key={appt.id}
                     href={`/appointments/${appt.id}`}
-                    className="flex items-center gap-3 p-3 rounded-md hover:bg-gray-50 transition-colors group border border-transparent hover:border-gray-200"
+                    className="bg-white border border-slate-100 rounded-xl p-3 shadow-sm flex items-center justify-between group cursor-pointer hover:border-blue-200 transition-colors"
                   >
-                    <Avatar name={appt.user_phone} size="sm" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900 truncate">
-                        {appt.service_name}
-                      </p>
-                      <p className="text-xs text-gray-500 truncate">
-                        {appt.user_phone}
-                        {appt.provider_name && ` • ${appt.provider_name}`}
-                      </p>
-                    </div>
-                    <div className="text-right flex items-center gap-3">
-                      <div>
-                        <p className="text-xs text-gray-500 whitespace-nowrap">
-                          {format(new Date(appt.start_time), 'h:mm a')}
-                        </p>
-                        <div className="mt-1">
-                          <StatusBadge status={appt.status as AppointmentStatus} size="sm" />
-                        </div>
+                    <div className="flex items-center">
+                      <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-600 font-bold text-xs flex items-center justify-center mr-3 shrink-0">
+                        {getPhonePrefix(appt.user_phone)}
                       </div>
-                      <ChevronRight
-                        size={16}
-                        className="text-gray-300 group-hover:text-gray-500 transition-colors"
-                      />
+                      <div>
+                        <h4 className="text-sm font-bold text-slate-800 group-hover:text-blue-600 transition-colors leading-tight">
+                          {appt.service_name}
+                        </h4>
+                        <p className="text-[10px] text-slate-500 leading-tight mt-0.5">{appt.user_phone}</p>
+                      </div>
                     </div>
+                    <div className="text-right ml-2">
+                      <p className="text-xs font-semibold text-slate-700 mb-1">
+                        {format(new Date(appt.start_time), 'h:mm a')}
+                      </p>
+                      <span className={`inline-flex items-center text-[10px] font-medium px-1.5 py-0.5 rounded ${statusBadgeClass(appt.status)}`}>
+                        <span className={`w-1 h-1 rounded-full mr-1 shrink-0 ${statusDotClass(appt.status)}`} />
+                        {statusLabel(appt.status)}
+                      </span>
+                    </div>
+                    <ChevronRight size={12} className="text-slate-300 ml-2 shrink-0" />
                   </Link>
                 ))}
               </div>

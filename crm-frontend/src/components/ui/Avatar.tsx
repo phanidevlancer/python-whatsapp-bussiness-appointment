@@ -27,7 +27,7 @@ const Avatar = forwardRef<HTMLDivElement, AvatarProps>(
   ) => {
     const sizes = {
       xs: 'w-6 h-6 text-xs',
-      sm: 'w-8 h-8 text-sm',
+      sm: 'w-8 h-8 text-xs',
       md: 'w-10 h-10 text-base',
       lg: 'w-12 h-12 text-lg',
       xl: 'w-16 h-16 text-xl',
@@ -58,13 +58,13 @@ const Avatar = forwardRef<HTMLDivElement, AvatarProps>(
     };
 
     const colors = [
-      'bg-primary-100 text-primary-700',
-      'bg-success-100 text-success-700',
-      'bg-warning-100 text-warning-700',
-      'bg-error-100 text-error-700',
-      'bg-purple-100 text-purple-700',
-      'bg-pink-100 text-pink-700',
-      'bg-teal-100 text-teal-700',
+      'bg-blue-50 text-blue-600',
+      'bg-teal-50 text-teal-600',
+      'bg-indigo-50 text-indigo-600',
+      'bg-violet-50 text-violet-600',
+      'bg-sky-50 text-sky-600',
+      'bg-cyan-50 text-cyan-600',
+      'bg-blue-50 text-blue-600',
     ];
 
     const getColorIndex = (name?: string) => {
@@ -91,7 +91,7 @@ const Avatar = forwardRef<HTMLDivElement, AvatarProps>(
         ) : (
           <div
             className={twMerge(
-              'w-full h-full flex items-center justify-center font-semibold',
+              'w-full h-full flex items-center justify-center font-bold',
               colors[getColorIndex(name)]
             )}
           >
