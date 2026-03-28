@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import { format } from 'date-fns';
 import { CalendarCheck, ChevronDown, UserPen, MessageSquare, Loader2 } from 'lucide-react';
 import Link from 'next/link';
+import { StackedActivityCards } from '@/components/ui/stacked-activity-cards';
 import type { ActivityEvent } from '@/types/lead';
 
 interface Props {
@@ -43,6 +44,22 @@ function getLastStatusLabel(events: ActivityEvent[]) {
   return latestAppointmentEvent?.event ?? 'General activity';
 }
 
+function getGroupCardItems(events: ActivityEvent[]) {
+  return events.map((event) => ({
+    id: `${event.created_at}-${event.event}`,
+    activity: event.event,
+    location: event.detail ?? (event.source === 'whatsapp' ? 'WhatsApp activity' : 'CRM activity'),
+    date: format(new Date(event.created_at), 'MMM d'),
+    href: event.appointment_id ? `/appointments/${event.appointment_id}` : undefined,
+    color:
+      event.type === 'appointment_event'
+        ? '#3b82f6'
+        : event.type === 'message_sent'
+          ? '#14b8a6'
+          : '#64748b',
+  }));
+}
+
 export default function ActivityTimeline({ events, isLoading }: Props) {
   const [view, setView] = useState<TimelineView>('flat');
   const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
@@ -74,8 +91,8 @@ export default function ActivityTimeline({ events, isLoading }: Props) {
 
   if (isLoading) {
     return (
-      <div className="bg-white rounded-xl border border-slate-200 p-6">
-        <h3 className="text-sm font-semibold text-slate-700 mb-4">Activity Timeline</h3>
+      <div className="bg-white rounded-xl border border-slate-200 p-4">
+        <h3 className="mb-3 text-sm font-semibold text-slate-700">Activity Timeline</h3>
         <div className="flex items-center gap-2 text-slate-400 text-sm">
           <Loader2 size={14} className="animate-spin" />
           Loading activity…
@@ -86,8 +103,8 @@ export default function ActivityTimeline({ events, isLoading }: Props) {
 
   if (!events.length) {
     return (
-      <div className="bg-white rounded-xl border border-slate-200 p-6">
-        <h3 className="text-sm font-semibold text-slate-700 mb-2">Activity Timeline</h3>
+      <div className="bg-white rounded-xl border border-slate-200 p-4">
+        <h3 className="mb-2 text-sm font-semibold text-slate-700">Activity Timeline</h3>
         <p className="text-sm text-slate-400">No activity recorded yet.</p>
       </div>
     );
@@ -99,39 +116,47 @@ export default function ActivityTimeline({ events, isLoading }: Props) {
     const appointmentRef = getAppointmentRef(event.appointment_id);
     const isAppointmentLink = !!event.appointment_id;
     const content = (
-      <div className={`flex-1 min-w-0 pb-1 ${isAppointmentLink ? 'rounded-lg px-3 py-2 -mx-3 -my-2 transition-colors hover:bg-slate-50' : ''}`}>
-        <div className="flex items-start justify-between gap-2">
-          <p className={`text-sm font-medium ${cfg.label}`}>{event.event}</p>
-          <span className="text-xs text-slate-400 whitespace-nowrap shrink-0">
+      <div
+        className={`flex min-h-[68px] min-w-0 items-center rounded-[22px] border border-slate-200 bg-white px-3 py-2.5 shadow-[0_8px_22px_rgba(15,23,42,0.10)] transition-all duration-300 ease-out ${
+          isAppointmentLink ? 'hover:-translate-y-0.5 hover:shadow-[0_14px_36px_rgba(15,23,42,0.16)]' : ''
+        }`}
+      >
+        <div className="grid w-full grid-cols-[minmax(0,1fr)_auto] items-start gap-x-3 gap-y-2">
+          <div className="flex min-w-0 items-center gap-2.5">
+            <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${cfg.dot} text-white shadow-sm`}>
+              <Icon size={15} className="text-white" />
+            </div>
+            <div className="min-w-0">
+              <p className={`truncate text-sm font-semibold leading-5 ${cfg.label}`}>{event.event}</p>
+              {event.detail && (
+                <p className="mt-0.5 line-clamp-2 text-xs text-slate-500">{event.detail}</p>
+              )}
+            </div>
+          </div>
+          <span className="justify-self-end whitespace-nowrap pt-0.5 text-right text-xs font-medium text-slate-500">
             {format(new Date(event.created_at), 'MMM d, h:mm a')}
           </span>
-        </div>
-        {event.detail && (
-          <p className="text-xs text-slate-500 mt-0.5">{event.detail}</p>
-        )}
-        <div className="mt-1 flex flex-wrap items-center gap-2">
-          {event.source && (
-            <span className="inline-block text-xs px-1.5 py-0.5 rounded bg-slate-100 text-slate-500">
-              {event.source === 'whatsapp' ? 'WhatsApp' : 'CRM'}
-            </span>
-          )}
-          {showAppointmentRef && appointmentRef && (
-            <span className="inline-block text-xs px-1.5 py-0.5 rounded bg-blue-50 text-blue-700">
-              Appointment ID: {appointmentRef}
-            </span>
-          )}
+          <div className="col-span-1 flex flex-wrap items-center gap-1.5">
+            {event.source && (
+              <span className="inline-block rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-500">
+                {event.source === 'whatsapp' ? 'WhatsApp' : 'CRM'}
+              </span>
+            )}
+            {showAppointmentRef && appointmentRef && (
+              <span className="inline-block rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-medium text-blue-700">
+                Appointment ID: {appointmentRef}
+              </span>
+            )}
+          </div>
+          <div />
         </div>
       </div>
     );
 
     return (
-      <div key={`${event.created_at}-${event.event}-${i}`} className="flex gap-4 relative">
-        <div className={`w-6 h-6 rounded-full ${cfg.dot} flex items-center justify-center shrink-0 z-10 mt-0.5 ring-2 ring-white`}>
-          <Icon size={12} className="text-white" />
-        </div>
-
+      <div key={`${event.created_at}-${event.event}-${i}`} className="relative">
         {isAppointmentLink ? (
-          <Link href={`/appointments/${event.appointment_id}`} className="flex-1 min-w-0">
+          <Link href={`/appointments/${event.appointment_id}`} className="block">
             {content}
           </Link>
         ) : (
@@ -142,14 +167,14 @@ export default function ActivityTimeline({ events, isLoading }: Props) {
   };
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 p-6">
-      <div className="mb-5 flex items-center justify-between gap-3">
+    <div className="bg-white rounded-xl border border-slate-200 p-4">
+      <div className="mb-3 flex items-center justify-between gap-3">
         <h3 className="text-sm font-semibold text-slate-700">Activity Timeline</h3>
         <div className="inline-flex rounded-lg border border-slate-200 bg-slate-50 p-1">
           <button
             type="button"
             onClick={() => setView('flat')}
-            className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+            className={`rounded-md px-2.5 py-1 text-[11px] font-medium transition-colors ${
               view === 'flat' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'
             }`}
           >
@@ -158,7 +183,7 @@ export default function ActivityTimeline({ events, isLoading }: Props) {
           <button
             type="button"
             onClick={() => setView('grouped')}
-            className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+            className={`rounded-md px-2.5 py-1 text-[11px] font-medium transition-colors ${
               view === 'grouped' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'
             }`}
           >
@@ -167,48 +192,54 @@ export default function ActivityTimeline({ events, isLoading }: Props) {
         </div>
       </div>
       <div className="relative">
-        {/* Vertical line */}
-        <div className="absolute left-[11px] top-0 bottom-0 w-px bg-slate-100" />
-
         {view === 'flat' ? (
-          <div className="space-y-5">
+          <div className="space-y-3">
             {events.map((event, i) => renderEvent(event, i, true))}
           </div>
         ) : (
-          <div className="space-y-6">
+          <div className="space-y-4">
             {groupedEvents.map((group) => (
-              <div key={group.key} className="rounded-xl border border-slate-100 bg-slate-50/60 p-4">
-                <button
-                  type="button"
-                  onClick={() => toggleGroup(group.key)}
-                  className="flex w-full items-center justify-between gap-3 text-left"
-                >
-                  <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <p className="text-sm font-semibold text-slate-800">{group.title}</p>
-                      {group.appointmentRef && (
-                        <span className="inline-block text-xs px-1.5 py-0.5 rounded bg-blue-50 text-blue-700">
-                          Booking ID: {group.appointmentRef}
-                        </span>
-                      )}
-                      <span className="inline-block text-xs px-1.5 py-0.5 rounded bg-slate-200 text-slate-700">
-                        {getLastStatusLabel(group.events)}
-                      </span>
+              <div key={group.key} className="space-y-3">
+                {group.events.length > 1 ? (
+                  <div className="rounded-[24px] bg-[linear-gradient(180deg,#fbfdff_0%,#eef4ff_100%)] p-2.5 shadow-[0_12px_30px_rgba(15,23,42,0.08)]">
+                    <div className="mb-2.5 flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <p className="text-sm font-semibold text-slate-800">{group.title}</p>
+                          {group.appointmentRef && (
+                            <span className="inline-block rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-medium text-blue-700">
+                              Booking ID: {group.appointmentRef}
+                            </span>
+                          )}
+                          <span className="inline-block rounded-full bg-slate-200 px-2 py-0.5 text-[11px] font-medium text-slate-700">
+                            {getLastStatusLabel(group.events)}
+                          </span>
+                        </div>
+                        <p className="mt-0.5 text-[11px] text-slate-400">
+                          {group.events.length} events
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => toggleGroup(group.key)}
+                        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+                        aria-label={collapsedGroups[group.key] ? 'Expand group' : 'Collapse group'}
+                      >
+                        <ChevronDown size={12} className={`transition-transform ${collapsedGroups[group.key] ? '-rotate-90' : 'rotate-0'}`} />
+                      </button>
                     </div>
-                    <p className="mt-1 text-xs text-slate-400">
-                      {group.events.length} event{group.events.length === 1 ? '' : 's'}
-                    </p>
-                  </div>
-                  <ChevronDown
-                    size={16}
-                    className={`shrink-0 text-slate-400 transition-transform ${collapsedGroups[group.key] ? '-rotate-90' : 'rotate-0'}`}
-                  />
-                </button>
 
-                {!collapsedGroups[group.key] && (
-                  <div className="mt-4 space-y-5">
-                    {group.events.map((event, i) => renderEvent(event, i, false))}
+                    <StackedActivityCards
+                      items={getGroupCardItems(group.events)}
+                      className="max-w-none"
+                      expanded={collapsedGroups[group.key] === false}
+                      onExpandedChange={(next) =>
+                        setCollapsedGroups((prev) => ({ ...prev, [group.key]: !next }))
+                      }
+                    />
                   </div>
+                ) : (
+                  group.events.map((event, i) => renderEvent(event, i, false))
                 )}
               </div>
             ))}
