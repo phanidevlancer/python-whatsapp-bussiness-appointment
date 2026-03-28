@@ -1,6 +1,7 @@
 'use client';
 
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, Sector, Tooltip } from 'recharts';
+import type { PieSectorDataItem } from 'recharts';
 import type { DashboardStats } from '@/types/dashboard';
 
 interface AppointmentDistributionProps {
@@ -12,6 +13,23 @@ const DISTRIBUTION_DATA = [
   { id: 'completed', label: 'Completed', color: '#3b82f6' },
   { id: 'cancelled', label: 'Cancelled', color: '#6366f1' },
 ];
+
+type AppointmentSliceShapeProps = PieSectorDataItem & {
+  isActive?: boolean;
+};
+
+function AppointmentSliceShape({ isActive, outerRadius = 0, ...props }: AppointmentSliceShapeProps) {
+  return (
+    <Sector
+      {...props}
+      outerRadius={isActive ? outerRadius + 8 : outerRadius}
+      stroke={isActive ? '#ffffff' : 'none'}
+      strokeWidth={isActive ? 3 : 0}
+      opacity={isActive ? 1 : 0.94}
+      style={{ cursor: 'pointer' }}
+    />
+  );
+}
 
 export default function AppointmentDistribution({ stats }: AppointmentDistributionProps) {
   const rawData = [
@@ -38,7 +56,7 @@ export default function AppointmentDistribution({ stats }: AppointmentDistributi
       <div className="flex-1 relative flex items-center justify-center py-4">
         <div className="w-48 h-48">
           <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
+            <PieChart accessibilityLayer={false}>
               <Pie
                 data={chartData}
                 cx="50%"
@@ -47,9 +65,13 @@ export default function AppointmentDistribution({ stats }: AppointmentDistributi
                 outerRadius={90}
                 paddingAngle={2}
                 dataKey="value"
+                activeShape={AppointmentSliceShape}
+                inactiveShape={AppointmentSliceShape}
+                shape={AppointmentSliceShape}
+                rootTabIndex={-1}
               >
                 {chartData.map((entry) => (
-                  <Cell key={entry.id} fill={entry.color} />
+                  <Cell key={entry.id} fill={entry.color} style={{ cursor: 'pointer', outline: 'none' }} />
                 ))}
               </Pie>
               <Tooltip

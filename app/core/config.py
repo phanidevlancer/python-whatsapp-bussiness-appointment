@@ -33,6 +33,11 @@ class Settings(BaseSettings):
     # CORS
     FRONTEND_CORS_ORIGINS: list[str] = ["http://localhost:3000"]
 
+    # Lead Management
+    LEAD_ASSIGNMENT_STRATEGY: str = "none"  # Options: "none", "round_robin", "load_based"
+    LEAD_SLA_HOURS: int = 2  # Target response time in hours
+    LEAD_AUTO_ASSIGN_ENABLED: bool = False  # Set to True to enable auto-assignment
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

@@ -195,10 +195,18 @@ async def cancel_appointment(
         slot_start_time=slot_start,
     )
 
-    # 6. Release Redis lock if present (harmless if not held)
+    # 6. If the clinic cancelled (not the customer), create a lead so CRM can re-book them
+    if cancellation_source == AppointmentSource.ADMIN_DASHBOARD:
+        try:
+            from app.services.lead_service import capture_drop_off_from_cancellation
+            await capture_drop_off_from_cancellation(db, appointment)
+        except Exception:
+            logger.exception("Failed to capture drop-off lead for cancelled appointment %s", appointment_id)
+
+    # 7. Release Redis lock if present (harmless if not held)
     await session_svc.release_slot_lock(str(slot_id))
 
-    # 7. Dispatch event
+    # 9. Dispatch event
     if slot_start:
         await event_dispatcher.dispatch(
             AppointmentCancelledEvent(

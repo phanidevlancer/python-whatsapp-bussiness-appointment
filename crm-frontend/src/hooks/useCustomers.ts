@@ -3,6 +3,7 @@ import api from '@/lib/api';
 import type { Customer } from '@/types/appointment';
 import type { PaginatedAppointmentResponse } from '@/types/appointment';
 import type { ChangeHistoryEntry } from '@/components/ui/ChangeHistoryPanel';
+import type { ActivityEvent } from '@/types/lead';
 
 interface CustomerListResponse {
   items: Customer[];
@@ -52,6 +53,17 @@ export function useCustomerHistory(id: string | null) {
     queryKey: ['customer-history', id],
     queryFn: async () => {
       const res = await api.get<ChangeHistoryEntry[]>(`/api/v1/customers/${id}/history`);
+      return res.data;
+    },
+    enabled: !!id,
+  });
+}
+
+export function useCustomerActivity(id: string | null) {
+  return useQuery({
+    queryKey: ['customer-activity', id],
+    queryFn: async () => {
+      const res = await api.get<ActivityEvent[]>(`/api/v1/customers/${id}/activity`);
       return res.data;
     },
     enabled: !!id,

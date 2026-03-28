@@ -95,7 +95,19 @@ async def get_customer_appointments(
     page_size: int = 20,
 ) -> tuple[list[Appointment], int]:
     from sqlalchemy.orm import selectinload
-    query = select(Appointment).where(Appointment.customer_id == customer_id)
+    customer = await get_by_id(db, customer_id)
+    if customer is None:
+        return [], 0
+
+    normalized_phone = normalize_phone(customer.phone)
+    phone_variants = [normalized_phone, '+' + normalized_phone]
+
+    query = select(Appointment).where(
+        or_(
+            Appointment.customer_id == customer_id,
+            Appointment.customer_id.is_(None) & Appointment.user_phone.in_(phone_variants),
+        )
+    )
     count_result = await db.execute(select(func.count()).select_from(query.subquery()))
     total = count_result.scalar_one()
     query = (

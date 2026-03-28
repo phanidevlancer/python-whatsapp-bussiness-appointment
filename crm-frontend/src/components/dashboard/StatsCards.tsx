@@ -53,7 +53,7 @@ interface StatCardProps {
 function StatCard({ label, value, icon, iconBg, trend, sparkData, sparkColor }: StatCardProps) {
   const trendUp = trend !== undefined && trend >= 0;
   return (
-    <div className="bg-white rounded-xl p-4 shadow-[0_1px_2px_rgba(0,0,0,0.02)] border border-slate-100 relative overflow-hidden flex flex-col justify-between h-28">
+    <div className="bg-white rounded-xl p-4 shadow-[0_1px_2px_rgba(0,0,0,0.02)] border border-slate-100 relative overflow-hidden flex flex-col justify-between min-h-30">
       <div className="flex justify-between items-start">
         <div className={`w-8 h-8 rounded-lg ${iconBg} flex items-center justify-center`}>
           {icon}
@@ -65,12 +65,12 @@ function StatCard({ label, value, icon, iconBg, trend, sparkData, sparkColor }: 
           </span>
         )}
       </div>
-      <div className="mt-2 flex justify-between items-end relative z-10">
-        <div>
+      <div className="mt-2 flex items-end justify-between gap-3 relative z-10">
+        <div className="min-w-0 flex-1 pr-1">
           <h3 className="text-2xl font-bold text-slate-800 leading-none mb-1">{value}</h3>
-          <p className="text-xs text-slate-500 font-medium">{label}</p>
+          <p className="text-xs leading-4 text-slate-500 font-medium break-words">{label}</p>
         </div>
-        <div className="w-20 h-10 opacity-70">
+        <div className="w-18 h-10 shrink-0 opacity-70">
           <Sparkline data={sparkData} color={sparkColor} />
         </div>
       </div>

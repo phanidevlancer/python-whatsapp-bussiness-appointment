@@ -12,6 +12,7 @@ import {
   Bell,
   Settings,
   ChevronDown,
+  UserX,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 
@@ -20,6 +21,7 @@ const nav = [
   { href: '/appointments',   label: 'Appointments',  icon: CalendarCheck },
   { href: '/calendar',       label: 'Calendar',      icon: Calendar },
   { href: '/customers',      label: 'Contacts',      icon: BookUser },
+  { href: '/leads',          label: 'Leads',         icon: UserX },
   { href: '/services',       label: 'Services',      icon: BriefcaseMedical },
   { href: '/providers',      label: 'Providers',     icon: UserRound },
   { href: '/notifications',  label: 'Notifications', icon: Bell },

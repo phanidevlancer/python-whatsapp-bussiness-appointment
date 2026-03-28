@@ -13,6 +13,7 @@ async def create_appointment(
     user_phone: str,
     service_id: uuid.UUID,
     slot_id: uuid.UUID,
+    customer_id: uuid.UUID | None = None,
     source: AppointmentSource = AppointmentSource.WHATSAPP,
 ) -> Appointment:
     """
@@ -26,6 +27,7 @@ async def create_appointment(
         user_phone=normalized_phone,
         service_id=service_id,
         slot_id=slot_id,
+        customer_id=customer_id,
         status=AppointmentStatus.CONFIRMED,
         source=source,
     )

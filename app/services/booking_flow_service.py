@@ -29,6 +29,15 @@ import uuid as _uuid
 from app.core.config import settings
 from app.integrations.whatsapp_client import WhatsAppClient, WhatsAppAPIError
 from app.models.user_session import SessionStep
+
+# Steps that are meaningful enough to capture as a lead when user abandons flow
+CAPTURABLE_STEPS = {
+    SessionStep.SERVICE_SELECTED,
+    SessionStep.SLOT_SELECTED,
+    SessionStep.AWAITING_NAME,
+    SessionStep.AWAITING_EMAIL,
+}
+
 from app.repositories import (
     appointment_repository as appt_repo,
     customer_repository as customer_repo,
@@ -171,6 +180,35 @@ async def _process_message(
     # --- Load or create session ---
     user_session = await sess_repo.get_or_create_session(db, sender)
     text_body = get_text_body(message)
+    
+    # --- Check for expired session and capture lead if needed ---
+    from datetime import datetime, timezone, timedelta
+    from app.core.config import settings
+    
+    # Check if session has expired (idle for more than SESSION_TTL_SECONDS)
+    # Use created_at as fallback if updated_at is not reliable
+    session_updated = user_session.updated_at
+    if session_updated.tzinfo is None:
+        session_updated = session_updated.replace(tzinfo=timezone.utc)
+    
+    session_age = (datetime.now(timezone.utc) - session_updated).total_seconds()
+    is_session_expired = session_age > settings.SESSION_TTL_SECONDS
+    
+    # Capture lead if session expired and user was in a capturable step
+    # But NOT if they're starting fresh (START step)
+    if is_session_expired and user_session.current_step in CAPTURABLE_STEPS:
+        try:
+            from app.services.lead_service import capture_drop_off
+            await capture_drop_off(db, user_session)
+            # Reset the session after capturing lead
+            await sess_repo.reset_session(db, sender)
+            await db.commit()
+            logger.info("Captured lead for expired session: phone=%s age=%.0fs step=%s", sender, session_age, user_session.current_step.value)
+            # After capturing and resetting, continue with fresh session
+            user_session = await sess_repo.get_or_create_session(db, sender)
+        except Exception:
+            logger.exception("Failed to capture drop-off for expired session %s", sender)
+            await db.rollback()
 
     # --- Load or create customer, seeding name from WhatsApp profile ---
     _customer, _ = await customer_repo.get_or_create_by_phone(db, sender, whatsapp_name=whatsapp_name)
@@ -303,6 +341,15 @@ async def _handle_main_menu(
     sender: str, db: AsyncSession, wa_client: WhatsAppClient, uname: str | None = None
 ) -> None:
     """Show the main menu with 2 options: Book an appointment / My appointments."""
+    # Capture drop-off if the user was mid-flow before resetting
+    existing_session = await sess_repo.get_or_create_session(db, sender)
+    if existing_session.current_step in CAPTURABLE_STEPS:
+        try:
+            from app.services.lead_service import capture_drop_off
+            await capture_drop_off(db, existing_session)
+        except Exception:
+            logger.exception("Failed to capture drop-off for %s", sender)
+
     await sess_repo.reset_session(db, sender)
     await db.commit()
     _log_action(sender, "Sent main menu buttons")
@@ -526,6 +573,7 @@ async def _handle_booking_confirmation(
             user_phone=sender,
             service_id=user_session.selected_service_id,
             slot_id=slot_id,
+            customer_id=_customer.id,
         )
         
         # Write status history for the booking

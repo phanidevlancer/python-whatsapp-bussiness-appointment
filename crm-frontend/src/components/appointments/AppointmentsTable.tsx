@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { format } from 'date-fns';
 import { Eye, Ban, RefreshCw, CheckCircle, MoreVertical } from 'lucide-react';
@@ -7,7 +8,8 @@ import toast from 'react-hot-toast';
 import type { Appointment } from '@/types/appointment';
 import StatusBadge from './StatusBadge';
 import SourceBadge from './SourceBadge';
-import { useCancelAppointment, useCompleteAppointment } from '@/hooks/useAppointments';
+import CancelDialog from './CancelDialog';
+import { useCompleteAppointment } from '@/hooks/useAppointments';
 import {
   Table,
   TableHeader,
@@ -26,7 +28,7 @@ interface Props {
 }
 
 export default function AppointmentsTable({ appointments, isLoading }: Props) {
-  const { mutate: cancel } = useCancelAppointment();
+  const [cancellingId, setCancellingId] = useState<string | null>(null);
   const { mutate: complete } = useCompleteAppointment();
 
   if (isLoading) {
@@ -62,6 +64,7 @@ export default function AppointmentsTable({ appointments, isLoading }: Props) {
   }
 
   return (
+    <>
     <Table>
       <TableHeader>
         <TableRow hoverable={false}>
@@ -128,26 +131,22 @@ export default function AppointmentsTable({ appointments, isLoading }: Props) {
                 </Link>
                 {appt.status === 'confirmed' && (
                   <>
+                    {appt.slot && new Date(appt.slot.start_time) <= new Date() && (
+                      <IconButton
+                        variant="default"
+                        size="sm"
+                        onClick={() => complete(appt.id, {
+                          onSuccess: () => toast.success('Marked as completed'),
+                        })}
+                        tooltip="Mark complete"
+                      >
+                        <CheckCircle size={16} />
+                      </IconButton>
+                    )}
                     <IconButton
                       variant="default"
                       size="sm"
-                      onClick={() => complete(appt.id, {
-                        onSuccess: () => toast.success('Marked as completed'),
-                      })}
-                      tooltip="Mark complete"
-                    >
-                      <CheckCircle size={16} />
-                    </IconButton>
-                    <IconButton
-                      variant="default"
-                      size="sm"
-                      onClick={() => {
-                        if (confirm('Cancel this appointment?')) {
-                          cancel({ id: appt.id }, {
-                            onSuccess: () => toast.success('Appointment cancelled. WhatsApp notification sent.'),
-                          });
-                        }
-                      }}
+                      onClick={() => setCancellingId(appt.id)}
                       tooltip="Cancel"
                     >
                       <Ban size={16} />
@@ -163,5 +162,12 @@ export default function AppointmentsTable({ appointments, isLoading }: Props) {
         ))}
       </TableBody>
     </Table>
+    {cancellingId && (
+      <CancelDialog
+        appointmentId={cancellingId}
+        onClose={() => setCancellingId(null)}
+      />
+    )}
+    </>
   );
 }

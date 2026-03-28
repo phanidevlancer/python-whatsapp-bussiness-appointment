@@ -15,7 +15,7 @@ from app.integrations.whatsapp_client import WhatsAppClient
 from app.routers.webhook import router as webhook_router
 
 # CRM routers
-from app.api.v1 import auth, appointments, customers, services, providers, slots, notifications, dashboard
+from app.api.v1 import auth, appointments, customers, services, providers, slots, notifications, dashboard, leads, leads_analytics
 from app.api.v1 import events as sse
 
 # Events + notification service
@@ -121,6 +121,8 @@ app.include_router(services.router,      prefix=f"{API_V1}/services",      tags=
 app.include_router(providers.router,     prefix=f"{API_V1}/providers",     tags=["providers"])
 app.include_router(slots.router,         prefix=f"{API_V1}/slots",         tags=["slots"])
 app.include_router(notifications.router, prefix=f"{API_V1}/notifications", tags=["notifications"])
+app.include_router(leads.router,         prefix=f"{API_V1}/leads",         tags=["leads"])
+app.include_router(leads_analytics.router, prefix=f"{API_V1}/leads/analytics", tags=["leads-analytics"])
 app.include_router(sse.router,           prefix=f"{API_V1}",              tags=["events"])
 
 
