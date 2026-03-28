@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Badge } from '@/components/ui/Badge';
 import { FluidDropdown } from '@/components/ui/fluid-dropdown';
+import { DropdownRangeDatePicker } from '@/components/ui/dropdown-range-date-picker';
 
 export default function AppointmentsPage() {
   const [filters, setFilters] = useState<AppointmentFilters>({ page: 1, page_size: 20 });
@@ -43,7 +44,7 @@ export default function AppointmentsPage() {
       </div>
 
       {/* Filters Card */}
-      <Card className="p-4" variant="elevated">
+      <Card className="relative z-20 p-4" variant="elevated">
         <div className="flex flex-wrap gap-3 items-center">
           {/* Search */}
           <div className="flex-1 min-w-64">
@@ -64,21 +65,18 @@ export default function AppointmentsPage() {
           />
 
           {/* Date Range */}
-          <div className="flex items-center gap-2">
-            <Input
-              type="date"
-              value={filters.date_from ?? ''}
-              onChange={(e) => setFilter('date_from', e.target.value)}
-              className="w-40"
-            />
-            <span className="text-slate-400 text-sm">to</span>
-            <Input
-              type="date"
-              value={filters.date_to ?? ''}
-              onChange={(e) => setFilter('date_to', e.target.value)}
-              className="w-40"
-            />
-          </div>
+          <DropdownRangeDatePicker
+            value={{ from: filters.date_from, to: filters.date_to }}
+            onApply={({ from, to }) =>
+              setFilters((current) => ({
+                ...current,
+                date_from: from,
+                date_to: to,
+                page: 1,
+              }))
+            }
+            className="w-full md:w-[280px] justify-start text-left font-normal"
+          />
 
           {/* Clear Filters */}
           {hasActiveFilters && (
@@ -100,7 +98,7 @@ export default function AppointmentsPage() {
       </Card>
 
       {/* Table Card */}
-      <Card className="p-0 overflow-hidden" variant="elevated">
+      <Card className="relative z-0 overflow-hidden p-0" variant="elevated">
         <AppointmentsTable appointments={data?.items ?? []} isLoading={isLoading} />
       </Card>
 
