@@ -567,13 +567,15 @@ async def _handle_booking_confirmation(
             )
             return
 
+        customer, _ = await customer_repo.get_or_create_by_phone(db, sender)
+
         # Create the appointment record
         appointment = await appt_repo.create_appointment(
             db,
             user_phone=sender,
             service_id=user_session.selected_service_id,
             slot_id=slot_id,
-            customer_id=_customer.id,
+            customer_id=customer.id,
         )
         
         # Write status history for the booking
@@ -616,7 +618,6 @@ async def _handle_booking_confirmation(
         )
 
         # Collect name/email via Flow if we don't have them yet
-        customer, _ = await customer_repo.get_or_create_by_phone(db, sender)
         if not customer.name:
             await sess_repo.update_session(db, sender, SessionStep.AWAITING_NAME)
             await db.commit()
