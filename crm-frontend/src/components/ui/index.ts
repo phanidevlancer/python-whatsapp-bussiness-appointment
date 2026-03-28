@@ -53,5 +53,7 @@ export type { DeliverySchedulerTimeSlot } from './delivery-scheduler';
 export { StackedActivityCards } from './stacked-activity-cards';
 export type { StackedActivityCardItem, StackedActivityCardsProps } from './stacked-activity-cards';
 
+export { FluidDropdown, Component as FluidDropdownComponent } from './fluid-dropdown';
+
 export { Globe } from './cosmic-404';
 export { default as Cosmic404 } from './cosmic-404';

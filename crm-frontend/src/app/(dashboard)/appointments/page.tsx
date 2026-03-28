@@ -9,8 +9,8 @@ import type { AppointmentFilters, AppointmentStatus } from '@/types/appointment'
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { Select } from '@/components/ui/Select';
 import { Badge } from '@/components/ui/Badge';
+import { FluidDropdown } from '@/components/ui/fluid-dropdown';
 
 export default function AppointmentsPage() {
   const [filters, setFilters] = useState<AppointmentFilters>({ page: 1, page_size: 20 });
@@ -19,7 +19,7 @@ export default function AppointmentsPage() {
 
   const { data, isLoading } = useAppointmentsList({ ...filters, search: search || undefined });
 
-  const setFilter = (key: keyof AppointmentFilters, value: string | undefined) =>
+  const setFilter = (key: keyof AppointmentFilters, value: string | AppointmentStatus | undefined) =>
     setFilters((f) => ({ ...f, [key]: value || undefined, page: 1 }));
 
   const hasActiveFilters = search || filters.status || filters.date_from || filters.date_to;
@@ -57,18 +57,10 @@ export default function AppointmentsPage() {
           </div>
 
           {/* Status Filter */}
-          <Select
-            value={filters.status ?? ''}
-            onChange={(e) => setFilter('status', e.target.value as AppointmentStatus)}
-            options={[
-              { value: '', label: 'All Statuses' },
-              { value: 'confirmed', label: 'Confirmed' },
-              { value: 'pending', label: 'Pending' },
-              { value: 'cancelled', label: 'Cancelled' },
-              { value: 'completed', label: 'Completed' },
-              { value: 'no_show', label: 'No Show' },
-            ]}
-            className="w-40"
+          <FluidDropdown
+            value={filters.status}
+            onChange={(value) => setFilter('status', value)}
+            className="w-full md:w-44"
           />
 
           {/* Date Range */}
