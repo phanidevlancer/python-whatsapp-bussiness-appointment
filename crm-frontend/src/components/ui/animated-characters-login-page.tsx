@@ -9,6 +9,14 @@ import { Input } from '@/components/ui/Input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 
+const CHARACTER_COLORS = {
+  tallPrimary: '#0d9488',
+  tallSecondary: '#1e3a8a',
+  frontLeft: '#60a5fa',
+  frontRight: '#f59e0b',
+  pupil: '#0f172a',
+} as const;
+
 interface PupilProps {
   size?: number;
   maxDistance?: number;
@@ -20,7 +28,7 @@ interface PupilProps {
 const Pupil = ({
   size = 12,
   maxDistance = 5,
-  pupilColor = '#1f2937',
+  pupilColor = CHARACTER_COLORS.pupil,
   forceLookX,
   forceLookY,
 }: PupilProps) => {
@@ -87,7 +95,7 @@ const EyeBall = ({
   pupilSize = 16,
   maxDistance = 10,
   eyeColor = 'white',
-  pupilColor = '#1f2937',
+  pupilColor = CHARACTER_COLORS.pupil,
   isBlinking = false,
   forceLookX,
   forceLookY,
@@ -272,18 +280,19 @@ export default function AnimatedCharactersLoginPage() {
   return (
     <div className="min-h-screen grid overflow-hidden bg-[radial-gradient(circle_at_top,#eff6ff_0%,#f8fafc_35%,#e2e8f0_100%)] lg:grid-cols-2">
       <div className="relative hidden overflow-hidden lg:flex lg:flex-col lg:justify-between">
-        <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(13,148,136,0.98),rgba(37,99,235,0.94))]" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.18),transparent_32%),radial-gradient(circle_at_80%_25%,rgba(255,255,255,0.12),transparent_28%),radial-gradient(circle_at_35%_75%,rgba(255,255,255,0.1),transparent_30%)]" />
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.06)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.06)_1px,transparent_1px)] bg-[size:28px_28px]" />
+        <div className="absolute inset-0 bg-[linear-gradient(145deg,#ecfeff_0%,#dbeafe_38%,#bfdbfe_72%,#93c5fd_100%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_22%,rgba(13,148,136,0.16),transparent_28%),radial-gradient(circle_at_82%_24%,rgba(245,158,11,0.14),transparent_26%),radial-gradient(circle_at_36%_78%,rgba(29,78,216,0.12),transparent_34%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(15,23,42,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(15,23,42,0.04)_1px,transparent_1px)] bg-[size:28px_28px]" />
+        <div className="absolute inset-x-10 bottom-8 h-36 rounded-full bg-[radial-gradient(circle,rgba(15,23,42,0.16),rgba(15,23,42,0.02)_65%,transparent_75%)] blur-2xl" />
 
         <div className="relative z-20 p-12">
-          <div className="flex items-center gap-3 text-white">
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/14 backdrop-blur-sm">
+          <div className="flex items-center gap-3 text-slate-900">
+            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/70 text-primary-700 shadow-sm backdrop-blur-sm">
               <MessageSquare className="size-5" />
             </div>
             <div>
               <p className="text-lg font-semibold tracking-wide">ORA Clinic</p>
-              <p className="text-sm text-white/75">Admin console</p>
+              <p className="text-sm text-slate-600">Admin console</p>
             </div>
           </div>
         </div>
@@ -297,7 +306,7 @@ export default function AnimatedCharactersLoginPage() {
                 left: '74px',
                 width: '182px',
                 height: isTypingEmail || isTypingPassword ? '436px' : '398px',
-                backgroundColor: '#1d4ed8',
+                backgroundColor: CHARACTER_COLORS.tallPrimary,
                 borderRadius: '18px 18px 0 0',
                 zIndex: 1,
                 transform:
@@ -321,7 +330,7 @@ export default function AnimatedCharactersLoginPage() {
                   pupilSize={7}
                   maxDistance={8}
                   eyeColor="white"
-                  pupilColor="#1f2937"
+                  pupilColor={CHARACTER_COLORS.pupil}
                   isBlinking={isPurpleBlinking}
                   forceLookX={password.length > 0 && showPassword ? (isPurplePeeking ? 4 : -4) : isLookingAtEachOther ? 3 : undefined}
                   forceLookY={password.length > 0 && showPassword ? (isPurplePeeking ? 5 : -4) : isLookingAtEachOther ? 4 : undefined}
@@ -331,7 +340,7 @@ export default function AnimatedCharactersLoginPage() {
                   pupilSize={7}
                   maxDistance={8}
                   eyeColor="white"
-                  pupilColor="#1f2937"
+                  pupilColor={CHARACTER_COLORS.pupil}
                   isBlinking={isPurpleBlinking}
                   forceLookX={password.length > 0 && showPassword ? (isPurplePeeking ? 4 : -4) : isLookingAtEachOther ? 3 : undefined}
                   forceLookY={password.length > 0 && showPassword ? (isPurplePeeking ? 5 : -4) : isLookingAtEachOther ? 4 : undefined}
@@ -346,7 +355,7 @@ export default function AnimatedCharactersLoginPage() {
                 left: '244px',
                 width: '124px',
                 height: '314px',
-                backgroundColor: '#0f172a',
+                backgroundColor: CHARACTER_COLORS.tallSecondary,
                 borderRadius: '12px 12px 0 0',
                 zIndex: 2,
                 transform:
@@ -372,7 +381,7 @@ export default function AnimatedCharactersLoginPage() {
                   pupilSize={6}
                   maxDistance={4}
                   eyeColor="white"
-                  pupilColor="#0f172a"
+                  pupilColor={CHARACTER_COLORS.pupil}
                   isBlinking={isBlackBlinking}
                   forceLookX={password.length > 0 && showPassword ? -4 : isLookingAtEachOther ? 0 : undefined}
                   forceLookY={password.length > 0 && showPassword ? -4 : isLookingAtEachOther ? -4 : undefined}
@@ -382,7 +391,7 @@ export default function AnimatedCharactersLoginPage() {
                   pupilSize={6}
                   maxDistance={4}
                   eyeColor="white"
-                  pupilColor="#0f172a"
+                  pupilColor={CHARACTER_COLORS.pupil}
                   isBlinking={isBlackBlinking}
                   forceLookX={password.length > 0 && showPassword ? -4 : isLookingAtEachOther ? 0 : undefined}
                   forceLookY={password.length > 0 && showPassword ? -4 : isLookingAtEachOther ? -4 : undefined}
@@ -398,7 +407,7 @@ export default function AnimatedCharactersLoginPage() {
                 width: '238px',
                 height: '198px',
                 zIndex: 3,
-                backgroundColor: '#f59e0b',
+                backgroundColor: CHARACTER_COLORS.frontLeft,
                 borderRadius: '120px 120px 0 0',
                 transform: password.length > 0 && showPassword ? 'skewX(0deg)' : `skewX(${orangePos.bodySkew}deg)`,
                 transformOrigin: 'bottom center',
@@ -411,8 +420,8 @@ export default function AnimatedCharactersLoginPage() {
                   top: password.length > 0 && showPassword ? '84px' : `${90 + orangePos.faceY}px`,
                 }}
               >
-                <Pupil size={12} maxDistance={5} pupilColor="#0f172a" forceLookX={password.length > 0 && showPassword ? -5 : undefined} forceLookY={password.length > 0 && showPassword ? -4 : undefined} />
-                <Pupil size={12} maxDistance={5} pupilColor="#0f172a" forceLookX={password.length > 0 && showPassword ? -5 : undefined} forceLookY={password.length > 0 && showPassword ? -4 : undefined} />
+                <Pupil size={12} maxDistance={5} pupilColor={CHARACTER_COLORS.pupil} forceLookX={password.length > 0 && showPassword ? -5 : undefined} forceLookY={password.length > 0 && showPassword ? -4 : undefined} />
+                <Pupil size={12} maxDistance={5} pupilColor={CHARACTER_COLORS.pupil} forceLookX={password.length > 0 && showPassword ? -5 : undefined} forceLookY={password.length > 0 && showPassword ? -4 : undefined} />
               </div>
             </div>
 
@@ -423,7 +432,7 @@ export default function AnimatedCharactersLoginPage() {
                 left: '314px',
                 width: '144px',
                 height: '232px',
-                backgroundColor: '#2dd4bf',
+                backgroundColor: CHARACTER_COLORS.frontRight,
                 borderRadius: '72px 72px 0 0',
                 zIndex: 4,
                 transform: password.length > 0 && showPassword ? 'skewX(0deg)' : `skewX(${yellowPos.bodySkew}deg)`,
@@ -437,8 +446,8 @@ export default function AnimatedCharactersLoginPage() {
                   top: password.length > 0 && showPassword ? '35px' : `${40 + yellowPos.faceY}px`,
                 }}
               >
-                <Pupil size={12} maxDistance={5} pupilColor="#0f172a" forceLookX={password.length > 0 && showPassword ? -5 : undefined} forceLookY={password.length > 0 && showPassword ? -4 : undefined} />
-                <Pupil size={12} maxDistance={5} pupilColor="#0f172a" forceLookX={password.length > 0 && showPassword ? -5 : undefined} forceLookY={password.length > 0 && showPassword ? -4 : undefined} />
+                <Pupil size={12} maxDistance={5} pupilColor={CHARACTER_COLORS.pupil} forceLookX={password.length > 0 && showPassword ? -5 : undefined} forceLookY={password.length > 0 && showPassword ? -4 : undefined} />
+                <Pupil size={12} maxDistance={5} pupilColor={CHARACTER_COLORS.pupil} forceLookX={password.length > 0 && showPassword ? -5 : undefined} forceLookY={password.length > 0 && showPassword ? -4 : undefined} />
               </div>
               <div
                 className="absolute h-1 w-20 rounded-full bg-slate-900 transition-all duration-200 ease-out"
@@ -451,8 +460,8 @@ export default function AnimatedCharactersLoginPage() {
           </div>
         </div>
 
-        <div className="relative z-20 p-12 pt-6 text-sm text-white/70">
-          <p className="mb-2 flex items-center gap-2 font-medium text-white">
+        <div className="relative z-20 p-12 pt-6 text-sm text-slate-600">
+          <p className="mb-2 flex items-center gap-2 font-semibold text-slate-900">
             <Sparkles className="size-4" />
             Built for high-clarity appointment operations
           </p>
