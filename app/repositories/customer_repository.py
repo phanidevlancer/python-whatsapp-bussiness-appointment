@@ -27,12 +27,19 @@ async def get_by_id(db: AsyncSession, customer_id: uuid.UUID) -> Customer | None
     return result.scalar_one_or_none()
 
 
-async def get_or_create_by_phone(db: AsyncSession, phone: str) -> tuple[Customer, bool]:
+async def get_or_create_by_phone(
+    db: AsyncSession,
+    phone: str,
+    whatsapp_name: str | None = None,
+) -> tuple[Customer, bool]:
     customer = await get_by_phone(db, phone)
     if customer:
+        # Silently backfill name from WhatsApp profile if not yet set
+        if whatsapp_name and not customer.name:
+            customer.name = whatsapp_name
+            await db.flush()
         return customer, False
-    # Store phone in normalized format (without +)
-    customer = Customer(phone=normalize_phone(phone))
+    customer = Customer(phone=normalize_phone(phone), name=whatsapp_name)
     db.add(customer)
     await db.flush()
     return customer, True

@@ -44,6 +44,14 @@ def extract_sender_phone(payload: dict) -> str | None:
         return None
 
 
+def extract_whatsapp_profile_name(payload: dict) -> str | None:
+    """Extract the sender's WhatsApp profile name from the webhook payload."""
+    try:
+        return payload["entry"][0]["changes"][0]["value"]["contacts"][0]["profile"]["name"]
+    except (KeyError, IndexError, TypeError):
+        return None
+
+
 def get_message_type(message: dict) -> MessageType:
     """Classify a message dict into one of the supported MessageType values."""
     msg_type = message.get("type")

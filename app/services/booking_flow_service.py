@@ -41,6 +41,7 @@ from app.utils.whatsapp_parser import (
     MessageType,
     extract_message,
     extract_sender_phone,
+    extract_whatsapp_profile_name,
     get_button_reply_id,
     get_flow_reply_data,
     get_list_reply_id,
@@ -154,6 +155,8 @@ async def _process_message(
         logger.warning("Could not extract sender phone from payload")
         return
 
+    whatsapp_name = extract_whatsapp_profile_name(payload)
+
     message_id = get_message_id(message)
     msg_type = get_message_type(message)
 
@@ -169,8 +172,8 @@ async def _process_message(
     user_session = await sess_repo.get_or_create_session(db, sender)
     text_body = get_text_body(message)
 
-    # --- Load customer name once for personalised messages ---
-    _customer, _ = await customer_repo.get_or_create_by_phone(db, sender)
+    # --- Load or create customer, seeding name from WhatsApp profile ---
+    _customer, _ = await customer_repo.get_or_create_by_phone(db, sender, whatsapp_name=whatsapp_name)
     uname: str | None = _customer.name.title() if _customer.name else None
 
     # Resolve service name once for the log block (cheap: already in identity map if loaded)
