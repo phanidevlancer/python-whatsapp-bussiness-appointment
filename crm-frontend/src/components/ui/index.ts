@@ -46,3 +46,6 @@ export {
 
 export { IconButton } from './IconButton';
 export type { IconButtonProps } from './IconButton';
+
+export { DeliveryScheduler } from './delivery-scheduler';
+export type { DeliverySchedulerTimeSlot } from './delivery-scheduler';
