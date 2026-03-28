@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { format } from 'date-fns';
-import { User, Phone, Tag } from 'lucide-react';
+import { Phone } from 'lucide-react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import {
@@ -13,7 +13,6 @@ import {
 } from '@/hooks/useAppointments';
 import { Modal, ModalHeader, ModalTitle, ModalContent } from '@/components/ui/Modal';
 import { Input } from '@/components/ui/Input';
-import { Select } from '@/components/ui/Select';
 import { Textarea } from '@/components/ui/Textarea';
 import { DeliveryScheduler } from '@/components/ui/delivery-scheduler';
 
@@ -90,6 +89,9 @@ export default function CreateAppointmentDialog({ isOpen, onClose }: Props) {
       label: format(new Date(slot.start_time), 'h:mm a'),
     })) ?? [];
 
+  const selectClassName =
+    'flex h-10 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:cursor-not-allowed disabled:opacity-50';
+
   return (
     <Modal isOpen={isOpen} onClose={handleClose} size="lg">
       <ModalHeader>
@@ -108,39 +110,49 @@ export default function CreateAppointmentDialog({ isOpen, onClose }: Props) {
           />
 
           {/* Service Selection */}
-          <Select
-            label="Service *"
-            value={selectedServiceId}
-            onChange={(e) => {
-              setSelectedServiceId(e.target.value);
-              setSelectedSlotId('');
-            }}
-            options={[
-              { value: '', label: 'Select a service' },
-              ...(services?.map((s) => ({
-                value: s.id,
-                label: `${s.name} (${s.duration_minutes} min)`,
-              })) ?? []),
-            ]}
-            leftIcon={<Tag size={16} />}
-            disabled={loadingServices}
-          />
+          <div className="w-full">
+            <label htmlFor="appointment-service" className="mb-1.5 block text-sm font-medium text-slate-700">
+              Service *
+            </label>
+            <select
+              id="appointment-service"
+              value={selectedServiceId}
+              onChange={(e) => {
+                setSelectedServiceId(e.target.value);
+                setSelectedSlotId('');
+              }}
+              className={selectClassName}
+              disabled={loadingServices}
+            >
+              <option value="">Select a service</option>
+              {(services ?? []).map((service) => (
+                <option key={service.id} value={service.id}>
+                  {service.name} ({service.duration_minutes} min)
+                </option>
+              ))}
+            </select>
+          </div>
 
           {/* Provider Selection (Optional) */}
-          <Select
-            label="Provider (Optional)"
-            value={selectedProviderId}
-            onChange={(e) => setSelectedProviderId(e.target.value)}
-            options={[
-              { value: '', label: 'Any available provider' },
-              ...(providers?.map((p) => ({
-                value: p.id,
-                label: p.name,
-              })) ?? []),
-            ]}
-            leftIcon={<User size={16} />}
-            disabled={loadingProviders}
-          />
+          <div className="w-full">
+            <label htmlFor="appointment-provider" className="mb-1.5 block text-sm font-medium text-slate-700">
+              Provider (Optional)
+            </label>
+            <select
+              id="appointment-provider"
+              value={selectedProviderId}
+              onChange={(e) => setSelectedProviderId(e.target.value)}
+              className={selectClassName}
+              disabled={loadingProviders}
+            >
+              <option value="">Any available provider</option>
+              {(providers ?? []).map((provider) => (
+                <option key={provider.id} value={provider.id}>
+                  {provider.name}
+                </option>
+              ))}
+            </select>
+          </div>
 
           {selectedServiceId ? (
             <div className="space-y-2">

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { cva } from 'class-variance-authority';
@@ -51,7 +51,7 @@ const getWeekDays = (startDate: Date): Date[] => {
   startOfWeek.setDate(diff);
   startOfWeek.setHours(0, 0, 0, 0);
 
-  for (let i = 0; i < 6; i++) {
+  for (let i = 0; i < 7; i++) {
     const nextDay = new Date(startOfWeek);
     nextDay.setDate(startOfWeek.getDate() + i);
     days.push(nextDay);
@@ -93,6 +93,19 @@ export function DeliveryScheduler({
   const [currentDate, setCurrentDate] = useState(normalizedInitialDate);
   const [selectedDate, setSelectedDate] = useState<Date>(normalizedInitialDate);
   const [internalSelectedTime, setInternalSelectedTime] = useState<string | null>(selectedTime ?? defaultTimeSlot);
+
+  useEffect(() => {
+    setCurrentDate(normalizedInitialDate);
+    setSelectedDate(normalizedInitialDate);
+  }, [normalizedInitialDate]);
+
+  useEffect(() => {
+    if (selectedTime !== undefined) {
+      setInternalSelectedTime(selectedTime);
+      return;
+    }
+    setInternalSelectedTime(defaultTimeSlot);
+  }, [defaultTimeSlot, selectedTime]);
 
   const activeTime = selectedTime ?? internalSelectedTime;
   const weekDays = getWeekDays(currentDate);
@@ -158,7 +171,7 @@ export function DeliveryScheduler({
           </div>
         </div>
 
-        <div className="grid grid-cols-6 gap-2">
+        <div className="grid grid-cols-7 gap-2">
           {weekDays.map((day) => {
             const isSelected = isSameDay(selectedDate, day);
             const isDisabled = minimumDate ? normalizeDate(day) < minimumDate : false;
