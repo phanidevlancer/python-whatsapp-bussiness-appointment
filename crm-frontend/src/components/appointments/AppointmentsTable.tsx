@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { format } from 'date-fns';
-import { Eye, Ban, RefreshCw, CheckCircle, MoreVertical } from 'lucide-react';
+import { Eye, Ban, CheckCircle, MoreVertical } from 'lucide-react';
 import toast from 'react-hot-toast';
 import type { Appointment } from '@/types/appointment';
 import StatusBadge from './StatusBadge';

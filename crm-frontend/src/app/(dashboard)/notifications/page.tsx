@@ -5,7 +5,7 @@ import { format } from 'date-fns';
 import { RefreshCw, MessageSquare, AlertCircle, CheckCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useNotificationLogs, useResendNotification } from '@/hooks/useNotifications';
-import { Card, CardHeader, CardTitle } from '@/components/ui/Card';
+import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import {
