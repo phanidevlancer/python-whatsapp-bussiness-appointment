@@ -378,3 +378,58 @@ body {
   background: var(--primary-600);
   color: white;
 }
+
+/* ============================================
+   DAY PICKER RANGE STYLES
+   ============================================ */
+
+.rdp-day-cell.rdp-range-middle,
+.rdp-day-cell.rdp-range-start,
+.rdp-day-cell.rdp-range-end {
+  background: var(--primary-100);
+}
+
+.rdp-day-cell.rdp-range-start {
+  border-radius: var(--radius-lg) 0 0 var(--radius-lg);
+}
+
+.rdp-day-cell.rdp-range-end {
+  border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
+}
+
+.rdp-day-cell.rdp-range-start.rdp-range-end {
+  border-radius: var(--radius-lg);
+  background: transparent;
+}
+
+.rdp-day-cell.rdp-day-selected .rdp-day-button {
+  background: var(--primary-600);
+  color: var(--text-inverse);
+}
+
+.rdp-day-cell.rdp-range-middle .rdp-day-button {
+  background: transparent;
+  color: var(--text-primary);
+  border-radius: 0;
+}
+
+.rdp-day-cell.rdp-day-outside.rdp-day-selected .rdp-day-button {
+  background: var(--primary-300);
+  color: var(--text-inverse);
+}
+
+.rdp-day-cell.rdp-day-today .rdp-day-button::after {
+  content: "";
+  position: absolute;
+  bottom: 0.25rem;
+  left: 50%;
+  width: 0.25rem;
+  height: 0.25rem;
+  transform: translateX(-50%);
+  border-radius: 9999px;
+  background: var(--primary-600);
+}
+
+.rdp-day-cell.rdp-day-selected .rdp-day-button::after {
+  background: var(--text-inverse);
+}
