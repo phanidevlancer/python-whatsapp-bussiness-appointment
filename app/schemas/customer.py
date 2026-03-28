@@ -16,6 +16,13 @@ class CustomerUpdate(BaseModel):
     notes: str | None = None
 
 
+class CustomerContactUpdate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    phone: str | None = None
+    email: EmailStr | None = None
+
+
 class CustomerRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

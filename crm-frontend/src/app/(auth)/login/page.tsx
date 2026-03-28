@@ -8,10 +8,27 @@ import { useAuthStore } from '@/store/authStore';
 export default function LoginPage() {
   const router = useRouter();
   const token = useAuthStore((s) => s.token);
-  const [hydrated, setHydrated] = useState(() => useAuthStore.persist.hasHydrated());
+  const [hydrated, setHydrated] = useState(() => {
+    const persistApi = (useAuthStore as typeof useAuthStore & {
+      persist?: {
+        hasHydrated?: () => boolean;
+      };
+    }).persist;
+    return persistApi?.hasHydrated?.() ?? true;
+  });
 
   useEffect(() => {
-    const unsubscribe = useAuthStore.persist.onFinishHydration(() => {
+    const persistApi = (useAuthStore as typeof useAuthStore & {
+      persist?: {
+        onFinishHydration?: (callback: () => void) => () => void;
+      };
+    }).persist;
+
+    if (!persistApi) {
+      return;
+    }
+
+    const unsubscribe = persistApi.onFinishHydration?.(() => {
       setHydrated(true);
     });
 

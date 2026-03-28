@@ -4,7 +4,7 @@ from typing import Optional
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.deps import get_current_admin_user, get_whatsapp_client
+from app.core.deps import get_whatsapp_client, require_permission
 from app.db.session import get_db
 from app.repositories import appointment_repository as appt_repo
 from app.repositories import notification_repository as notif_repo
@@ -19,7 +19,7 @@ async def list_notification_logs(
     page_size: int = Query(20, ge=1, le=100),
     appointment_id: Optional[uuid.UUID] = Query(None),
     db: AsyncSession = Depends(get_db),
-    _=Depends(get_current_admin_user),
+    _=Depends(require_permission("notifications.view")),
 ):
     items, total = await notif_repo.list_logs(
         db, page=page, page_size=page_size, appointment_id=appointment_id
@@ -37,7 +37,7 @@ async def resend_notification(
     appointment_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
     wa_client=Depends(get_whatsapp_client),
-    current_user=Depends(get_current_admin_user),
+    current_user=Depends(require_permission("notifications.manage")),
 ):
     from fastapi import HTTPException
     from app.db.session import AsyncSessionLocal

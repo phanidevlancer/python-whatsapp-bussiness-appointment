@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
+  type LucideIcon,
   LayoutDashboard,
   CalendarCheck,
   Calendar,
@@ -13,22 +14,37 @@ import {
   Settings,
   ChevronDown,
   UserX,
+  Users,
+  Shield,
 } from 'lucide-react';
 import { clsx } from 'clsx';
+import { useAuthStore } from '@/store/authStore';
+import { PERMISSIONS, type PermissionCode } from '@/lib/permissions';
+
+interface NavItem {
+  href: string;
+  label: string;
+  icon: LucideIcon;
+  permission?: PermissionCode;
+}
 
 const nav = [
-  { href: '/dashboard',      label: 'Dashboard',     icon: LayoutDashboard },
-  { href: '/appointments',   label: 'Appointments',  icon: CalendarCheck },
-  { href: '/calendar',       label: 'Calendar',      icon: Calendar },
-  { href: '/customers',      label: 'Contacts',      icon: BookUser },
-  { href: '/leads',          label: 'Leads',         icon: UserX },
-  { href: '/services',       label: 'Services',      icon: BriefcaseMedical },
-  { href: '/providers',      label: 'Providers',     icon: UserRound },
-  { href: '/notifications',  label: 'Notifications', icon: Bell },
-];
+  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, permission: PERMISSIONS.dashboard.view },
+  { href: '/appointments', label: 'Appointments', icon: CalendarCheck, permission: PERMISSIONS.appointments.view },
+  { href: '/calendar', label: 'Calendar', icon: Calendar, permission: PERMISSIONS.appointments.view },
+  { href: '/customers', label: 'Contacts', icon: BookUser, permission: PERMISSIONS.customers.view },
+  { href: '/leads', label: 'Leads', icon: UserX, permission: PERMISSIONS.leads.view },
+  { href: '/services', label: 'Services', icon: BriefcaseMedical, permission: PERMISSIONS.services.view },
+  { href: '/providers', label: 'Providers', icon: UserRound, permission: PERMISSIONS.providers.view },
+  { href: '/notifications', label: 'Notifications', icon: Bell, permission: PERMISSIONS.notifications.view },
+  { href: '/users', label: 'Users', icon: Users, permission: PERMISSIONS.users.view },
+  { href: '/role-templates', label: 'Role Templates', icon: Shield, permission: PERMISSIONS.roles.view },
+] satisfies NavItem[];
 
 export default function Sidebar() {
   const path = usePathname();
+  const hasPermission = useAuthStore((s) => s.hasPermission);
+  const visibleNav = nav.filter((item) => !item.permission || hasPermission(item.permission));
 
   return (
     <aside className="w-64 bg-slate-800 flex flex-col shrink-0 h-full">
@@ -49,7 +65,7 @@ export default function Sidebar() {
             Main Menu
           </p>
           <div className="space-y-0.5">
-            {nav.map(({ href, label, icon: Icon }) => {
+            {visibleNav.map(({ href, label, icon: Icon }) => {
               const active = path === href || (href !== '/dashboard' && path.startsWith(href));
               return (
                 <Link
@@ -78,13 +94,15 @@ export default function Sidebar() {
           <p className="px-3 py-2 text-xs font-semibold text-slate-500 uppercase tracking-wider">
             Settings
           </p>
-          <Link
-            href="/settings"
-            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-400 hover:bg-slate-700/30 hover:text-white transition-all duration-200"
-          >
-            <Settings size={18} className="text-slate-500" />
-            <span>Preferences</span>
-          </Link>
+          {hasPermission(PERMISSIONS.settings.view) ? (
+            <Link
+              href="/settings"
+              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-400 hover:bg-slate-700/30 hover:text-white transition-all duration-200"
+            >
+              <Settings size={18} className="text-slate-500" />
+              <span>Preferences</span>
+            </Link>
+          ) : null}
         </div>
       </nav>
 

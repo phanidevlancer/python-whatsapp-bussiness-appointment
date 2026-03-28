@@ -1,7 +1,8 @@
 import uuid
 from datetime import datetime
-from pydantic import BaseModel, EmailStr, ConfigDict
+from pydantic import BaseModel, EmailStr, ConfigDict, Field, field_validator
 from app.models.admin_user import AdminRole
+from app.schemas.user_management import validate_password_strength
 
 
 class AdminUserCreate(BaseModel):
@@ -9,6 +10,11 @@ class AdminUserCreate(BaseModel):
     password: str
     name: str
     role: AdminRole = AdminRole.RECEPTIONIST
+
+    @field_validator("password")
+    @classmethod
+    def validate_password(cls, value: str) -> str:
+        return validate_password_strength(value)
 
 
 class AdminUserRead(BaseModel):
@@ -18,6 +24,7 @@ class AdminUserRead(BaseModel):
     email: str
     name: str
     role: AdminRole
+    template_id: uuid.UUID | None = None
     is_active: bool
     created_at: datetime
 
@@ -31,3 +38,11 @@ class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
     user: AdminUserRead
+    permissions: list[str] = Field(default_factory=list)
+    must_change_password: bool = False
+
+
+class CurrentUserResponse(BaseModel):
+    user: AdminUserRead
+    permissions: list[str] = Field(default_factory=list)
+    must_change_password: bool = False

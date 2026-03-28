@@ -4,7 +4,7 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.deps import get_current_admin_user
+from app.core.deps import require_permission
 from app.db.session import get_db
 from app.models.booking_drop_off import LeadStatus, CustomerType
 from app.repositories import lead_repository as lead_repo
@@ -34,7 +34,7 @@ async def list_leads(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
     db: AsyncSession = Depends(get_db),
-    _=Depends(get_current_admin_user),
+    _=Depends(require_permission("leads.view")),
 ):
     items, total = await lead_repo.list_leads(
         db,
@@ -57,7 +57,7 @@ async def list_leads(
 async def get_lead(
     lead_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
-    _=Depends(get_current_admin_user),
+    _=Depends(require_permission("leads.view")),
 ):
     lead = await lead_repo.get_lead_by_id(db, lead_id)
     if not lead:
@@ -70,7 +70,7 @@ async def update_lead(
     lead_id: uuid.UUID,
     payload: LeadUpdate,
     db: AsyncSession = Depends(get_db),
-    current_user=Depends(get_current_admin_user),
+    current_user=Depends(require_permission("leads.update")),
 ):
     lead = await lead_repo.update_lead(
         db,
@@ -93,7 +93,8 @@ async def convert_lead(
     lead_id: uuid.UUID,
     payload: LeadConvertRequest,
     db: AsyncSession = Depends(get_db),
-    current_user=Depends(get_current_admin_user),
+    current_user=Depends(require_permission("leads.update")),
+    _=Depends(require_permission("appointments.create")),
 ):
     appt = await lead_service.convert_lead(db, lead_id, payload, current_user)
     appt = await appt_repo.get_appointment_crm_by_id(db, appt.id)
@@ -104,7 +105,7 @@ async def convert_lead(
 async def bulk_update_leads(
     payload: LeadBulkUpdateRequest,
     db: AsyncSession = Depends(get_db),
-    current_user=Depends(get_current_admin_user),
+    current_user=Depends(require_permission("leads.update")),
 ):
     """
     Bulk update multiple leads with the same values.
@@ -134,7 +135,7 @@ async def bulk_update_leads(
 async def bulk_assign_leads(
     payload: LeadBulkAssignRequest,
     db: AsyncSession = Depends(get_db),
-    current_user=Depends(get_current_admin_user),
+    current_user=Depends(require_permission("leads.assign")),
 ):
     """
     Bulk assign multiple leads to a specific agent.
@@ -165,7 +166,7 @@ async def get_lead_activity(
     page: int = Query(1, ge=1),
     page_size: int = Query(50, ge=1, le=100),
     db: AsyncSession = Depends(get_db),
-    _=Depends(get_current_admin_user),
+    _=Depends(require_permission("leads.view")),
 ):
     """
     Get activity history for a specific lead.
@@ -197,7 +198,7 @@ async def schedule_follow_up(
     lead_id: uuid.UUID,
     follow_up_at: Optional[str] = Query(None, description="ISO 8601 datetime for follow-up"),
     db: AsyncSession = Depends(get_db),
-    current_user=Depends(get_current_admin_user),
+    current_user=Depends(require_permission("leads.update")),
 ):
     """
     Schedule or cancel a follow-up reminder for a lead.

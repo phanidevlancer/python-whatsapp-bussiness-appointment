@@ -56,6 +56,7 @@ REDIS_URL=redis://localhost:6379/0
 WHATSAPP_TOKEN=your_permanent_access_token_here
 WHATSAPP_PHONE_NUMBER_ID=your_phone_number_id_here
 WHATSAPP_VERIFY_TOKEN=any_random_string_you_choose
+RBAC_BOOTSTRAP_ON_STARTUP=false
 ```
 
 ### Where to find Meta credentials
@@ -125,6 +126,12 @@ alembic revision --autogenerate -m "initial schema"
 alembic upgrade head
 ```
 
+For the RBAC rollout, keep the order explicit:
+
+1. Apply Alembic migrations.
+2. Seed RBAC permissions and templates.
+3. Start the app, or enable the local bootstrap flag below.
+
 ### Useful Alembic commands
 
 ```bash
@@ -135,7 +142,39 @@ alembic downgrade -1     # Roll back the last migration
 
 ---
 
-## Step 6 — Seed Sample Data
+## Step 6 — Seed RBAC Data
+
+This creates the permission catalog, the default role templates, and backfills existing admin users to matching system templates.
+
+```bash
+python -m app.db.seed
+```
+
+Default system templates:
+
+- `Super Admin`
+- `Admin`
+- `Receptionist`
+- `Viewer`
+- `Operations Manager`
+
+First-login flow:
+
+- New admin users are created with `must_change_password=True` and `is_first_login=True`.
+- On first login, the frontend should redirect those users to the change-password page.
+- After the password change, the old token is invalidated and a fresh session is issued.
+
+Optional dev-only startup bootstrap:
+
+```bash
+RBAC_BOOTSTRAP_ON_STARTUP=true uvicorn main:app --reload
+```
+
+`main.py` ignores that flag outside development/local environments, so production startup stays explicit.
+
+---
+
+## Step 7 — Seed Sample Data
 
 Populates the database with 3 sample services and time slots for the next 7 days.
 
@@ -152,7 +191,7 @@ Seeding complete.
 
 ---
 
-## Step 7 — Run the Server
+## Step 8 — Run the Server
 
 ```bash
 uvicorn main:app --reload --host 0.0.0.0 --port 8000
@@ -172,7 +211,7 @@ http://localhost:8000/docs
 
 ---
 
-## Step 8 — Expose Localhost with ngrok
+## Step 9 — Expose Localhost with ngrok
 
 Meta requires a public HTTPS URL to deliver webhook events to your local machine.
 
@@ -194,7 +233,7 @@ Copy the `https://...` URL — you'll need it in the next step.
 
 ---
 
-## Step 9 — Register the Webhook with Meta
+## Step 10 — Register the Webhook with Meta
 
 1. Go to [Meta Developer Console](https://developers.facebook.com)
 2. Open your app → **WhatsApp** → **Configuration**
@@ -217,7 +256,7 @@ curl "http://localhost:8000/webhook\
 
 ---
 
-## Step 10 — Test the Full Flow
+## Step 11 — Test the Full Flow
 
 Send a WhatsApp message from the test number linked in your Meta app to your bot number:
 

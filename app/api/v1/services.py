@@ -3,7 +3,7 @@ import uuid
 from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.deps import get_current_admin_user, require_admin
+from app.core.deps import require_permission
 from app.db.session import get_db
 from app.repositories import service_repository as svc_repo
 from app.repositories import entity_change_history_repository as history_repo
@@ -17,7 +17,7 @@ router = APIRouter()
 async def list_services(
     include_inactive: bool = Query(False),
     db: AsyncSession = Depends(get_db),
-    _=Depends(get_current_admin_user),
+    _=Depends(require_permission("services.view")),
 ):
     if include_inactive:
         from sqlalchemy import select
@@ -32,7 +32,7 @@ async def list_services(
 async def create_service(
     payload: ServiceCreate,
     db: AsyncSession = Depends(get_db),
-    _=Depends(require_admin),
+    _=Depends(require_permission("services.create")),
 ):
     from app.models.service import Service
     service = Service(
@@ -50,7 +50,7 @@ async def update_service(
     service_id: uuid.UUID,
     payload: ServiceUpdate,
     db: AsyncSession = Depends(get_db),
-    current_user=Depends(require_admin),
+    current_user=Depends(require_permission("services.update")),
 ):
     from fastapi import HTTPException
     service = await svc_repo.get_service_by_id(db, service_id)
@@ -85,7 +85,7 @@ async def update_service(
 async def get_service_history(
     service_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
-    _=Depends(get_current_admin_user),
+    _=Depends(require_permission("services.view")),
 ):
     records = await history_repo.get_entity_history(db, "service", str(service_id))
     return [EntityChangeHistoryRead.from_orm_with_user(r) for r in records]
@@ -95,7 +95,7 @@ async def get_service_history(
 async def deactivate_service(
     service_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
-    current_user=Depends(require_admin),
+    current_user=Depends(require_permission("services.delete")),
 ):
     from fastapi import HTTPException
     service = await svc_repo.get_service_by_id(db, service_id)

@@ -9,8 +9,11 @@ from app.models.user_session import UserSession                                 
 from app.models.admin_user import AdminUser                                     # noqa: F401
 from app.models.customer import Customer                                        # noqa: F401
 from app.models.provider import Provider                                        # noqa: F401
+from app.models.permission import Permission                                    # noqa: F401
+from app.models.role_template import RoleTemplate, role_template_permissions     # noqa: F401
 from app.models.appointment_status_history import AppointmentStatusHistory     # noqa: F401
 from app.models.whatsapp_message_log import WhatsAppMessageLog                 # noqa: F401
 from app.models.audit_log import AuditLog                                       # noqa: F401
 from app.models.entity_change_history import EntityChangeHistory                 # noqa: F401
 from app.models.booking_drop_off import BookingDropOff                           # noqa: F401
+from app.models.user_audit_log import UserAuditLog                              # noqa: F401

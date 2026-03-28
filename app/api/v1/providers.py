@@ -5,7 +5,7 @@ from typing import Optional
 from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.deps import get_current_admin_user, require_admin
+from app.core.deps import require_permission
 from app.db.session import get_db
 from app.repositories import provider_repository as provider_repo
 from app.repositories import entity_change_history_repository as history_repo
@@ -20,7 +20,7 @@ router = APIRouter()
 async def list_providers(
     active_only: bool = Query(True),
     db: AsyncSession = Depends(get_db),
-    _=Depends(get_current_admin_user),
+    _=Depends(require_permission("providers.view")),
 ):
     providers = await provider_repo.list_providers(db, active_only=active_only)
     result = []
@@ -34,7 +34,7 @@ async def list_providers(
 async def create_provider(
     payload: ProviderCreate,
     db: AsyncSession = Depends(get_db),
-    _=Depends(require_admin),
+    _=Depends(require_permission("providers.create")),
 ):
     provider = await provider_repo.create_provider(
         db,
@@ -50,7 +50,7 @@ async def update_provider(
     provider_id: uuid.UUID,
     payload: ProviderUpdate,
     db: AsyncSession = Depends(get_db),
-    current_user=Depends(require_admin),
+    current_user=Depends(require_permission("providers.update")),
 ):
     from fastapi import HTTPException
     updates = payload.model_dump(exclude_none=True)
@@ -86,7 +86,7 @@ async def update_provider(
 async def get_provider_history(
     provider_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
-    _=Depends(get_current_admin_user),
+    _=Depends(require_permission("providers.view")),
 ):
     records = await history_repo.get_entity_history(db, "provider", str(provider_id))
     return [EntityChangeHistoryRead.from_orm_with_user(r) for r in records]
@@ -97,7 +97,7 @@ async def get_provider_slots(
     provider_id: uuid.UUID,
     filter_date: Optional[date] = Query(None),
     db: AsyncSession = Depends(get_db),
-    _=Depends(get_current_admin_user),
+    _=Depends(require_permission("providers.view")),
 ):
     slots = await provider_repo.get_provider_slots(db, provider_id, filter_date=filter_date)
     return SlotListResponse(
@@ -111,7 +111,7 @@ async def assign_service_to_provider(
     provider_id: uuid.UUID,
     body: dict,
     db: AsyncSession = Depends(get_db),
-    _=Depends(require_admin),
+    _=Depends(require_permission("providers.manage")),
 ):
     from fastapi import HTTPException
     service_id = body.get("service_id")
@@ -129,6 +129,6 @@ async def remove_service_from_provider(
     provider_id: uuid.UUID,
     service_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
-    _=Depends(require_admin),
+    _=Depends(require_permission("providers.manage")),
 ):
     await provider_repo.remove_service(db, provider_id, service_id)

@@ -16,7 +16,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select, func, distinct, extract
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.deps import get_current_admin_user
+from app.core.deps import require_permission
 from app.db.session import get_db
 from app.models.booking_drop_off import BookingDropOff, LeadStatus, CustomerType
 from app.models.admin_user import AdminUser
@@ -67,7 +67,7 @@ class LeadAnalyticsResponse(BaseModel):
 @router.get("/summary", response_model=LeadMetrics)
 async def get_lead_metrics(
     db: AsyncSession = Depends(get_db),
-    _=Depends(get_current_admin_user),
+    _=Depends(require_permission("reports.view")),
 ):
     """
     Get summary metrics for all leads.
@@ -131,7 +131,7 @@ async def get_lead_metrics(
 async def get_lead_trend(
     days: int = Query(30, ge=1, le=90, description="Number of days to analyze"),
     db: AsyncSession = Depends(get_db),
-    _=Depends(get_current_admin_user),
+    _=Depends(require_permission("reports.view")),
 ):
     """
     Get daily lead creation trend.
@@ -167,7 +167,7 @@ async def get_lead_trend(
 async def get_agent_performance(
     limit: int = Query(20, ge=1, le=100),
     db: AsyncSession = Depends(get_db),
-    _=Depends(get_current_admin_user),
+    _=Depends(require_permission("reports.view")),
 ):
     """
     Get performance metrics for each agent.
@@ -221,7 +221,7 @@ async def get_agent_performance(
 @router.get("/drop-off-steps", response_model=list[dict])
 async def get_drop_off_analysis(
     db: AsyncSession = Depends(get_db),
-    _=Depends(get_current_admin_user),
+    _=Depends(require_permission("reports.view")),
 ):
     """
     Analyze where leads are dropping off in the booking flow.
@@ -258,7 +258,7 @@ async def get_drop_off_analysis(
 async def get_complete_analytics(
     days: int = Query(30, ge=1, le=90),
     db: AsyncSession = Depends(get_db),
-    current_user=Depends(get_current_admin_user),
+    current_user=Depends(require_permission("reports.view")),
 ):
     """
     Get complete lead analytics dashboard data.

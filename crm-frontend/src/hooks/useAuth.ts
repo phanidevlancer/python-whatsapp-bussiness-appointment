@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
@@ -19,7 +19,11 @@ export function useLogin() {
       return res.data;
     },
     onSuccess: (data) => {
-      setAuth(data.access_token, data.user);
+      setAuth(data.access_token, data.user, data.permissions, data.must_change_password);
+      if (data.must_change_password) {
+        router.replace('/change-password');
+        return;
+      }
       router.push('/dashboard');
     },
   });

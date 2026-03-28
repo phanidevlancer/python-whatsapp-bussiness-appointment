@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy import select, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.deps import get_current_admin_user, require_manager_or_above
+from app.core.deps import require_permission
 from app.db.session import get_db
 from app.models.time_slot import TimeSlot
 from app.schemas.slot_crm import SlotGenerateRequest, SlotListResponse, SlotRead
@@ -22,7 +22,7 @@ async def list_slots(
     page: int = Query(1, ge=1),
     page_size: int = Query(50, ge=1, le=200),
     db: AsyncSession = Depends(get_db),
-    _=Depends(get_current_admin_user),
+    _=Depends(require_permission("slots.view")),
 ):
     from sqlalchemy import func
     now = datetime.now(timezone.utc)
@@ -53,7 +53,7 @@ async def list_slots(
 async def generate_slots(
     payload: SlotGenerateRequest,
     db: AsyncSession = Depends(get_db),
-    _=Depends(require_manager_or_above),
+    _=Depends(require_permission("slots.create")),
 ):
     """Bulk generate time slots for a service across a date range."""
     from app.repositories import service_repository as svc_repo
@@ -106,7 +106,7 @@ async def generate_slots(
 async def block_slot(
     slot_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
-    _=Depends(require_manager_or_above),
+    _=Depends(require_permission("slots.update")),
 ):
     from fastapi import HTTPException
     slot = await db.get(TimeSlot, slot_id)
@@ -121,7 +121,7 @@ async def block_slot(
 async def unblock_slot(
     slot_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
-    _=Depends(require_manager_or_above),
+    _=Depends(require_permission("slots.update")),
 ):
     from fastapi import HTTPException
     from app.models.appointment import Appointment, AppointmentStatus

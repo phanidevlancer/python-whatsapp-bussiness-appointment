@@ -1,4 +1,5 @@
 import logging
+import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
@@ -11,11 +12,12 @@ import app.db.base  # noqa: F401 — must be first to register all models with S
 from app.core.config import settings
 from app.core.logging import configure_logging
 from app.db.session import engine, AsyncSessionLocal
+from app.db.seed import run_seed as run_rbac_seed
 from app.integrations.whatsapp_client import WhatsAppClient
 from app.routers.webhook import router as webhook_router
 
 # CRM routers
-from app.api.v1 import auth, appointments, customers, services, providers, slots, notifications, dashboard, leads, leads_analytics
+from app.api.v1 import auth, appointments, customers, services, providers, slots, notifications, dashboard, leads, leads_analytics, role_templates, permissions, users
 from app.api.v1 import events as sse
 
 # Events + notification service
@@ -32,6 +34,27 @@ from app.services import notification_service as notif_svc
 configure_logging()
 
 logger = logging.getLogger(__name__)
+
+
+def _env_flag(name: str, default: bool = False) -> bool:
+    value = os.getenv(name)
+    if value is None:
+        return default
+    return value.strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _should_bootstrap_rbac_seed() -> bool:
+    if settings.APP_ENV.lower() not in {"development", "local"}:
+        return False
+    return _env_flag("RBAC_BOOTSTRAP_ON_STARTUP", False)
+
+
+async def _maybe_bootstrap_rbac_seed() -> None:
+    if not _should_bootstrap_rbac_seed():
+        return
+
+    logger.info("RBAC bootstrap enabled; seeding permissions, templates, and legacy backfill")
+    await run_rbac_seed()
 
 
 @asynccontextmanager
@@ -81,6 +104,8 @@ async def lifespan(app: FastAPI):
     event_dispatcher.register(AppointmentRescheduledEvent, _sse_rescheduled)
     event_dispatcher.register(AppointmentStatusChangedEvent, _sse_status_changed)
 
+    await _maybe_bootstrap_rbac_seed()
+
     logger.info("Startup complete")
     yield
 
@@ -121,6 +146,9 @@ app.include_router(services.router,      prefix=f"{API_V1}/services",      tags=
 app.include_router(providers.router,     prefix=f"{API_V1}/providers",     tags=["providers"])
 app.include_router(slots.router,         prefix=f"{API_V1}/slots",         tags=["slots"])
 app.include_router(notifications.router, prefix=f"{API_V1}/notifications", tags=["notifications"])
+app.include_router(users.router,         prefix=f"{API_V1}/users",         tags=["users"])
+app.include_router(role_templates.router, prefix=f"{API_V1}/role-templates", tags=["role-templates"])
+app.include_router(permissions.router,   prefix=f"{API_V1}/permissions",    tags=["permissions"])
 app.include_router(leads.router,         prefix=f"{API_V1}/leads",         tags=["leads"])
 app.include_router(leads_analytics.router, prefix=f"{API_V1}/leads/analytics", tags=["leads-analytics"])
 app.include_router(sse.router,           prefix=f"{API_V1}",              tags=["events"])

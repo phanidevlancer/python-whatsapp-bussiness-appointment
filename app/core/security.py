@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta, timezone
+from uuid import uuid4
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from app.core.config import settings
@@ -14,11 +15,23 @@ def verify_password(plain: str, hashed: str) -> bool:
     return pwd_context.verify(plain, hashed)
 
 
-def create_access_token(subject: str, role: str, expires_delta: timedelta | None = None) -> str:
+def create_access_token(
+    subject: str,
+    role: str | None = None,
+    expires_delta: timedelta | None = None,
+    *,
+    jti: str | None = None,
+    perms_hash: str | None = None,
+) -> str:
     expire = datetime.now(timezone.utc) + (
         expires_delta or timedelta(minutes=settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES)
     )
-    payload = {"sub": subject, "role": role, "exp": expire}
+    payload = {"sub": subject, "exp": expire}
+    if role is not None:
+        payload["role"] = role
+    payload["jti"] = jti or str(uuid4())
+    if perms_hash is not None:
+        payload["perms_hash"] = perms_hash
     return jwt.encode(payload, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
 
 

@@ -71,7 +71,7 @@ User: taps "Confirm"
 ├── requirements.txt
 ├── .env.example                 # Copy to .env and fill in values
 ├── alembic.ini
-├── seed.py                      # Populate DB with sample data
+├── seed.py                      # Populate demo services/time slots
 ├── alembic/
 │   ├── env.py                   # Async Alembic config
 │   └── versions/                # Migration files (auto-generated)
@@ -167,6 +167,15 @@ alembic revision --autogenerate -m "describe your change"
 alembic upgrade head
 ```
 
+For the RBAC rollout, run the migration first and seed second:
+
+```bash
+alembic upgrade head
+python -m app.db.seed
+```
+
+The RBAC seed is idempotent. It creates the permission catalog, the default role templates, and backfills existing admin users onto matching templates.
+
 ### Useful Alembic commands
 
 ```bash
@@ -179,6 +188,8 @@ alembic downgrade -1     # Roll back one migration
 
 ## Seed Sample Data
 
+The sample-data script is separate from RBAC bootstrapping and stays useful for demo appointments.
+
 ```bash
 python seed.py
 ```
@@ -189,6 +200,34 @@ This creates:
 - **Skin Consultation** (30 min)
 
 And generates time slots (9am–5pm, every 30 min) for each service for the next 7 days.
+
+## RBAC Bootstrap
+
+Run this after migrations to create the default permission catalog and system role templates:
+
+```bash
+python -m app.db.seed
+```
+
+Default system templates:
+- `Super Admin`
+- `Admin`
+- `Receptionist`
+- `Viewer`
+- `Operations Manager`
+
+First-login flow:
+- New admin users are created with `must_change_password=True` and `is_first_login=True`.
+- The frontend should redirect those users to the change-password screen on first login.
+- After the password is changed, the old token is invalidated and a fresh session is issued.
+
+Optional startup bootstrap for local development only:
+
+```bash
+RBAC_BOOTSTRAP_ON_STARTUP=true uvicorn main:app --reload
+```
+
+This is guarded in `main.py` so it only runs in non-production environments.
 
 ---
 
@@ -258,6 +297,7 @@ curl "http://localhost:8000/webhook?hub.mode=subscribe&hub.verify_token=YOUR_VER
 | `DATABASE_MAX_OVERFLOW` | No | Max overflow connections (default: 20) |
 | `REDIS_URL` | Yes | Redis connection string |
 | `WHATSAPP_TOKEN` | Yes | Meta permanent access token |
+| `RBAC_BOOTSTRAP_ON_STARTUP` | No | Set to `true` to seed RBAC data on app startup in development/local environments |
 | `WHATSAPP_PHONE_NUMBER_ID` | Yes | Your WhatsApp phone number ID |
 | `WHATSAPP_VERIFY_TOKEN` | Yes | Custom string used for webhook verification |
 | `SLOT_LOCK_TTL_SECONDS` | No | How long a Redis slot lock lasts (default: 300) |
