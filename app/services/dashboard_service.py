@@ -94,14 +94,13 @@ async def get_trends(db: AsyncSession, range_str: str = "7d") -> TrendResponse:
 
     result = await db.execute(
         select(
-            func.date(TimeSlot.start_time).label("slot_date"),
+            func.date(Appointment.created_at).label("slot_date"),
             Appointment.status,
             func.count(Appointment.id).label("cnt"),
         )
-        .join(TimeSlot, Appointment.slot_id == TimeSlot.id, isouter=True)
-        .where(TimeSlot.start_time >= start)
-        .group_by(func.date(TimeSlot.start_time), Appointment.status)
-        .order_by(func.date(TimeSlot.start_time))
+        .where(Appointment.created_at >= start)
+        .group_by(func.date(Appointment.created_at), Appointment.status)
+        .order_by(func.date(Appointment.created_at))
     )
     rows = result.all()
 
@@ -121,9 +120,9 @@ async def get_trends(db: AsyncSession, range_str: str = "7d") -> TrendResponse:
         if status_key in data_map[d]:
             data_map[d][status_key] = row.cnt
 
-    # Fill gaps for dates with no data
+    # Fill gaps for dates with no data (include today)
     trend_data = []
-    for i in range(days):
+    for i in range(days + 1):
         d = (start + timedelta(days=i)).strftime("%Y-%m-%d")
         counts = data_map.get(d, {"confirmed": 0, "cancelled": 0, "completed": 0, "no_show": 0})
         trend_data.append(TrendDataPoint(date=d, **counts))

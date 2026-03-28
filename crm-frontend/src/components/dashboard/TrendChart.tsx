@@ -80,14 +80,14 @@ export default function TrendChart({ data, range = '30d', onRangeChange }: Trend
             <CartesianGrid vertical={false} stroke="#f1f5f9" strokeDasharray="" />
             <XAxis
               dataKey="date"
-              interval={1}
+              interval="preserveStartEnd"
               tick={{ fill: '#94a3b8', fontSize: 11 }}
               axisLine={false}
               tickLine={false}
             />
             <YAxis
-              domain={[0, 20]}
-              ticks={[0, 10, 20]}
+              domain={[0, 'auto']}
+              allowDecimals={false}
               tick={{ fill: '#94a3b8', fontSize: 11 }}
               axisLine={false}
               tickLine={false}

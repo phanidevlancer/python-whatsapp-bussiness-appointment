@@ -16,16 +16,34 @@ interface WeeklyPerformanceProps {
 }
 
 export default function WeeklyPerformance({ stats }: WeeklyPerformanceProps) {
-  const w = stats.total_appointments_week;
-  const data = [
-    { day: 'Mon', confirmed: Math.floor(w * 0.18), completed: Math.floor(w * 0.15), cancelled: Math.floor(w * 0.05) },
-    { day: 'Tue', confirmed: Math.floor(w * 0.16), completed: Math.floor(w * 0.14), cancelled: Math.floor(w * 0.04) },
-    { day: 'Wed', confirmed: Math.floor(w * 0.17), completed: Math.floor(w * 0.16), cancelled: Math.floor(w * 0.06) },
-    { day: 'Thu', confirmed: Math.floor(w * 0.15), completed: Math.floor(w * 0.14), cancelled: Math.floor(w * 0.05) },
-    { day: 'Fri', confirmed: Math.floor(w * 0.19), completed: Math.floor(w * 0.17), cancelled: Math.floor(w * 0.07) },
-    { day: 'Sat', confirmed: Math.floor(w * 0.10), completed: Math.floor(w * 0.13), cancelled: Math.floor(w * 0.04) },
-    { day: 'Sun', confirmed: Math.floor(w * 0.05), completed: Math.floor(w * 0.11), cancelled: Math.floor(w * 0.03) },
-  ];
+  // Use actual status counts from stats and distribute proportionally across days
+  const confirmed = stats.total_confirmed;
+  const completed = stats.total_completed;
+  const cancelled = stats.total_cancelled;
+
+  const distribute = (total: number, weights: number[]) => {
+    if (total === 0) return weights.map(() => 0);
+    const raw = weights.map((w) => w * total);
+    const floored = raw.map(Math.floor);
+    let remainder = total - floored.reduce((a, b) => a + b, 0);
+    // Distribute remaining units to highest fractional parts
+    const fracs = raw.map((v, i) => ({ i, f: v - floored[i] })).sort((a, b) => b.f - a.f);
+    for (let k = 0; k < remainder; k++) floored[fracs[k].i]++;
+    return floored;
+  };
+
+  const dayWeights = [0.18, 0.16, 0.17, 0.15, 0.19, 0.10, 0.05];
+  const confirmedDays = distribute(confirmed, dayWeights);
+  const completedDays = distribute(completed, dayWeights);
+  const cancelledDays = distribute(cancelled, dayWeights);
+
+  const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  const data = days.map((day, i) => ({
+    day,
+    confirmed: confirmedDays[i],
+    completed: completedDays[i],
+    cancelled: cancelledDays[i],
+  }));
 
   return (
     <div className="glass-card rounded-2xl p-5 flex flex-col">
