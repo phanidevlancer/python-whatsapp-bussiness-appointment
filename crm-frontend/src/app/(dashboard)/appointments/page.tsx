@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Search, Plus, Filter, Calendar as CalendarIcon } from 'lucide-react';
+import { Search, Plus } from 'lucide-react';
 import { useAppointmentsList } from '@/hooks/useAppointments';
 import AppointmentsTable from '@/components/appointments/AppointmentsTable';
 import CreateAppointmentDialog from '@/components/appointments/CreateAppointmentDialog';
@@ -19,7 +19,7 @@ export default function AppointmentsPage() {
 
   const { data, isLoading } = useAppointmentsList({ ...filters, search: search || undefined });
 
-  const setFilter = (key: keyof AppointmentFilters, value: any) =>
+  const setFilter = (key: keyof AppointmentFilters, value: string | undefined) =>
     setFilters((f) => ({ ...f, [key]: value || undefined, page: 1 }));
 
   const hasActiveFilters = search || filters.status || filters.date_from || filters.date_to;
