@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
 import type { Service } from '@/types/appointment';
+import type { ChangeHistoryEntry } from '@/components/ui/ChangeHistoryPanel';
 
 export function useServicesList(includeInactive = false) {
   return useQuery({
@@ -28,11 +29,14 @@ export function useCreateService() {
 export function useUpdateService() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, ...data }: { id: string; name?: string; is_active?: boolean }) => {
+    mutationFn: async ({ id, ...data }: { id: string; name?: string; description?: string; duration_minutes?: number; is_active?: boolean }) => {
       const res = await api.patch<Service>(`/api/v1/services/${id}`, data);
       return res.data;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['services'] }),
+    onSuccess: (_, { id }) => {
+      qc.invalidateQueries({ queryKey: ['services'] });
+      qc.invalidateQueries({ queryKey: ['service-history', id] });
+    },
   });
 }
 
@@ -43,5 +47,16 @@ export function useDeleteService() {
       await api.delete(`/api/v1/services/${id}`);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['services'] }),
+  });
+}
+
+export function useServiceHistory(id: string | null) {
+  return useQuery({
+    queryKey: ['service-history', id],
+    queryFn: async () => {
+      const res = await api.get<ChangeHistoryEntry[]>(`/api/v1/services/${id}/history`);
+      return res.data;
+    },
+    enabled: !!id,
   });
 }

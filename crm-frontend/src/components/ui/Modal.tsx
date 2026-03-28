@@ -2,7 +2,8 @@
 
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import { forwardRef, HTMLAttributes, ReactNode } from 'react';
+import { forwardRef, HTMLAttributes, ReactNode, useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 export interface ModalProps extends HTMLAttributes<HTMLDivElement> {
   isOpen?: boolean;
@@ -21,7 +22,10 @@ export function Modal({
   className,
   ...props
 }: ModalProps) {
-  if (!isOpen) return null;
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
+
+  if (!isOpen || !mounted) return null;
 
   const sizes = {
     sm: 'max-w-md',
@@ -31,7 +35,7 @@ export function Modal({
     full: 'max-w-[95vw]',
   };
 
-  return (
+  const content = (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
       <div
@@ -62,6 +66,8 @@ export function Modal({
       </div>
     </div>
   );
+
+  return createPortal(content, document.body);
 }
 
 interface ModalHeaderProps extends HTMLAttributes<HTMLDivElement> {

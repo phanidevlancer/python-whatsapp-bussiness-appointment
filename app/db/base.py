@@ -12,3 +12,4 @@ from app.models.provider import Provider                                        
 from app.models.appointment_status_history import AppointmentStatusHistory     # noqa: F401
 from app.models.whatsapp_message_log import WhatsAppMessageLog                 # noqa: F401
 from app.models.audit_log import AuditLog                                       # noqa: F401
+from app.models.entity_change_history import EntityChangeHistory                 # noqa: F401

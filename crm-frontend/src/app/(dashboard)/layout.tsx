@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
 import Sidebar from '@/components/layout/Sidebar';
@@ -10,15 +10,20 @@ import { useRealtimeEvents } from '@/hooks/useRealtimeEvents';
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const token = useAuthStore((s) => s.token);
   const router = useRouter();
+  const [hydrated, setHydrated] = useState(false);
   useRealtimeEvents();
 
   useEffect(() => {
-    if (!token) {
+    setHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (hydrated && !token) {
       router.replace('/login');
     }
-  }, [token, router]);
+  }, [hydrated, token, router]);
 
-  if (!token) return null;
+  if (!hydrated || !token) return null;
 
   return (
     <div className="flex h-screen overflow-hidden bg-gray-50">
