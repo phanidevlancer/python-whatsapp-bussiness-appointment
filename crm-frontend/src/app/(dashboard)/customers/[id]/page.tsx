@@ -71,7 +71,7 @@ function LogCallDialog({ lead, onClose }: { lead: Lead; onClose: () => void }) {
   );
 }
 
-export default function CustomerDetailPage() {
+export default function PatientDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const { data: customer, isLoading } = useCustomerDetail(id);
@@ -127,7 +127,7 @@ export default function CustomerDetailPage() {
       { id: customer.id, ...payload },
       {
         onSuccess: () => {
-          toast.success('Customer updated');
+          toast.success('Patient updated');
           setShowConfirm(false);
           setEditing(false);
         },
@@ -144,7 +144,7 @@ export default function CustomerDetailPage() {
             'detail' in err.response.data &&
             typeof err.response.data.detail === 'string'
               ? err.response.data.detail
-              : 'Failed to update customer';
+              : 'Failed to update patient';
           toast.error(message);
           setShowConfirm(false);
         },
@@ -201,7 +201,7 @@ export default function CustomerDetailPage() {
                   <p className="font-medium">{customer.email ?? '—'}</p>
                 </div>
                 <div>
-                  <p className="text-slate-400 text-xs">Customer since</p>
+                  <p className="text-slate-400 text-xs">Patient since</p>
                   <p className="font-medium">{format(new Date(customer.created_at), 'MMM d, yyyy')}</p>
                 </div>
                 {customer.notes && (
@@ -272,7 +272,7 @@ export default function CustomerDetailPage() {
         onClose={() => setShowConfirm(false)}
         onConfirm={confirmSave}
         isLoading={saving}
-        title="Confirm Customer Changes"
+      title="Confirm Patient Changes"
         changes={pendingChanges}
       />
 

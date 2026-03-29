@@ -32,7 +32,7 @@ const nav = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, permission: PERMISSIONS.dashboard.view },
   { href: '/appointments', label: 'Appointments', icon: CalendarCheck, permission: PERMISSIONS.appointments.view },
   { href: '/calendar', label: 'Calendar', icon: Calendar, permission: PERMISSIONS.appointments.view },
-  { href: '/customers', label: 'Customers', icon: BookUser, permission: PERMISSIONS.customers.view },
+  { href: '/customers', label: 'Patients', icon: BookUser, permission: PERMISSIONS.customers.view },
   { href: '/leads', label: 'Leads', icon: UserX, permission: PERMISSIONS.leads.view },
   { href: '/services', label: 'Services', icon: BriefcaseMedical, permission: PERMISSIONS.services.view },
   { href: '/providers', label: 'Providers', icon: UserRound, permission: PERMISSIONS.providers.view },

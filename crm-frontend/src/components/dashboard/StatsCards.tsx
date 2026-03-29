@@ -127,7 +127,7 @@ export default function StatsCards({ stats }: { stats: DashboardStats }) {
         sparkColor="#14b8a6"
       />
       <StatCard
-        label="Total Contacts"
+        label="Total Patients"
         value={stats.total_customers}
         icon={<Users size={16} className="text-orange-500" />}
         iconBg="bg-orange-50"

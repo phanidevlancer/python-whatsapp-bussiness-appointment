@@ -20,7 +20,7 @@ import {
 } from '@/components/ui/Table';
 import { Skeleton } from '@/components/ui/Skeleton';
 
-export default function CustomersPage() {
+export default function PatientsPage() {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const { data, isLoading } = useCustomersList({ search: search || undefined, page });
@@ -30,17 +30,17 @@ export default function CustomersPage() {
       {/* Page Header */}
       <div className="dashboard-page-header flex items-center justify-between rounded-[24px] px-6 py-5">
         <div>
-          <h2 className="text-[1.9rem] font-black tracking-[-0.03em] text-slate-900">Customers</h2>
-          <p className="mt-1 text-sm font-medium text-slate-500">Manage your customer relationships</p>
+          <h2 className="text-[1.9rem] font-black tracking-[-0.03em] text-slate-900">Patients</h2>
+          <p className="mt-1 text-sm font-medium text-slate-500">Manage your patient relationships</p>
         </div>
-        <Button
-          variant="primary"
-          size="md"
-          leftIcon={<Plus size={18} />}
-          className="h-11 rounded-2xl border border-primary-500/20 px-5 font-semibold shadow-[0_14px_28px_rgba(13,148,136,0.18)]"
-        >
-          Add Customer
-        </Button>
+          <Button
+            variant="primary"
+            size="md"
+            leftIcon={<Plus size={18} />}
+            className="h-11 rounded-2xl border border-primary-500/20 px-5 font-semibold shadow-[0_14px_28px_rgba(13,148,136,0.18)]"
+          >
+            Add Patient
+          </Button>
       </div>
 
       {/* Search & Stats */}
@@ -55,10 +55,10 @@ export default function CustomersPage() {
               className="dashboard-surface-input h-12 w-full rounded-2xl border shadow-none ring-1 ring-transparent focus:ring-2 focus:ring-primary-200"
             />
           </div>
-          <Badge variant="primary" size="lg" className="rounded-full bg-primary-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-primary-700">
-            <Users size={16} />
-            {data?.total ?? 0} customers
-          </Badge>
+            <Badge variant="primary" size="lg" className="rounded-full bg-primary-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-primary-700">
+              <Users size={16} />
+              {data?.total ?? 0} patients
+            </Badge>
         </div>
       </Card>
 
@@ -83,7 +83,7 @@ export default function CustomersPage() {
             <div className="dashboard-empty-state-icon mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
               <Users size={32} className="text-primary-400" />
             </div>
-            <h3 className="mb-1 text-sm font-semibold text-slate-900">No customers found</h3>
+            <h3 className="mb-1 text-sm font-semibold text-slate-900">No patients found</h3>
             <p className="text-sm text-slate-500">Try adjusting your search</p>
           </div>
         ) : (
