@@ -7,10 +7,11 @@ import { ArrowLeft, ImageIcon, Layers3, Send, Users2 } from 'lucide-react';
 import CampaignMetricsCards from '@/components/campaigns/CampaignMetricsCards';
 import CampaignRecipientsTable from '@/components/campaigns/CampaignRecipientsTable';
 import { Badge } from '@/components/ui/Badge';
-import { Button } from '@/components/ui/Button';
+import { buttonVariants } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { useCampaignDetail } from '@/hooks/useCampaigns';
+import { cn } from '@/lib/utils';
 
 function formatDateTime(value: string | null) {
   if (!value) return 'Not set';
@@ -62,9 +63,13 @@ export default function CampaignDetailPage() {
             The campaign detail payload is unavailable or the record no longer exists.
           </p>
           <div className="mt-5">
-            <Button asChild variant="outline" size="md" leftIcon={<ArrowLeft size={16} />}>
-              <Link href="/campaigns">Back to campaigns</Link>
-            </Button>
+            <Link
+              href="/campaigns"
+              className={cn(buttonVariants({ variant: 'outline', size: 'md' }))}
+            >
+              <ArrowLeft size={16} />
+              Back to campaigns
+            </Link>
           </div>
         </Card>
       </div>

@@ -56,6 +56,7 @@ async def create_campaign(
     )
     db.add(campaign)
     await db.flush()
+    await db.refresh(campaign)
     return CampaignRead.model_validate(campaign)
 
 
@@ -78,6 +79,7 @@ async def update_campaign(
         setattr(campaign, key, value)
 
     await db.flush()
+    await db.refresh(campaign)
     return CampaignRead.model_validate(campaign)
 
 

@@ -16,7 +16,7 @@ import toast from 'react-hot-toast';
 import CampaignBuilder from '@/components/campaigns/CampaignBuilder';
 import CampaignComparisonChart from '@/components/campaigns/CampaignComparisonChart';
 import { Badge } from '@/components/ui/Badge';
-import { Button } from '@/components/ui/Button';
+import { Button, buttonVariants } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Skeleton } from '@/components/ui/Skeleton';
 import {
@@ -29,6 +29,7 @@ import {
 } from '@/hooks/useCampaigns';
 import { useCampaignPerformance } from '@/hooks/useDashboard';
 import { useServicesList } from '@/hooks/useServices';
+import { cn } from '@/lib/utils';
 import type {
   Campaign,
   CampaignImageUploadResponse,
@@ -352,9 +353,12 @@ export default function CampaignsPage() {
                   </div>
 
                   <div className="mt-3">
-                    <Button asChild variant="ghost" size="sm">
-                      <Link href={`/campaigns/${campaign.id}`}>View insights</Link>
-                    </Button>
+                    <Link
+                      href={`/campaigns/${campaign.id}`}
+                      className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }))}
+                    >
+                      View insights
+                    </Link>
                   </div>
 
                   <p className="mt-4 text-sm leading-6 text-slate-500">
