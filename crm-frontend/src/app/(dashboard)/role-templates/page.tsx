@@ -1,7 +1,6 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import Link from 'next/link';
 import { format } from 'date-fns';
 import { Copy, Plus, Shield, ShieldX, Users } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -216,8 +215,12 @@ export default function RoleTemplatesPage() {
                     </td>
                     <td className="px-4 py-4">
                       <div className="flex justify-end gap-2">
-                        <Button asChild variant="outline" size="sm">
-                          <Link href={`/role-templates/${template.id}`}>View</Link>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => router.push(`/role-templates/${template.id}`)}
+                        >
+                          View
                         </Button>
                         <PermissionGuard permission={PERMISSIONS.roles.create}>
                           <Button

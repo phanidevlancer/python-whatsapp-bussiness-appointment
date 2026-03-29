@@ -13,17 +13,29 @@ from app.models.role_template import RoleTemplate
 
 
 async def get_by_name(db: AsyncSession, name: str) -> RoleTemplate | None:
-    result = await db.execute(select(RoleTemplate).where(RoleTemplate.name == name))
+    result = await db.execute(
+        select(RoleTemplate)
+        .options(selectinload(RoleTemplate.permissions))
+        .where(RoleTemplate.name == name)
+    )
     return result.scalar_one_or_none()
 
 
 async def get_by_id(db: AsyncSession, template_id: uuid.UUID) -> RoleTemplate | None:
-    result = await db.execute(select(RoleTemplate).where(RoleTemplate.id == template_id))
+    result = await db.execute(
+        select(RoleTemplate)
+        .options(selectinload(RoleTemplate.permissions))
+        .where(RoleTemplate.id == template_id)
+    )
     return result.scalar_one_or_none()
 
 
 async def list_templates(db: AsyncSession) -> list[RoleTemplate]:
-    result = await db.execute(select(RoleTemplate).order_by(RoleTemplate.name))
+    result = await db.execute(
+        select(RoleTemplate)
+        .options(selectinload(RoleTemplate.permissions))
+        .order_by(RoleTemplate.name)
+    )
     return list(result.scalars().all())
 
 
@@ -70,7 +82,12 @@ async def set_template_permissions(
     template_id: uuid.UUID,
     permissions: Sequence[Permission],
 ) -> RoleTemplate:
-    template = await get_by_id(db, template_id)
+    result = await db.execute(
+        select(RoleTemplate)
+        .options(selectinload(RoleTemplate.permissions))
+        .where(RoleTemplate.id == template_id)
+    )
+    template = result.scalar_one_or_none()
     if template is None:
         raise ValueError(f"Role template {template_id} not found")
 

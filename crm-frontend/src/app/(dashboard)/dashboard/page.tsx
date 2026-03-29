@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useStats, useTrends, useUpcoming, useChannelStats, useCancellationStats, useRescheduleStats } from '@/hooks/useDashboard';
+import { useAuthStore } from '@/store/authStore';
 import StatsCards from '@/components/dashboard/StatsCards';
 import TrendChart from '@/components/dashboard/TrendChart';
 import UpcomingList from '@/components/dashboard/UpcomingList';
@@ -19,12 +20,15 @@ function getGreeting(): string {
 
 export default function DashboardPage() {
   const [range, setRange] = useState<'7d' | '30d' | '90d'>('30d');
+  const user = useAuthStore((s) => s.user);
   const { data: stats, isLoading: statsLoading } = useStats();
   const { data: trends, isLoading: trendsLoading } = useTrends(range);
   const { data: upcoming, isLoading: upcomingLoading } = useUpcoming(50);
   const { data: channels, isLoading: channelsLoading } = useChannelStats();
   const { data: cancellations, isLoading: cancellationsLoading } = useCancellationStats();
   const { data: reschedules, isLoading: reschedulesLoading } = useRescheduleStats();
+  const displayName = user?.name?.trim() || 'there';
+  const avatarLabel = displayName.charAt(0).toUpperCase();
 
   if (statsLoading) {
     return (
@@ -51,10 +55,10 @@ export default function DashboardPage() {
       {/* Greeting Row */}
       <div className="flex justify-end items-center mb-6">
         <h2 className="text-lg text-slate-700 mr-3">
-          {getGreeting()}, <span className="font-bold text-slate-900">Admin</span>
+          {getGreeting()}, <span className="font-bold text-slate-900">{displayName}</span>
         </h2>
         <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-sm font-semibold border-2 border-white shadow-sm">
-          A
+          {avatarLabel}
         </div>
       </div>
 
