@@ -70,6 +70,26 @@
   --background: #f1f5f9;
   --surface: #ffffff;
   --surface-elevated: #ffffff;
+  --surface-container-lowest: #ffffff;
+  --surface-container-low: #f8fafc;
+  --surface-container: #eef2f7;
+  --surface-container-high: #e2e8f0;
+  --surface-container-highest: #cbd5e1;
+  --surface-bright: rgba(255, 255, 255, 0.85);
+  --shell-background: linear-gradient(180deg, #f8fbff 0%, #eef7fb 100%);
+  --shell-accent: radial-gradient(circle at top left, rgba(13, 148, 136, 0.12), transparent 32%),
+    radial-gradient(circle at top right, rgba(59, 130, 246, 0.08), transparent 28%);
+  --sidebar-background: rgba(248, 250, 252, 0.9);
+  --sidebar-border: rgba(226, 232, 240, 0.7);
+  --sidebar-item-hover: rgba(255, 255, 255, 0.8);
+  --sidebar-item-active-bg: #ffffff;
+  --sidebar-item-active-text: var(--primary-700);
+  --sidebar-item-active-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+  --topbar-background: rgba(255, 255, 255, 0.7);
+  --topbar-border: rgba(255, 255, 255, 0.6);
+  --panel-background: rgba(255, 255, 255, 0.85);
+  --panel-border: rgba(255, 255, 255, 0.8);
+  --panel-hover: #ffffff;
   
   /* Text Colors */
   --text-primary: #1f2937;
@@ -105,20 +125,8 @@
 
   /* Font */
   --font-sans: 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Roboto', 'Oxygen', 'Ubuntu', sans-serif;
+  --font-display: 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Roboto', 'Oxygen', 'Ubuntu', sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0f172a;
-    --surface: #1e293b;
-    --surface-elevated: #334155;
-    --text-primary: #f9fafb;
-    --text-secondary: #d1d5db;
-    --text-tertiary: #6b7280;
-    --border-light: #374151;
-    --border-medium: #4b5563;
-  }
 }
 
 @theme inline {
@@ -126,6 +134,12 @@
   --color-foreground: var(--text-primary);
   --color-surface: var(--surface);
   --color-surface-elevated: var(--surface-elevated);
+  --color-surface-container-lowest: var(--surface-container-lowest);
+  --color-surface-container-low: var(--surface-container-low);
+  --color-surface-container: var(--surface-container);
+  --color-surface-container-high: var(--surface-container-high);
+  --color-surface-container-highest: var(--surface-container-highest);
+  --color-surface-bright: var(--surface-bright);
   
   --color-primary-50: var(--primary-50);
   --color-primary-100: var(--primary-100);
@@ -185,6 +199,7 @@
   --color-gray-900: var(--gray-900);
 
   --font-sans: var(--font-sans);
+  --font-display: var(--font-display);
   --font-mono: var(--font-mono);
 
   --shadow-xs: var(--shadow-xs);
@@ -220,6 +235,90 @@ body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+.theme-strong-shell {
+  background: var(--shell-background);
+}
+
+.theme-shell-accent {
+  background: var(--shell-accent);
+}
+
+.dashboard-page-shell {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--panel-background) 92%, transparent), color-mix(in srgb, var(--surface-container) 72%, transparent));
+  border-radius: 28px;
+  padding: 0.25rem;
+}
+
+.dashboard-page-header {
+  background: var(--panel-background);
+  border: 1px solid var(--panel-border);
+  box-shadow: var(--shadow-lg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.dashboard-page-panel {
+  background: var(--panel-background);
+  border: 1px solid var(--panel-border);
+  box-shadow: var(--shadow-lg);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.dashboard-page-subtle {
+  background: color-mix(in srgb, var(--surface-container-low) 84%, transparent);
+}
+
+.dashboard-page-table-head {
+  background: color-mix(in srgb, var(--surface-container-low) 92%, transparent);
+}
+
+.dashboard-surface-input {
+  background: color-mix(in srgb, var(--surface-container-low) 94%, transparent);
+  border-color: color-mix(in srgb, var(--border-medium) 82%, transparent);
+  color: var(--text-primary);
+}
+
+.dashboard-surface-input::placeholder {
+  color: var(--text-tertiary);
+}
+
+.dashboard-surface-input:focus {
+  background: var(--surface-container-lowest);
+}
+
+.dashboard-surface-muted {
+  background: color-mix(in srgb, var(--surface-container-low) 88%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border-light) 92%, transparent);
+}
+
+.dashboard-surface-soft {
+  background: color-mix(in srgb, var(--panel-background) 94%, transparent);
+  border: 1px solid color-mix(in srgb, var(--panel-border) 92%, transparent);
+}
+
+.dashboard-surface-strong {
+  background: color-mix(in srgb, var(--surface-container-lowest) 96%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border-light) 90%, transparent);
+}
+
+.dashboard-empty-state-icon {
+  background: color-mix(in srgb, var(--primary-100) 78%, transparent);
+  color: var(--primary-500);
+}
+
+.dashboard-action-outline {
+  background: color-mix(in srgb, var(--surface-container-lowest) 92%, transparent);
+  border-color: color-mix(in srgb, var(--border-light) 92%, transparent);
+  color: var(--text-secondary);
+}
+
+.dashboard-action-outline:hover {
+  background: color-mix(in srgb, var(--primary-50) 86%, transparent);
+  border-color: color-mix(in srgb, var(--primary-200) 90%, transparent);
+  color: var(--primary-700);
 }
 
 /* ============================================

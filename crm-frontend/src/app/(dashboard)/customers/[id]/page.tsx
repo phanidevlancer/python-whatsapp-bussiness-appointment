@@ -44,7 +44,7 @@ function LogCallDialog({ lead, onClose }: { lead: Lead; onClose: () => void }) {
             <select
               value={status}
               onChange={(e) => setStatus(e.target.value as LeadStatus)}
-              className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="dashboard-surface-input w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
             >
               <option value="contacted">Contacted — spoke to them</option>
               <option value="follow_up">Follow Up — call again later</option>
@@ -58,7 +58,7 @@ function LogCallDialog({ lead, onClose }: { lead: Lead; onClose: () => void }) {
               onChange={(e) => setNotes(e.target.value)}
               rows={4}
               placeholder="What did they say? Any special requests?"
-              className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="dashboard-surface-input w-full resize-none rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
             />
           </div>
         </div>
@@ -156,7 +156,7 @@ export default function CustomerDetailPage() {
   if (!customer) return <div className="text-slate-400 text-sm p-8 text-center">Not found</div>;
 
   return (
-    <div className="space-y-5">
+    <div className="dashboard-page-shell space-y-5">
       <button onClick={() => router.back()} className="flex items-center gap-2 text-sm text-slate-500 hover:text-slate-800 transition-colors">
         <ArrowLeft size={15} /> Back
       </button>
@@ -164,7 +164,7 @@ export default function CustomerDetailPage() {
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1.6fr)_minmax(320px,0.95fr)]">
         <div className="space-y-5">
           {/* Details card */}
-          <div className="bg-white rounded-xl border border-slate-200 p-6">
+          <div className="dashboard-page-panel rounded-xl p-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-semibold text-slate-900">{customer.name ?? 'Unknown'}</h2>
               {!editing ? (
@@ -244,14 +244,14 @@ export default function CustomerDetailPage() {
         </div>
 
         <div className="space-y-5">
-          <div className="bg-white rounded-xl border border-slate-200 p-6 xl:sticky xl:top-6">
+          <div className="dashboard-page-panel rounded-xl p-6 xl:sticky xl:top-6">
             <h3 className="text-sm font-semibold text-slate-700 mb-4">Appointment History ({appts?.total ?? 0})</h3>
             {!appts?.items.length ? (
               <p className="text-sm text-slate-400">No appointments</p>
             ) : (
               <div className="divide-y divide-slate-100">
                 {appts.items.map((a) => (
-                  <Link key={a.id} href={`/appointments/${a.id}`} className="flex items-center justify-between py-3 hover:bg-slate-50 -mx-2 px-2 rounded transition-colors">
+                  <Link key={a.id} href={`/appointments/${a.id}`} className="flex items-center justify-between rounded px-2 py-3 transition-colors -mx-2 hover:[background:color-mix(in_srgb,var(--surface-container-low)_90%,transparent)]">
                     <div>
                       <p className="text-sm font-medium text-slate-900">{a.service?.name ?? '—'}</p>
                       <p className="text-xs text-slate-400">

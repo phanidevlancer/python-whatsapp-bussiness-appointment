@@ -98,8 +98,8 @@ export default function RoleTemplateDetailPage() {
 
   if (!canViewRoles) {
     return (
-      <Card className="p-8 text-center" variant="elevated">
-        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-slate-100 text-slate-500">
+      <Card className="dashboard-page-panel p-8 text-center" variant="elevated">
+        <div className="dashboard-surface-muted mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full" style={{ color: 'var(--text-secondary)' }}>
           <ShieldX size={28} />
         </div>
         <h2 className="text-lg font-semibold text-slate-900">Access denied</h2>
@@ -112,7 +112,7 @@ export default function RoleTemplateDetailPage() {
     return (
       <div className="space-y-6">
         <Skeleton variant="text" className="h-4 w-24" />
-        <Card className="p-6" variant="elevated">
+        <Card className="dashboard-page-panel p-6" variant="elevated">
           <div className="space-y-3">
             <Skeleton variant="text" className="h-5 w-48" />
             <Skeleton variant="text" className="h-4 w-72" />
@@ -124,7 +124,7 @@ export default function RoleTemplateDetailPage() {
 
   if (!template) {
     return (
-      <Card className="p-8 text-center" variant="elevated">
+      <Card className="dashboard-page-panel p-8 text-center" variant="elevated">
         <h3 className="text-sm font-medium text-slate-900">Role template not found</h3>
         <Button variant="outline" size="sm" className="mt-3" onClick={() => router.back()}>
           Go Back
@@ -232,7 +232,7 @@ export default function RoleTemplateDetailPage() {
       : `This template is assigned to ${assignedCount} users. Saving changes will immediately change the permissions for those accounts.`;
 
   return (
-    <div className="space-y-5 rounded-[28px] bg-[linear-gradient(180deg,rgba(255,255,255,0.82),rgba(240,249,255,0.62))] p-1">
+    <div className="dashboard-page-shell space-y-5">
       <button
         onClick={() => router.back()}
         className="flex items-center gap-2 px-2 text-sm text-slate-500 transition-colors hover:text-slate-800"
@@ -240,7 +240,7 @@ export default function RoleTemplateDetailPage() {
         <ArrowLeft size={15} /> Back
       </button>
 
-      <div className="flex flex-wrap items-start justify-between gap-4 rounded-[24px] border border-white/70 bg-white/70 px-6 py-5 shadow-[0_16px_40px_rgba(13,148,136,0.08)] backdrop-blur-sm">
+      <div className="dashboard-page-header flex flex-wrap items-start justify-between gap-4 rounded-[24px] px-6 py-5">
         <div className="space-y-2">
           <div className="flex flex-wrap items-center gap-2">
             <h2 className="text-[1.9rem] font-black tracking-[-0.03em] text-slate-900">{template.name}</h2>
@@ -270,7 +270,7 @@ export default function RoleTemplateDetailPage() {
               size="md"
               leftIcon={<Copy size={16} />}
               onClick={openCopyModal}
-              className="rounded-2xl border-slate-200 bg-white px-5 text-slate-600 hover:border-primary-200 hover:bg-primary-50 hover:text-primary-700"
+              className="dashboard-action-outline rounded-2xl border px-5"
             >
               Copy Template
             </Button>
@@ -308,13 +308,13 @@ export default function RoleTemplateDetailPage() {
       </div>
 
       {isReadOnly ? (
-        <Card className="rounded-[24px] border-amber-200 bg-amber-50/70 p-4 text-sm text-amber-900" variant="outlined">
+        <Card className="dashboard-page-panel rounded-[24px] border-amber-200 p-4 text-sm text-amber-900" variant="outlined" style={{ background: 'color-mix(in srgb, var(--warning-50) 88%, transparent)' }}>
           System templates are read-only. You can copy this template, but edits and deletes are blocked.
         </Card>
       ) : null}
 
       <div className="grid gap-6 xl:grid-cols-[1fr_1.25fr]">
-        <Card className="rounded-[28px] border-white/80 bg-white/90 p-6 shadow-[0_20px_48px_rgba(15,23,42,0.08)]" variant="elevated">
+        <Card className="dashboard-page-panel rounded-[28px] p-6" variant="elevated">
           <CardHeader className="border-0 pb-4">
             <div>
               <CardTitle className="text-lg font-bold tracking-[-0.02em] text-slate-900">Template details</CardTitle>
@@ -330,7 +330,7 @@ export default function RoleTemplateDetailPage() {
                   <InfoTile label="Created" value={formatDate(template.created_at)} />
                   <InfoTile label="Updated" value={formatDate(template.updated_at)} />
                 </div>
-                <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+                <div className="dashboard-surface-muted rounded-xl p-4 text-sm" style={{ color: 'var(--text-secondary)' }}>
                   {usage?.users?.length ? (
                     <div className="space-y-2">
                       <p className="font-medium text-slate-900">Assigned users</p>
@@ -358,7 +358,7 @@ export default function RoleTemplateDetailPage() {
                   placeholder="Optional template description"
                 />
                 <div className="flex items-center justify-end gap-3">
-                  <Button variant="outline" size="md" onClick={() => setEditing(false)} className="rounded-2xl border-slate-200 bg-white px-5 text-slate-600 hover:border-primary-200 hover:bg-primary-50 hover:text-primary-700">
+                  <Button variant="outline" size="md" onClick={() => setEditing(false)} className="dashboard-action-outline rounded-2xl border px-5">
                     Cancel
                   </Button>
                   <PermissionGuard permission={PERMISSIONS.roles.update}>
@@ -394,7 +394,7 @@ export default function RoleTemplateDetailPage() {
           <ModalTitle>Copy role template</ModalTitle>
         </ModalHeader>
         <ModalContent className="space-y-4">
-          <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+          <div className="rounded-xl border border-amber-200 p-4 text-sm text-amber-800" style={{ background: 'color-mix(in srgb, var(--warning-50) 92%, transparent)' }}>
             This will duplicate the permission set into a new editable template.
           </div>
           <Input label="New template name" value={copyName} onChange={(e) => setCopyName(e.target.value)} />
@@ -420,7 +420,7 @@ export default function RoleTemplateDetailPage() {
           <ModalTitle>Usage warning</ModalTitle>
         </ModalHeader>
         <ModalContent className="space-y-4">
-          <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+          <div className="rounded-xl border border-amber-200 p-4 text-sm text-amber-900" style={{ background: 'color-mix(in srgb, var(--warning-50) 92%, transparent)' }}>
             {usageWarningMessage}
           </div>
           {warningAction !== 'delete' ? (
@@ -460,9 +460,9 @@ export default function RoleTemplateDetailPage() {
 
 function InfoTile({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-xl bg-slate-50 p-3">
-      <p className="mb-1 text-xs text-slate-500">{label}</p>
-      <p className="break-words text-sm font-medium text-slate-900">{value}</p>
+    <div className="dashboard-surface-muted rounded-xl p-3">
+      <p className="mb-1 text-xs" style={{ color: 'var(--text-secondary)' }}>{label}</p>
+      <p className="break-words text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{value}</p>
     </div>
   );
 }

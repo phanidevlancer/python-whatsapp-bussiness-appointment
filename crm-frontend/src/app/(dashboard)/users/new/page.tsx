@@ -50,8 +50,8 @@ export default function NewUserPage() {
 
   if (!canCreateUsers) {
     return (
-      <Card className="p-8 text-center" variant="elevated">
-        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-slate-100 text-slate-500">
+      <Card className="dashboard-page-panel p-8 text-center" variant="elevated">
+        <div className="dashboard-surface-muted mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full" style={{ color: 'var(--text-secondary)' }}>
           <ShieldX size={28} />
         </div>
         <h2 className="text-lg font-semibold text-slate-900">Access denied</h2>
@@ -99,7 +99,7 @@ export default function NewUserPage() {
   };
 
   return (
-    <div className="max-w-4xl space-y-5">
+    <div className="dashboard-page-shell max-w-4xl space-y-5">
       <button
         onClick={() => router.back()}
         className="flex items-center gap-2 text-sm text-slate-500 hover:text-slate-800 transition-colors"
@@ -107,7 +107,7 @@ export default function NewUserPage() {
         <ArrowLeft size={15} /> Back
       </button>
 
-      <Card className="overflow-hidden" variant="elevated">
+      <Card className="dashboard-page-panel overflow-hidden" variant="elevated">
         <CardHeader>
           <div>
             <CardTitle>Create User</CardTitle>
@@ -134,7 +134,7 @@ export default function NewUserPage() {
               <select
                 value={templateId}
                 onChange={(e) => setTemplateId(e.target.value)}
-                className="flex h-10 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:cursor-not-allowed disabled:opacity-50"
+                className="dashboard-surface-input flex h-10 w-full rounded-xl border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <option value="">No template assigned</option>
                 {activeTemplates.map((template) => (
@@ -145,7 +145,7 @@ export default function NewUserPage() {
               </select>
             </div>
           </div>
-          <label className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+          <label className="dashboard-surface-muted flex items-center gap-3 rounded-xl px-4 py-3 text-sm" style={{ color: 'var(--text-secondary)' }}>
             <input
               type="checkbox"
               checked={mustChangePassword}
@@ -156,7 +156,7 @@ export default function NewUserPage() {
           </label>
           {formError ? <p className="text-sm font-medium text-error-600">{formError}</p> : null}
           <div className="flex items-center justify-end gap-3 pt-2">
-            <Button variant="outline" size="md" onClick={() => router.back()} disabled={isPending}>
+            <Button variant="outline" size="md" onClick={() => router.back()} disabled={isPending} className="dashboard-action-outline border">
               Cancel
             </Button>
             <PermissionGuard permission={PERMISSIONS.users.create}>

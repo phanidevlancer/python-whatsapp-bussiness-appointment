@@ -45,11 +45,11 @@ export default function AppointmentDistribution({ stats }: AppointmentDistributi
     : rawData.map((d) => ({ ...d, value: 1 }));
 
   return (
-    <div className="glass-card rounded-2xl p-5 flex flex-col">
+    <div className="dashboard-page-panel flex flex-col rounded-2xl p-5">
       {/* Header */}
       <div className="flex justify-between items-center mb-4">
-        <h3 className="text-sm font-semibold text-slate-900">Appointment Distribution</h3>
-        <span className="text-xs text-slate-500">Total {total}</span>
+        <h3 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Appointment Distribution</h3>
+        <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>Total {total}</span>
       </div>
 
       {/* Donut */}
@@ -76,8 +76,8 @@ export default function AppointmentDistribution({ stats }: AppointmentDistributi
               </Pie>
               <Tooltip
                 contentStyle={{
-                  background: 'rgba(255,255,255,0.95)',
-                  border: '1px solid #e2e8f0',
+                  background: 'var(--surface-container-lowest)',
+                  border: '1px solid var(--border-light)',
                   borderRadius: '8px',
                   fontSize: '12px',
                 }}
@@ -92,7 +92,7 @@ export default function AppointmentDistribution({ stats }: AppointmentDistributi
         {DISTRIBUTION_DATA.map((item) => (
           <div key={item.id} className="flex items-center">
             <span className="w-2.5 h-2.5 rounded-full mr-2 shrink-0" style={{ backgroundColor: item.color }} />
-            <span className="text-slate-600 text-xs">{item.label}</span>
+            <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>{item.label}</span>
           </div>
         ))}
       </div>

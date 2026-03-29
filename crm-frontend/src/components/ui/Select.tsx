@@ -18,9 +18,10 @@ const SelectTrigger = React.forwardRef<
   <SelectPrimitive.Trigger
     ref={ref}
     className={cn(
-      'flex h-9 w-full items-center justify-between gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-start text-sm text-slate-900 shadow-sm shadow-black/5 focus:border-slate-400 focus:outline-none focus:ring-[3px] focus:ring-slate-200 disabled:cursor-not-allowed disabled:opacity-50 data-[placeholder]:text-slate-400 [&>span]:min-w-0',
+      'dashboard-surface-input flex h-9 w-full items-center justify-between gap-2 rounded-lg border px-3 py-2 text-start text-sm shadow-sm shadow-black/5 focus:outline-none focus:ring-[3px] focus:ring-primary-100 disabled:cursor-not-allowed disabled:opacity-50 data-[placeholder]:[color:var(--text-tertiary)] [&>span]:min-w-0',
       className
     )}
+    style={{ color: 'var(--text-primary)' }}
     {...props}
   >
     {children}
@@ -67,12 +68,17 @@ const SelectContent = React.forwardRef<
     <SelectPrimitive.Content
       ref={ref}
       className={cn(
-        'relative z-[1001] max-h-[min(24rem,var(--radix-select-content-available-height))] min-w-[8rem] overflow-hidden rounded-lg border border-slate-200 bg-white text-slate-900 shadow-xl shadow-black/10 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 [&_[role=group]]:py-1',
+        'relative z-[1001] max-h-[min(24rem,var(--radix-select-content-available-height))] min-w-[8rem] overflow-hidden rounded-lg border shadow-xl shadow-black/10 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 [&_[role=group]]:py-1',
         position === 'popper' &&
           'w-full min-w-[var(--radix-select-trigger-width)] data-[side=bottom]:translate-y-1 data-[side=left]:-translate-x-1 data-[side=right]:translate-x-1 data-[side=top]:-translate-y-1',
         className
       )}
       position={position}
+      style={{
+        background: 'var(--surface-container-lowest)',
+        borderColor: 'var(--border-light)',
+        color: 'var(--text-primary)',
+      }}
       {...props}
     >
       <SelectScrollUpButton />
@@ -93,7 +99,8 @@ const SelectLabel = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <SelectPrimitive.Label
     ref={ref}
-    className={cn('py-1.5 pe-2 ps-8 text-xs font-medium text-slate-500', className)}
+    className={cn('py-1.5 pe-2 ps-8 text-xs font-medium', className)}
+    style={{ color: 'var(--text-secondary)' }}
     {...props}
   />
 ));
@@ -106,9 +113,10 @@ const SelectItem = React.forwardRef<
   <SelectPrimitive.Item
     ref={ref}
     className={cn(
-      'relative flex w-full cursor-default select-none items-center rounded-md py-1.5 pe-2 ps-8 text-sm outline-none focus:bg-slate-100 focus:text-slate-900 data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
+      'relative flex w-full cursor-default select-none items-center rounded-md py-1.5 pe-2 ps-8 text-sm outline-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
       className
     )}
+    style={{ color: 'var(--text-primary)' }}
     {...props}
   >
     <span className="absolute start-2 flex size-3.5 items-center justify-center">
@@ -126,7 +134,7 @@ const SelectSeparator = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Separator>,
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Separator>
 >(({ className, ...props }, ref) => (
-  <SelectPrimitive.Separator ref={ref} className={cn('-mx-1 my-1 h-px bg-slate-200', className)} {...props} />
+  <SelectPrimitive.Separator ref={ref} className={cn('-mx-1 my-1 h-px', className)} style={{ background: 'var(--border-light)' }} {...props} />
 ));
 SelectSeparator.displayName = SelectPrimitive.Separator.displayName;
 

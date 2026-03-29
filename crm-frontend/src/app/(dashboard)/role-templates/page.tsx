@@ -55,8 +55,8 @@ export default function RoleTemplatesPage() {
 
   if (!canViewRoles) {
     return (
-      <Card className="p-8 text-center" variant="elevated">
-        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-slate-100 text-slate-500">
+      <Card className="dashboard-page-panel p-8 text-center" variant="elevated">
+        <div className="dashboard-surface-muted mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full" style={{ color: 'var(--text-secondary)' }}>
           <ShieldX size={28} />
         </div>
         <h2 className="text-lg font-semibold text-slate-900">Access denied</h2>
@@ -127,8 +127,8 @@ export default function RoleTemplatesPage() {
   };
 
   return (
-    <div className="space-y-5 rounded-[28px] bg-[linear-gradient(180deg,rgba(255,255,255,0.82),rgba(240,249,255,0.62))] p-1">
-      <div className="flex flex-wrap items-start justify-between gap-4 rounded-[24px] border border-white/70 bg-white/70 px-6 py-5 shadow-[0_16px_40px_rgba(13,148,136,0.08)] backdrop-blur-sm">
+    <div className="dashboard-page-shell space-y-5">
+      <div className="dashboard-page-header flex flex-wrap items-start justify-between gap-4 rounded-[24px] px-6 py-5">
         <div>
           <h2 className="text-[1.9rem] font-black tracking-[-0.03em] text-slate-900">Role Templates</h2>
           <p className="mt-1 text-sm font-medium text-slate-500">
@@ -152,7 +152,7 @@ export default function RoleTemplatesPage() {
         </div>
       </div>
 
-      <Card className="overflow-hidden rounded-[28px] border-white/80 bg-white/90 p-0 shadow-[0_20px_48px_rgba(15,23,42,0.08)]" variant="elevated">
+      <Card className="dashboard-page-panel overflow-hidden rounded-[28px] p-0" variant="elevated">
         {isLoading ? (
           <div className="space-y-3 p-5">
             {Array.from({ length: 5 }).map((_, index) => (
@@ -165,7 +165,7 @@ export default function RoleTemplatesPage() {
           </div>
         ) : !templates?.length ? (
           <div className="p-20 text-center">
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary-50 text-primary-400">
+            <div className="dashboard-empty-state-icon mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
               <Shield size={32} />
             </div>
             <h3 className="text-sm font-semibold text-slate-900">No role templates found</h3>
@@ -173,8 +173,8 @@ export default function RoleTemplatesPage() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-slate-100">
-              <thead className="bg-slate-50/80">
+            <table className="min-w-full divide-y" style={{ borderColor: 'var(--border-light)' }}>
+              <thead className="dashboard-page-table-head">
                 <tr>
                   <th className="px-4 py-4 text-left text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Template</th>
                   <th className="px-4 py-4 text-left text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Users</th>
@@ -184,9 +184,9 @@ export default function RoleTemplatesPage() {
                   <th className="px-4 py-4 text-right text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 bg-white">
+              <tbody className="divide-y" style={{ borderColor: 'var(--border-light)' }}>
                 {templates.map((template) => (
-                  <tr key={template.id} className="hover:bg-slate-50/70">
+                  <tr key={template.id}>
                     <td className="px-4 py-4">
                       <div className="flex items-center gap-3">
                         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-50 text-primary-600">
@@ -215,11 +215,11 @@ export default function RoleTemplatesPage() {
                     </td>
                     <td className="px-4 py-4">
                       <div className="flex justify-end gap-2">
-                          <Button variant="outline" size="sm" onClick={() => router.push(`/role-templates/${template.id}`)} className="rounded-2xl border-slate-200 bg-white px-4 text-slate-600 hover:border-primary-200 hover:bg-primary-50 hover:text-primary-700">
+                          <Button variant="outline" size="sm" onClick={() => router.push(`/role-templates/${template.id}`)} className="dashboard-action-outline rounded-2xl border px-4">
                             View
                           </Button>
                         <PermissionGuard permission={PERMISSIONS.roles.create}>
-                          <Button variant="outline" size="sm" leftIcon={<Copy size={14} />} onClick={() => openCopyModal(template)} className="rounded-2xl border-slate-200 bg-white px-4 text-slate-600 hover:border-primary-200 hover:bg-primary-50 hover:text-primary-700">
+                          <Button variant="outline" size="sm" leftIcon={<Copy size={14} />} onClick={() => openCopyModal(template)} className="dashboard-action-outline rounded-2xl border px-4">
                             Copy
                           </Button>
                         </PermissionGuard>
@@ -269,7 +269,7 @@ export default function RoleTemplatesPage() {
           <ModalTitle>Copy role template</ModalTitle>
         </ModalHeader>
         <ModalContent className="space-y-4">
-          <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+          <div className="rounded-xl border border-amber-200 p-4 text-sm text-amber-800" style={{ background: 'color-mix(in srgb, var(--warning-50) 92%, transparent)' }}>
             Copying <span className="font-medium">{copyTarget?.name}</span> will duplicate its permission set and create a new editable template.
           </div>
           <Input label="New template name" value={copyName} onChange={(e) => setCopyName(e.target.value)} />
@@ -295,7 +295,7 @@ export default function RoleTemplatesPage() {
           <ModalTitle>Delete role template</ModalTitle>
         </ModalHeader>
         <ModalContent className="space-y-4">
-          <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+          <div className="rounded-xl border border-red-200 p-4 text-sm text-red-800" style={{ background: 'color-mix(in srgb, var(--error-50) 92%, transparent)' }}>
             {deleteTarget?.assigned_user_count
               ? `This template is assigned to ${deleteTarget.assigned_user_count} users. Deletion will be blocked until those users are moved to another template.`
               : 'This action permanently removes the template. It cannot be undone.'}

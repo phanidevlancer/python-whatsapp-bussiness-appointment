@@ -41,7 +41,7 @@ function ServiceHistoryRow({ serviceId }: { serviceId: string }) {
   const { data: history = [], isLoading } = useServiceHistory(serviceId);
   return (
     <tr>
-      <td colSpan={6} className="px-4 pb-4 bg-slate-50/70">
+      <td colSpan={6} className="px-4 pb-4 dashboard-page-table-head">
         <ChangeHistoryPanel history={history} isLoading={isLoading} />
       </td>
     </tr>
@@ -114,7 +114,7 @@ function ServiceRow({
 
     return (
     <>
-      <TableRow key={s.id} className="group hover:bg-slate-50/80">
+      <TableRow key={s.id} className="group">
         <TableCell className="py-4">
           <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary-50 text-primary-600">
             <Tag size={18} className="text-primary-600" />
@@ -122,21 +122,21 @@ function ServiceRow({
         </TableCell>
         <TableCell className="py-4">
           {editing ? (
-            <Input value={editName} onChange={(e) => setEditName(e.target.value)} className="max-w-[180px] rounded-2xl border-0 bg-slate-100/80 shadow-none ring-1 ring-transparent focus:bg-white focus:ring-2 focus:ring-primary-200" />
+            <Input value={editName} onChange={(e) => setEditName(e.target.value)} className="dashboard-surface-input max-w-[180px] rounded-2xl border shadow-none ring-1 ring-transparent focus:ring-2 focus:ring-primary-200" />
           ) : (
             <span className="font-semibold text-slate-900">{s.name}</span>
           )}
         </TableCell>
         <TableCell className="py-4">
           {editing ? (
-            <Textarea value={editDesc} onChange={(e) => setEditDesc(e.target.value)} rows={1} resize="none" className="max-w-[220px] rounded-2xl border-0 bg-slate-100/80 text-sm shadow-none ring-1 ring-transparent focus:bg-white focus:ring-2 focus:ring-primary-200" />
+            <Textarea value={editDesc} onChange={(e) => setEditDesc(e.target.value)} rows={1} resize="none" className="dashboard-surface-input max-w-[220px] rounded-2xl border text-sm shadow-none ring-1 ring-transparent focus:ring-2 focus:ring-primary-200" />
           ) : (
             <span className="text-sm text-slate-500">{s.description ?? '—'}</span>
           )}
         </TableCell>
         <TableCell className="py-4">
           {editing ? (
-            <Input type="number" value={editDuration} onChange={(e) => setEditDuration(e.target.value)} className="max-w-[90px] rounded-2xl border-0 bg-slate-100/80 shadow-none ring-1 ring-transparent focus:bg-white focus:ring-2 focus:ring-primary-200" />
+            <Input type="number" value={editDuration} onChange={(e) => setEditDuration(e.target.value)} className="dashboard-surface-input max-w-[90px] rounded-2xl border shadow-none ring-1 ring-transparent focus:ring-2 focus:ring-primary-200" />
           ) : (
             <div className="flex items-center gap-2">
               <Clock size={14} className="text-slate-400" />
@@ -158,17 +158,18 @@ function ServiceRow({
           <div className="flex items-center justify-end gap-1">
             {editing ? (
               <>
-                <Button variant="ghost" size="sm" leftIcon={<X size={14} />} onClick={cancelEdit} className="rounded-2xl px-3 text-slate-500 hover:bg-slate-100 hover:text-slate-800">Cancel</Button>
+                <Button variant="ghost" size="sm" leftIcon={<X size={14} />} onClick={cancelEdit} className="rounded-2xl px-3" style={{ color: 'var(--text-secondary)' }}>Cancel</Button>
                 <Button variant="primary" size="sm" leftIcon={<Check size={14} />} onClick={requestSave} className="rounded-2xl px-3">Save</Button>
               </>
             ) : (
               <>
-                <Button variant="ghost" size="sm" leftIcon={<Pencil size={14} />} onClick={startEdit} className="rounded-2xl px-3 text-slate-400 hover:bg-slate-100 hover:text-slate-700">Edit</Button>
+                <Button variant="ghost" size="sm" leftIcon={<Pencil size={14} />} onClick={startEdit} className="rounded-2xl px-3" style={{ color: 'var(--text-tertiary)' }}>Edit</Button>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => setShowHistory((v) => !v)}
-                  className="rounded-2xl px-3 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+                  className="rounded-2xl px-3"
+                  style={{ color: 'var(--text-tertiary)' }}
                   title="Show history"
                 >
                   {showHistory ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
@@ -229,8 +230,8 @@ export default function ServicesPage() {
   };
 
   return (
-    <div className="space-y-5 rounded-[28px] bg-[linear-gradient(180deg,rgba(255,255,255,0.82),rgba(240,249,255,0.62))] p-1">
-      <div className="flex items-center justify-between rounded-[24px] border border-white/70 bg-white/70 px-6 py-5 shadow-[0_16px_40px_rgba(13,148,136,0.08)] backdrop-blur-sm">
+    <div className="dashboard-page-shell space-y-5">
+      <div className="dashboard-page-header flex items-center justify-between rounded-[24px] px-6 py-5">
         <div>
           <h2 className="text-[1.9rem] font-black tracking-[-0.03em] text-slate-900">Services</h2>
           <p className="mt-1 text-sm font-medium text-slate-500">Manage your clinic services and pricing</p>
@@ -247,25 +248,25 @@ export default function ServicesPage() {
       </div>
 
       {showCreate && (
-        <Card className="rounded-[24px] border-white/80 bg-white/85 p-5 shadow-[0_16px_40px_rgba(15,23,42,0.06)] backdrop-blur-sm" variant="elevated">
+        <Card className="dashboard-page-panel rounded-[24px] p-5" variant="elevated">
           <CardHeader className="pb-4 border-0">
             <CardTitle className="text-lg font-bold tracking-[-0.02em] text-slate-900">Create New Service</CardTitle>
           </CardHeader>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Input placeholder="Service Name" value={newName} onChange={(e) => setNewName(e.target.value)} leftIcon={<Tag size={16} />} className="h-12 rounded-2xl border-0 bg-slate-100/80 shadow-none ring-1 ring-transparent focus:bg-white focus:ring-2 focus:ring-primary-200" />
-            <Input placeholder="Duration (minutes)" type="number" value={newDuration} onChange={(e) => setNewDuration(e.target.value)} leftIcon={<Clock size={16} />} className="h-12 rounded-2xl border-0 bg-slate-100/80 shadow-none ring-1 ring-transparent focus:bg-white focus:ring-2 focus:ring-primary-200" />
-            <Textarea placeholder="Description (optional)" value={newDesc} onChange={(e) => setNewDesc(e.target.value)} resize="none" rows={1} className="rounded-2xl border-0 bg-slate-100/80 shadow-none ring-1 ring-transparent focus:bg-white focus:ring-2 focus:ring-primary-200" />
+            <Input placeholder="Service Name" value={newName} onChange={(e) => setNewName(e.target.value)} leftIcon={<Tag size={16} />} className="dashboard-surface-input h-12 rounded-2xl border shadow-none ring-1 ring-transparent focus:ring-2 focus:ring-primary-200" />
+            <Input placeholder="Duration (minutes)" type="number" value={newDuration} onChange={(e) => setNewDuration(e.target.value)} leftIcon={<Clock size={16} />} className="dashboard-surface-input h-12 rounded-2xl border shadow-none ring-1 ring-transparent focus:ring-2 focus:ring-primary-200" />
+            <Textarea placeholder="Description (optional)" value={newDesc} onChange={(e) => setNewDesc(e.target.value)} resize="none" rows={1} className="dashboard-surface-input rounded-2xl border shadow-none ring-1 ring-transparent focus:ring-2 focus:ring-primary-200" />
           </div>
-          <div className="mt-4 flex gap-3 border-t border-slate-100 pt-4">
+          <div className="mt-4 flex gap-3 border-t pt-4" style={{ borderColor: 'var(--border-light)' }}>
             <Button variant="primary" size="md" onClick={handleCreate} isLoading={creating} className="rounded-2xl px-5 shadow-[0_14px_28px_rgba(13,148,136,0.18)]">
               {creating ? 'Creating...' : 'Create Service'}
             </Button>
-            <Button variant="outline" size="md" onClick={() => setShowCreate(false)} className="rounded-2xl border-slate-200 bg-white px-5 text-slate-600 hover:border-primary-200 hover:bg-primary-50 hover:text-primary-700">Cancel</Button>
+            <Button variant="outline" size="md" onClick={() => setShowCreate(false)} className="dashboard-action-outline rounded-2xl border px-5">Cancel</Button>
           </div>
         </Card>
       )}
 
-      <Card className="overflow-hidden rounded-[28px] border-white/80 bg-white/90 p-0 shadow-[0_20px_48px_rgba(15,23,42,0.08)]" variant="elevated">
+      <Card className="dashboard-page-panel overflow-hidden rounded-[28px] p-0" variant="elevated">
         {isLoading ? (
           <div className="p-4 space-y-3">
             {Array.from({ length: 5 }).map((_, i) => (
@@ -282,7 +283,7 @@ export default function ServicesPage() {
           </div>
         ) : !services?.length ? (
           <div className="py-20 text-center">
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary-50">
+            <div className="dashboard-empty-state-icon mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
               <Tag size={32} className="text-primary-400" />
             </div>
             <h3 className="mb-1 text-sm font-semibold text-slate-900">No services found</h3>
@@ -290,7 +291,7 @@ export default function ServicesPage() {
           </div>
         ) : (
           <Table className="min-w-full">
-            <TableHeader className="border-b border-slate-100 bg-slate-50/80">
+            <TableHeader className="dashboard-page-table-head border-b">
               <TableRow hoverable={false}>
                 <TableHead className="w-12 py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400"><span className="sr-only">Icon</span></TableHead>
                 <TableHead className="py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Name</TableHead>
@@ -300,7 +301,7 @@ export default function ServicesPage() {
                 <TableHead align="right" className="py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Actions</TableHead>
               </TableRow>
             </TableHeader>
-            <TableBody className="divide-y divide-slate-100">
+            <TableBody className="divide-y" style={{ borderColor: 'var(--border-light)' }}>
               {services.map((s) => (
                 <ServiceRow
                   key={s.id}

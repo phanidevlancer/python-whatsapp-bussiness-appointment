@@ -22,14 +22,14 @@ const Card = forwardRef<HTMLDivElement, CardProps>(
     ref
   ) => {
     const baseStyles = `
-      bg-white rounded-2xl
+      rounded-2xl
       transition-all duration-200
     `;
 
     const variants = {
-      default: 'shadow-sm border border-slate-200',
-      elevated: 'shadow-lg border border-slate-100',
-      outlined: 'border-2 border-slate-200 shadow-none',
+      default: 'shadow-sm border',
+      elevated: 'shadow-lg border',
+      outlined: 'border-2 shadow-none',
     };
 
     const paddings = {
@@ -46,6 +46,10 @@ const Card = forwardRef<HTMLDivElement, CardProps>(
     return (
       <div
         ref={ref}
+        style={{
+          background: 'var(--panel-background)',
+          borderColor: 'var(--panel-border)',
+        }}
         className={twMerge(baseStyles, variants[variant], paddings[padding], hoverStyles, className)}
         {...props}
       >
@@ -65,9 +69,10 @@ function CardHeader({ className, children, ...props }: CardHeaderProps) {
   return (
     <div
       className={twMerge(
-        'flex items-center justify-between pb-4 border-b border-slate-100',
+        'flex items-center justify-between pb-4 border-b',
         className
       )}
+      style={{ borderColor: 'var(--border-light)' }}
       {...props}
     >
       {children}
@@ -83,9 +88,10 @@ function CardTitle({ className, children, ...props }: CardTitleProps) {
   return (
     <h3
       className={twMerge(
-        'text-base font-semibold text-slate-900',
+        'text-base font-semibold',
         className
       )}
+      style={{ color: 'var(--text-primary)' }}
       {...props}
     >
       {children}
@@ -101,9 +107,10 @@ function CardSubtitle({ className, children, ...props }: CardSubtitleProps) {
   return (
     <p
       className={twMerge(
-        'text-sm text-slate-500 mt-0.5',
+        'mt-0.5 text-sm',
         className
       )}
+      style={{ color: 'var(--text-secondary)' }}
       {...props}
     >
       {children}
@@ -131,9 +138,10 @@ function CardFooter({ className, children, ...props }: CardFooterProps) {
   return (
     <div
       className={twMerge(
-        'flex items-center gap-3 pt-4 border-t border-slate-100',
+        'flex items-center gap-3 pt-4 border-t',
         className
       )}
+      style={{ borderColor: 'var(--border-light)' }}
       {...props}
     >
       {children}

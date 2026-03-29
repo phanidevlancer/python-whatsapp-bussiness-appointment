@@ -50,9 +50,10 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
           'inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors',
           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2',
           'disabled:pointer-events-none disabled:opacity-50',
-          variant === 'outline' && 'border border-slate-300 bg-transparent',
+          variant === 'outline' && 'border dashboard-surface-input',
           className
         )}
+        style={{ color: 'var(--text-primary)' }}
         {...props}
       >
         {children}
@@ -161,11 +162,11 @@ export function FluidDropdown({ value, onChange, className }: FluidDropdownProps
           variant="outline"
           onClick={() => setIsOpen((open) => !open)}
           className={cn(
-            'h-10 w-full justify-between border-slate-300 bg-white px-3 text-slate-600 shadow-sm',
-            'hover:bg-slate-50 hover:text-slate-900',
-            'focus:ring-slate-300 focus:ring-offset-2 focus:ring-offset-white',
+            'h-10 w-full justify-between px-3 shadow-sm',
+            'hover:[background:color-mix(in_srgb,var(--surface-container-low)_94%,transparent)]',
+            'focus:ring-primary-100 focus:ring-offset-2 focus:ring-offset-white',
             'transition-all duration-200 ease-in-out',
-            isOpen && 'bg-slate-50 text-slate-900'
+            isOpen && '[background:color-mix(in_srgb,var(--surface-container-low)_94%,transparent)]'
           )}
           aria-expanded={isOpen}
           aria-haspopup="true"
@@ -217,13 +218,17 @@ export function FluidDropdown({ value, onChange, className }: FluidDropdownProps
               onKeyDown={handleKeyDown}
             >
               <motion.div
-                className="w-full rounded-lg border border-slate-200 bg-white p-1 shadow-lg"
+                className="w-full rounded-lg border p-1 shadow-lg"
                 initial={{ borderRadius: 8 }}
                 animate={{
                   borderRadius: 12,
                   transition: { duration: 0.2 },
                 }}
-                style={{ transformOrigin: 'top' }}
+                style={{
+                  transformOrigin: 'top',
+                  background: 'var(--surface-container-lowest)',
+                  borderColor: 'var(--border-light)',
+                }}
               >
                 <motion.div
                   className="relative py-2"
@@ -233,7 +238,8 @@ export function FluidDropdown({ value, onChange, className }: FluidDropdownProps
                 >
                   <motion.div
                     layoutId="hover-highlight"
-                    className="absolute inset-x-1 rounded-md bg-slate-100"
+                    className="absolute inset-x-1 rounded-md"
+                    style={{ background: 'color-mix(in srgb, var(--surface-container-low) 96%, transparent)' }}
                     animate={{
                       y: highlightIndex * 40 + (highlightIndex > 0 ? 20 : 0),
                       height: 40,
@@ -248,7 +254,8 @@ export function FluidDropdown({ value, onChange, className }: FluidDropdownProps
                     <React.Fragment key={category.id}>
                       {index === 1 && (
                         <motion.div
-                          className="mx-4 my-2.5 border-t border-slate-200"
+                          className="mx-4 my-2.5 border-t"
+                          style={{ borderColor: 'var(--border-light)' }}
                           variants={itemVariants}
                         />
                       )}
@@ -264,9 +271,15 @@ export function FluidDropdown({ value, onChange, className }: FluidDropdownProps
                           'relative flex w-full items-center rounded-md px-4 py-2.5 text-sm',
                           'transition-colors duration-150 focus:outline-none',
                           selectedCategory.id === category.id || hoveredCategory === category.id
-                            ? 'text-slate-900'
-                            : 'text-slate-500'
+                            ? ''
+                            : ''
                         )}
+                        style={{
+                          color:
+                            selectedCategory.id === category.id || hoveredCategory === category.id
+                              ? 'var(--text-primary)'
+                              : 'var(--text-secondary)',
+                        }}
                         whileTap={{ scale: 0.98 }}
                         variants={itemVariants}
                       >

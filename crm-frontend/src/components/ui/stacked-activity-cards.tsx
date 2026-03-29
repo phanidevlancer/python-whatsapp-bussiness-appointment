@@ -75,7 +75,7 @@ export function StackedActivityCards({
 
   if (!previewItems.length) {
     return (
-      <div className={cn('rounded-[28px] border border-slate-200 bg-white p-6 text-sm text-slate-500 shadow-sm', className)}>
+      <div className={cn('dashboard-page-panel rounded-[28px] p-6 text-sm shadow-sm', className)} style={{ color: 'var(--text-secondary)' }}>
         {emptyMessage}
       </div>
     );
@@ -83,7 +83,7 @@ export function StackedActivityCards({
 
   return (
     <div className={cn('w-full max-w-md', className)}>
-      <div className="rounded-[28px] bg-[linear-gradient(180deg,#fbfdff_0%,#eef4ff_100%)] p-3 shadow-[0_16px_44px_rgba(15,23,42,0.10)]">
+      <div className="dashboard-page-panel rounded-[28px] p-3 shadow-[0_16px_44px_rgba(15,23,42,0.10)]">
         <motion.div layout transition={springTransition} className="flex flex-col gap-2.5">
           {previewItems.map((item, index) => {
             const Icon = item.icon ?? CalendarDays;
@@ -99,11 +99,11 @@ export function StackedActivityCards({
                     <Icon size={15} />
                   </span>
                   <div className="min-w-0">
-                    <h3 className="truncate text-sm font-semibold leading-5 text-slate-800">{item.activity}</h3>
-                    <p className="truncate text-xs text-slate-500">{item.location}</p>
+                    <h3 className="truncate text-sm font-semibold leading-5" style={{ color: 'var(--text-primary)' }}>{item.activity}</h3>
+                    <p className="truncate text-xs" style={{ color: 'var(--text-secondary)' }}>{item.location}</p>
                   </div>
                 </div>
-                <span className="justify-self-end whitespace-nowrap pt-0.5 text-right text-xs font-medium text-slate-500">{item.date}</span>
+                <span className="justify-self-end whitespace-nowrap pt-0.5 text-right text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>{item.date}</span>
               </div>
             );
 
@@ -117,7 +117,7 @@ export function StackedActivityCards({
                   scale: !isExpanded ? collapsedScale : 1,
                   opacity: 1,
                 }}
-                className="min-h-[68px] rounded-[22px] border border-slate-200 bg-white px-3 py-2.5 shadow-[0_8px_22px_rgba(15,23,42,0.10)]"
+                className="dashboard-surface-strong min-h-[68px] rounded-[22px] px-3 py-2.5 shadow-[0_8px_22px_rgba(15,23,42,0.10)]"
                 style={{
                   zIndex: previewItems.length - index,
                   transformOrigin: 'top center',
@@ -150,11 +150,11 @@ export function StackedActivityCards({
                         <Icon size={15} />
                       </span>
                       <div className="min-w-0">
-                        <h3 className="truncate text-sm font-semibold leading-5 text-slate-800">{item.activity}</h3>
-                        <p className="truncate text-xs text-slate-500">{item.location}</p>
+                        <h3 className="truncate text-sm font-semibold leading-5" style={{ color: 'var(--text-primary)' }}>{item.activity}</h3>
+                        <p className="truncate text-xs" style={{ color: 'var(--text-secondary)' }}>{item.location}</p>
                       </div>
                     </div>
-                    <span className="justify-self-end whitespace-nowrap pt-0.5 text-right text-xs font-medium text-slate-500">{item.date}</span>
+                    <span className="justify-self-end whitespace-nowrap pt-0.5 text-right text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>{item.date}</span>
                   </div>
                 );
 
@@ -166,7 +166,7 @@ export function StackedActivityCards({
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -8 }}
                     transition={fadeTransition}
-                    className="min-h-[68px] rounded-[22px] border border-slate-200 bg-white px-3 py-2.5 shadow-[0_8px_22px_rgba(15,23,42,0.10)]"
+                    className="dashboard-surface-strong min-h-[68px] rounded-[22px] px-3 py-2.5 shadow-[0_8px_22px_rgba(15,23,42,0.10)]"
                   >
                     {item.href ? (
                       <Link href={item.href} className="block">
@@ -191,7 +191,7 @@ export function StackedActivityCards({
               }
               onExpandedChange?.(next);
             }}
-            className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-semibold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+            className="dashboard-action-outline inline-flex items-center gap-1 rounded-full border px-3 py-1.5 text-[11px] font-semibold shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
           >
             {isExpanded ? 'Show Less' : `Show All${items.length > previewItems.length ? ` (${items.length})` : ''}`}
             <ChevronDown

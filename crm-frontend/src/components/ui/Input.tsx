@@ -37,7 +37,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
         ) : null}
         <div className="relative">
           {leftIcon ? (
-            <div className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+            <div className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-tertiary)' }}>
               {leftIcon}
             </div>
           ) : null}
@@ -45,24 +45,29 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             type={type}
             id={inputId}
             className={cn(
-              'flex h-10 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 ring-offset-white placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
+              'dashboard-surface-input flex h-10 w-full rounded-xl border px-3 py-2 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
               leftIcon ? 'pl-10' : '',
               rightIcon ? 'pr-10' : '',
               error ? 'border-error-500 focus-visible:ring-error-500' : '',
               className
             )}
+            style={{
+              background: 'var(--surface-container-lowest)',
+              borderColor: error ? undefined : 'var(--border-medium)',
+              color: 'var(--text-primary)',
+            }}
             ref={ref}
             disabled={disabled}
             {...props}
           />
           {rightIcon ? (
-            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">
+            <div className="absolute right-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-tertiary)' }}>
               {rightIcon}
             </div>
           ) : null}
         </div>
         {error ? <p className="mt-1.5 text-xs font-medium text-error-600">{error}</p> : null}
-        {helperText && !error ? <p className="mt-1.5 text-xs text-slate-500">{helperText}</p> : null}
+        {helperText && !error ? <p className="mt-1.5 text-xs" style={{ color: 'var(--text-secondary)' }}>{helperText}</p> : null}
       </div>
     );
   }

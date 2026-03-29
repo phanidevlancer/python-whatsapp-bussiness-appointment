@@ -25,7 +25,7 @@ export default function WeeklyPerformance({ stats }: WeeklyPerformanceProps) {
     if (total === 0) return weights.map(() => 0);
     const raw = weights.map((w) => w * total);
     const floored = raw.map(Math.floor);
-    let remainder = total - floored.reduce((a, b) => a + b, 0);
+    const remainder = total - floored.reduce((a, b) => a + b, 0);
     // Distribute remaining units to highest fractional parts
     const fracs = raw.map((v, i) => ({ i, f: v - floored[i] })).sort((a, b) => b.f - a.f);
     for (let k = 0; k < remainder; k++) floored[fracs[k].i]++;
@@ -46,14 +46,14 @@ export default function WeeklyPerformance({ stats }: WeeklyPerformanceProps) {
   }));
 
   return (
-    <div className="glass-card rounded-2xl p-5 flex flex-col">
+    <div className="dashboard-page-panel flex flex-col rounded-2xl p-5">
       {/* Header */}
       <div className="flex justify-between items-center mb-4">
-        <h3 className="text-sm font-semibold text-slate-900">Weekly Performance</h3>
+        <h3 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Weekly Performance</h3>
       </div>
 
       {/* Legend */}
-      <div className="flex justify-center space-x-6 mb-2 text-xs text-slate-600">
+      <div className="mb-2 flex justify-center space-x-6 text-xs" style={{ color: 'var(--text-secondary)' }}>
         <div className="flex items-center">
           <span className="w-2.5 h-2.5 rounded bg-blue-500 mr-2" />
           Confirmed
@@ -72,22 +72,22 @@ export default function WeeklyPerformance({ stats }: WeeklyPerformanceProps) {
       <div className="h-64 w-full mt-2">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data} margin={{ top: 5, right: 10, bottom: 5, left: -10 }}>
-            <CartesianGrid vertical={false} stroke="#f1f5f9" />
+            <CartesianGrid vertical={false} stroke="var(--border-light)" />
             <XAxis
               dataKey="day"
-              tick={{ fill: '#94a3b8', fontSize: 11 }}
+              tick={{ fill: 'var(--text-tertiary)', fontSize: 11 }}
               axisLine={false}
               tickLine={false}
             />
             <YAxis
-              tick={{ fill: '#94a3b8', fontSize: 11 }}
+              tick={{ fill: 'var(--text-tertiary)', fontSize: 11 }}
               axisLine={false}
               tickLine={false}
             />
             <Tooltip
               contentStyle={{
-                background: 'rgba(255,255,255,0.95)',
-                border: '1px solid #e2e8f0',
+                background: 'var(--surface-container-lowest)',
+                border: '1px solid var(--border-light)',
                 borderRadius: '8px',
                 fontSize: '12px',
               }}

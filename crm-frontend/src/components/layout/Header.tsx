@@ -2,11 +2,13 @@
 
 import { HelpCircle, LogOut, Plus, Search } from 'lucide-react';
 import { useLogout } from '@/hooks/useAuth';
+import { useTheme } from '@/components/theme/ThemeProvider';
 import { useAuthStore } from '@/store/authStore';
 
 export default function Header() {
   const logout = useLogout();
   const user = useAuthStore((s) => s.user);
+  const { themeId, setThemeId, themes } = useTheme();
   const initials = user?.name
     ?.split(' ')
     .filter(Boolean)
@@ -15,7 +17,10 @@ export default function Header() {
     .join('') || 'A';
 
   return (
-    <header className="sticky top-0 z-20 flex h-20 flex-shrink-0 items-center justify-between border-b border-white/60 bg-white/70 px-8 backdrop-blur-xl">
+    <header
+      className="sticky top-0 z-20 flex h-20 flex-shrink-0 items-center justify-between border-b px-8 backdrop-blur-xl"
+      style={{ borderColor: 'var(--topbar-border)', background: 'var(--topbar-background)' }}
+    >
       <div>
         <h1 className="text-xl font-black tracking-[-0.03em] text-slate-900">ORA Clinic</h1>
         <p className="text-xs font-medium text-slate-500">Operations and patient workflow</p>
@@ -31,6 +36,25 @@ export default function Header() {
           />
         </div>
 
+        <label
+          className="hidden items-center gap-2 rounded-2xl border px-3 py-2 text-sm text-slate-600 xl:flex"
+          style={{ borderColor: 'var(--panel-border)', background: 'var(--panel-background)', boxShadow: 'var(--shadow-md)' }}
+        >
+          <span className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Theme</span>
+          <select
+            value={themeId}
+            onChange={(event) => setThemeId(event.target.value as typeof themeId)}
+            className="bg-transparent text-sm font-medium text-slate-700 outline-none"
+            aria-label="Theme selector"
+          >
+            {themes.map((theme) => (
+              <option key={theme.id} value={theme.id}>
+                {theme.label}
+              </option>
+            ))}
+          </select>
+        </label>
+
         <button className="flex h-11 items-center rounded-2xl border border-primary-500/20 bg-primary-600 px-5 text-sm font-semibold text-white shadow-[0_14px_28px_rgba(13,148,136,0.18)] transition-colors hover:bg-primary-700">
           <Plus size={15} className="mr-2" /> Create
         </button>
@@ -41,7 +65,8 @@ export default function Header() {
 
         <button
           onClick={logout}
-          className="flex items-center gap-3 rounded-2xl border border-white/80 bg-white/85 px-3 py-2 shadow-[0_12px_28px_rgba(15,23,42,0.06)] transition-colors hover:bg-white"
+          className="flex items-center gap-3 rounded-2xl border px-3 py-2 transition-colors"
+          style={{ borderColor: 'var(--panel-border)', background: 'var(--panel-background)', boxShadow: 'var(--shadow-md)' }}
         >
           <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-to-br from-primary-500 to-primary-700 text-sm font-semibold text-white">
             {initials}

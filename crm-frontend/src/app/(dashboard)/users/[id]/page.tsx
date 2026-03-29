@@ -308,8 +308,8 @@ export default function UserDetailPage() {
 
   if (!canViewUsers) {
     return (
-      <Card className="p-8 text-center" variant="elevated">
-        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-slate-100 text-slate-500">
+      <Card className="dashboard-page-panel p-8 text-center" variant="elevated">
+        <div className="dashboard-surface-muted mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full" style={{ color: 'var(--text-secondary)' }}>
           <ShieldX size={28} />
         </div>
         <h2 className="text-lg font-semibold text-slate-900">Access denied</h2>
@@ -326,7 +326,7 @@ export default function UserDetailPage() {
         <div className="flex items-center gap-2">
           <Skeleton variant="text" className="w-20 h-4" />
         </div>
-        <Card className="p-6" variant="elevated">
+        <Card className="dashboard-page-panel p-6" variant="elevated">
           <div className="flex items-start justify-between gap-4">
             <div className="flex items-center gap-4">
               <Skeleton variant="circular" width={64} height={64} />
@@ -358,7 +358,7 @@ export default function UserDetailPage() {
   const pendingReset = user.must_change_password || user.is_first_login;
 
   return (
-    <div className="max-w-6xl space-y-6">
+    <div className="dashboard-page-shell max-w-6xl space-y-6">
       <button
         onClick={() => router.back()}
         className="flex items-center gap-2 text-sm text-slate-500 hover:text-slate-800 transition-colors"
@@ -368,7 +368,7 @@ export default function UserDetailPage() {
 
       <div className="grid gap-6 xl:grid-cols-[1.6fr_1fr]">
         <div className="space-y-6">
-          <Card className="p-6" variant="elevated">
+          <Card className="dashboard-page-panel p-6" variant="elevated">
             <div className="flex items-start justify-between gap-4 mb-6">
               <div className="flex items-center gap-4">
                 <Avatar name={user.name} size="lg" />
@@ -423,7 +423,7 @@ export default function UserDetailPage() {
             )}
 
             {!editing ? (
-              <div className="flex flex-wrap gap-3 mt-6 pt-6 border-t border-slate-100">
+              <div className="mt-6 flex flex-wrap gap-3 border-t pt-6" style={{ borderColor: 'var(--border-light)' }}>
                 <PermissionGuard permission={PERMISSIONS.users.update}>
                   <Button variant="outline" size="md" leftIcon={<Pencil size={16} />} onClick={startEditing}>
                     Edit Profile
@@ -433,7 +433,7 @@ export default function UserDetailPage() {
             ) : null}
           </Card>
 
-          <Card className="p-6" variant="elevated">
+          <Card className="dashboard-page-panel p-6" variant="elevated">
             <CardHeader className="pb-4 border-0">
               <div>
                 <CardTitle>Audit Log</CardTitle>
@@ -452,7 +452,7 @@ export default function UserDetailPage() {
               ) : (
                 <div className="space-y-3">
                   {auditLog.map((entry) => (
-                    <div key={entry.id} className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                    <div key={entry.id} className="dashboard-surface-muted rounded-xl p-3">
                       <div className="flex items-start justify-between gap-3">
                         <div>
                           <p className="text-sm font-medium text-slate-900 capitalize">
@@ -482,7 +482,7 @@ export default function UserDetailPage() {
         <div className="space-y-6">
           {canManageUsers ? (
             <>
-            <Card className="p-6" variant="elevated">
+            <Card className="dashboard-page-panel p-6" variant="elevated">
               <CardHeader className="pb-4 border-0">
                 <div>
                   <CardTitle>Role Template</CardTitle>
@@ -495,7 +495,7 @@ export default function UserDetailPage() {
                   <select
                     value={selectedTemplateId}
                     onChange={(e) => setSelectedTemplateId(e.target.value)}
-                    className="flex h-10 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="dashboard-surface-input flex h-10 w-full rounded-xl border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     <option value="">Unassigned</option>
                     {(templateOptions ?? []).map((template) => (
@@ -518,7 +518,7 @@ export default function UserDetailPage() {
               </CardContent>
             </Card>
 
-            <Card className="p-6" variant="elevated">
+            <Card className="dashboard-page-panel p-6" variant="elevated">
               <CardHeader className="pb-4 border-0">
                 <div>
                   <CardTitle>Account Controls</CardTitle>
@@ -559,8 +559,8 @@ export default function UserDetailPage() {
             </Card>
             </>
           ) : (
-            <Card className="p-6" variant="elevated">
-              <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-4 text-sm text-slate-500">
+            <Card className="dashboard-page-panel p-6" variant="elevated">
+              <div className="dashboard-surface-muted rounded-xl border border-dashed p-4 text-sm" style={{ color: 'var(--text-secondary)' }}>
                 Manage permission required to change templates, activate or deactivate users, and force password resets.
               </div>
             </Card>
@@ -586,7 +586,7 @@ export default function UserDetailPage() {
           <ModalTitle>Set Temporary Password</ModalTitle>
         </ModalHeader>
         <ModalContent className="space-y-4">
-          <p className="text-sm text-slate-500">
+          <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
             Set a temporary password for {user.name}. They will be required to change it on next login.
           </p>
           <Input
@@ -618,12 +618,12 @@ export default function UserDetailPage() {
 
 function InfoTile({ icon, label, value }: { icon: ReactNode; label: string; value: string }) {
   return (
-    <div className="rounded-xl bg-slate-50 p-3">
-      <div className="flex items-center gap-2 text-xs text-slate-500 mb-1">
+    <div className="dashboard-surface-muted rounded-xl p-3">
+      <div className="mb-1 flex items-center gap-2 text-xs" style={{ color: 'var(--text-secondary)' }}>
         {icon}
         <span>{label}</span>
       </div>
-      <p className="text-sm font-medium text-slate-900 break-words">{value}</p>
+      <p className="break-words text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{value}</p>
     </div>
   );
 }

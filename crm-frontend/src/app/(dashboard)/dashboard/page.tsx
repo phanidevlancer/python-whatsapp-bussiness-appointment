@@ -35,7 +35,7 @@ export default function DashboardPage() {
       <div className="space-y-6">
         <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="bg-white rounded-lg border border-gray-200 p-4">
+            <div key={i} className="dashboard-page-panel rounded-lg p-4">
               <Skeleton variant="rounded" width={40} height={40} className="mb-3" />
               <Skeleton variant="text" width={60} height={24} className="mb-2" />
               <Skeleton variant="text" width={40} height={16} />
@@ -54,10 +54,10 @@ export default function DashboardPage() {
     <div>
       {/* Greeting Row */}
       <div className="flex justify-end items-center mb-6">
-        <h2 className="text-lg text-slate-700 mr-3">
-          {getGreeting()}, <span className="font-bold text-slate-900">{displayName}</span>
+        <h2 className="mr-3 text-lg" style={{ color: 'var(--text-secondary)' }}>
+          {getGreeting()}, <span className="font-bold" style={{ color: 'var(--text-primary)' }}>{displayName}</span>
         </h2>
-        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-sm font-semibold border-2 border-white shadow-sm">
+        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-blue-400 to-blue-600 text-sm font-semibold text-white shadow-sm" style={{ border: '2px solid var(--panel-border)' }}>
           {avatarLabel}
         </div>
       </div>

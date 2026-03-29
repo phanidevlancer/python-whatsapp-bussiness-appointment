@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { Calendar, dateFnsLocalizer, View, Views, SlotInfo } from 'react-big-calendar';
+import { useState, useMemo, useCallback } from 'react';
+import { Calendar, dateFnsLocalizer, View, Views } from 'react-big-calendar';
 import { format, parse, startOfWeek, getDay, isValid, parseISO } from 'date-fns';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import { useAppointmentsList } from '@/hooks/useAppointments';
@@ -40,33 +40,19 @@ export default function CalendarPage() {
   const router = useRouter();
   const { data, isLoading, error } = useAppointmentsList({ page_size: 100 });
   const [view, setView] = useState<View>(Views.WEEK);
-  const [events, setEvents] = useState<CalendarEvent[]>([]);
-
-  // Transform appointments to calendar events
-  useEffect(() => {
-    if (!data?.items || data.items.length === 0) {
-      setEvents([]);
-      return;
-    }
+  const events = useMemo<CalendarEvent[]>(() => {
+    if (!data?.items?.length) return [];
 
     const mappedEvents: CalendarEvent[] = [];
 
     for (const appt of data.items) {
-      // Skip cancelled appointments
-      if (appt.status === 'cancelled') {
-        continue;
-      }
-
-      if (!appt.slot || !appt.slot.start_time || !appt.slot.end_time) {
-        continue;
-      }
+      if (appt.status === 'cancelled') continue;
+      if (!appt.slot || !appt.slot.start_time || !appt.slot.end_time) continue;
 
       const startDate = parseISO(appt.slot.start_time);
       const endDate = parseISO(appt.slot.end_time);
 
-      if (!isValid(startDate) || !isValid(endDate)) {
-        continue;
-      }
+      if (!isValid(startDate) || !isValid(endDate)) continue;
 
       mappedEvents.push({
         id: appt.id,
@@ -81,7 +67,7 @@ export default function CalendarPage() {
       });
     }
 
-    setEvents(mappedEvents);
+    return mappedEvents;
   }, [data]);
 
   // Custom event style getter - Google Calendar colors
@@ -130,7 +116,14 @@ export default function CalendarPage() {
   ), []);
 
   // Custom toolbar - Google Calendar style
-  const CustomToolbar = (toolbar: any) => {
+  type CalendarToolbar = {
+    label: string | Date[];
+    view: View;
+    onNavigate: (action: 'PREV' | 'NEXT' | 'TODAY') => void;
+    onView: (view: View) => void;
+  };
+
+  const CustomToolbar = (toolbar: CalendarToolbar) => {
     const goToBack = () => toolbar.onNavigate('PREV');
     const goToNext = () => toolbar.onNavigate('NEXT');
     const goToToday = () => toolbar.onNavigate('TODAY');
@@ -145,27 +138,27 @@ export default function CalendarPage() {
     const labelDate = getLabel();
 
     return (
-      <div className="flex items-center justify-between mb-0 p-4 bg-white border-b border-slate-200">
+      <div className="dashboard-surface-strong mb-0 flex items-center justify-between border-b p-4">
         <div className="flex items-center gap-3">
           <button
             onClick={goToToday}
-            className="px-4 py-2 text-sm font-medium text-slate-700 border border-slate-300 rounded hover:bg-slate-50"
+            className="dashboard-action-outline rounded border px-4 py-2 text-sm font-medium"
           >
             Today
           </button>
           <div className="flex items-center gap-1">
-            <button onClick={goToBack} className="p-2 hover:bg-slate-100 rounded-full">
+            <button onClick={goToBack} className="rounded-full p-2 hover:[background:color-mix(in_srgb,var(--surface-container-low)_90%,transparent)]">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M15 18l-6-6 6-6" />
               </svg>
             </button>
-            <button onClick={goToNext} className="p-2 hover:bg-slate-100 rounded-full">
+            <button onClick={goToNext} className="rounded-full p-2 hover:[background:color-mix(in_srgb,var(--surface-container-low)_90%,transparent)]">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M9 18l6-6-6-6" />
               </svg>
             </button>
           </div>
-          <h2 className="ml-2 text-xl font-semibold text-slate-900">
+          <h2 className="ml-2 text-xl font-semibold" style={{ color: 'var(--text-primary)' }}>
             {isValid(labelDate) ? format(labelDate, 'MMMM yyyy') : 'Calendar'}
           </h2>
         </div>
@@ -177,8 +170,9 @@ export default function CalendarPage() {
               className={`px-4 py-2 text-sm font-medium rounded transition-colors ${
                 toolbar.view === v
                   ? 'bg-blue-100 text-blue-700'
-                  : 'text-slate-600 hover:bg-slate-100'
+                  : 'hover:[background:color-mix(in_srgb,var(--surface-container-low)_90%,transparent)]'
               }`}
+              style={toolbar.view === v ? undefined : { color: 'var(--text-secondary)' }}
             >
               {v.charAt(0).toUpperCase() + v.slice(1)}
             </button>
@@ -191,7 +185,7 @@ export default function CalendarPage() {
   // Get error message
   const getErrorMessage = () => {
     if (error) {
-      const axiosError = error as any;
+      const axiosError = error as { response?: { status?: number }; message?: string };
       if (axiosError?.response?.status === 422) {
         return 'Invalid request parameters';
       }
@@ -204,9 +198,9 @@ export default function CalendarPage() {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="dashboard-page-shell space-y-5">
       {/* Page Header */}
-      <div className="flex items-center justify-between">
+      <div className="dashboard-page-header flex items-center justify-between rounded-[24px] px-6 py-5">
         <div>
           <h2 className="text-2xl font-bold text-slate-900">Calendar</h2>
           <p className="text-sm text-slate-500 mt-1">View and manage your appointments</p>
@@ -218,7 +212,7 @@ export default function CalendarPage() {
       </div>
 
       {/* Calendar Card */}
-      <Card className="p-0 overflow-hidden" variant="elevated">
+      <Card className="dashboard-page-panel overflow-hidden rounded-[28px] p-0" variant="elevated">
         <style jsx global>{`
           .rbc-calendar {
             font-family: 'Roboto', 'Segoe UI', sans-serif;
@@ -229,17 +223,17 @@ export default function CalendarPage() {
             padding: 8px 4px;
             font-size: 11px;
             font-weight: 600;
-            color: #5f6368;
-            border-bottom: 1px solid #dadce0;
+            color: var(--text-secondary);
+            border-bottom: 1px solid var(--border-light);
             text-transform: uppercase;
           }
           
           .rbc-header + .rbc-header {
-            border-left: 1px solid #dadce0;
+            border-left: 1px solid var(--border-light);
           }
           
           .rbc-header.rbc-today {
-            background-color: #e8f0fe;
+            background-color: color-mix(in srgb, var(--info-50) 90%, transparent);
           }
           
           .rbc-date-cell {
@@ -247,7 +241,7 @@ export default function CalendarPage() {
             text-align: right;
             font-size: 12px;
             font-weight: 500;
-            color: #3c4043;
+            color: var(--text-primary);
           }
           
           .rbc-date-cell.rbc-now {
@@ -256,15 +250,15 @@ export default function CalendarPage() {
           }
           
           .rbc-day-bg {
-            border-left: 1px solid #f1f3f4;
+            border-left: 1px solid var(--border-light);
           }
           
           .rbc-day-bg + .rbc-day-bg {
-            border-left: 1px solid #dadce0;
+            border-left: 1px solid var(--border-medium);
           }
           
           .rbc-today {
-            background: #f8f9fa;
+            background: color-mix(in srgb, var(--surface-container-low) 88%, transparent);
           }
           
           .rbc-event {
@@ -288,7 +282,7 @@ export default function CalendarPage() {
           }
           
           .rbc-toolbar button {
-            color: #5f6368;
+            color: var(--text-secondary);
             border-radius: 4px;
             font-size: 13px;
             padding: 8px 12px;
@@ -296,7 +290,7 @@ export default function CalendarPage() {
           }
           
           .rbc-toolbar button:hover {
-            background: #f1f3f4;
+            background: color-mix(in srgb, var(--surface-container-low) 94%, transparent);
           }
           
           .rbc-toolbar button.rbc-active {
@@ -313,17 +307,17 @@ export default function CalendarPage() {
           }
           
           .rbc-time-header {
-            background: #f8f9fa;
-            border-bottom: 1px solid #dadce0;
+            background: color-mix(in srgb, var(--surface-container-low) 88%, transparent);
+            border-bottom: 1px solid var(--border-medium);
           }
           
           .rbc-time-slot {
             font-size: 10px;
-            color: #5f6368;
+            color: var(--text-secondary);
           }
           
           .rbc-timeslot-group {
-            border-bottom: 1px solid #f1f3f4;
+            border-bottom: 1px solid var(--border-light);
           }
           
           .rbc-current-time-indicator {
@@ -343,8 +337,8 @@ export default function CalendarPage() {
           }
           
           .rbc-time-gutter {
-            background: #f8f9fa;
-            border-right: 1px solid #dadce0;
+            background: color-mix(in srgb, var(--surface-container-low) 88%, transparent);
+            border-right: 1px solid var(--border-medium);
           }
           
           .rbc-time-gutter .rbc-time-slot {
@@ -353,7 +347,7 @@ export default function CalendarPage() {
           }
           
           .rbc-day-slot {
-            background: white;
+            background: var(--surface-container-lowest);
           }
           
           .rbc-event-label {
@@ -376,7 +370,7 @@ export default function CalendarPage() {
           }
           
           .rbc-month-row {
-            border-bottom: 1px solid #dadce0;
+            border-bottom: 1px solid var(--border-medium);
           }
           
           .rbc-month-row:last-child {
@@ -385,22 +379,22 @@ export default function CalendarPage() {
         `}</style>
 
         {isLoading ? (
-          <div className="text-center py-16 text-slate-400">
+          <div className="py-16 text-center" style={{ color: 'var(--text-secondary)' }}>
             <div className="animate-pulse flex flex-col items-center">
-              <div className="w-16 h-16 bg-slate-200 rounded-full mb-4"></div>
-              <div className="w-40 h-5 bg-slate-200 rounded mb-2"></div>
+              <div className="mb-4 h-16 w-16 rounded-full" style={{ background: 'var(--surface-container-high)' }}></div>
+              <div className="mb-2 h-5 w-40 rounded" style={{ background: 'var(--surface-container-high)' }}></div>
             </div>
           </div>
         ) : error ? (
           <div className="text-center py-16">
             <p className="text-red-600 font-medium mb-2">Error loading calendar</p>
-            <p className="text-sm text-slate-500">{getErrorMessage()}</p>
+            <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>{getErrorMessage()}</p>
           </div>
         ) : events.length === 0 ? (
           <div className="text-center py-16">
-            <CalendarIcon size={48} className="mx-auto text-slate-300 mb-4" />
-            <h3 className="text-sm font-medium text-slate-900 mb-1">No appointments</h3>
-            <p className="text-sm text-slate-500">
+            <CalendarIcon size={48} className="mx-auto mb-4" style={{ color: 'var(--text-tertiary)' }} />
+            <h3 className="mb-1 text-sm font-medium" style={{ color: 'var(--text-primary)' }}>No appointments</h3>
+            <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
               {data?.total ? `${data.total} appointments exist but may not have time slots` : 'Create an appointment'}
             </p>
           </div>

@@ -26,9 +26,9 @@ export default function AppointmentsPage() {
   const hasActiveFilters = search || filters.status || filters.date_from || filters.date_to;
 
   return (
-    <div className="space-y-5 rounded-[28px] bg-[linear-gradient(180deg,rgba(255,255,255,0.82),rgba(240,249,255,0.62))] p-1">
+    <div className="dashboard-page-shell space-y-5">
       {/* Page Header */}
-      <div className="flex items-center justify-between rounded-[24px] border border-white/70 bg-white/70 px-6 py-5 shadow-[0_16px_40px_rgba(13,148,136,0.08)] backdrop-blur-sm">
+      <div className="dashboard-page-header flex items-center justify-between rounded-[24px] px-6 py-5">
         <div>
           <h2 className="text-[1.9rem] font-black tracking-[-0.03em] text-slate-900">Appointments</h2>
           <p className="mt-1 text-sm font-medium text-slate-500">Manage and track all clinic appointments</p>
@@ -46,7 +46,7 @@ export default function AppointmentsPage() {
 
       {/* Filters Card */}
       <Card
-        className="relative z-20 rounded-[24px] border-white/80 bg-white/85 p-5 shadow-[0_16px_40px_rgba(15,23,42,0.06)] backdrop-blur-sm"
+        className="dashboard-page-panel relative z-20 rounded-[24px] p-5"
         variant="elevated"
       >
         <div className="flex flex-wrap items-center gap-3">
@@ -57,7 +57,7 @@ export default function AppointmentsPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               leftIcon={<Search size={16} />}
-              className="h-12 w-full rounded-2xl border-0 bg-slate-100/80 text-slate-700 shadow-none ring-1 ring-transparent placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-primary-200"
+              className="dashboard-surface-input h-12 w-full rounded-2xl border shadow-none ring-1 ring-transparent focus:ring-2 focus:ring-primary-200"
             />
           </div>
 
@@ -65,7 +65,7 @@ export default function AppointmentsPage() {
           <FluidDropdown
             value={filters.status}
             onChange={(value) => setFilter('status', value)}
-            className="h-12 w-full rounded-2xl border-0 bg-slate-100/80 px-1 text-sm font-medium text-slate-700 shadow-none md:w-44"
+            className="dashboard-surface-input h-12 w-full rounded-2xl border px-1 text-sm font-medium shadow-none md:w-44"
           />
 
           {/* Date Range */}
@@ -79,7 +79,7 @@ export default function AppointmentsPage() {
                 page: 1,
               }))
             }
-            className="h-12 w-full justify-start rounded-2xl border-0 bg-slate-100/80 px-4 text-left text-sm font-medium text-slate-700 shadow-none md:w-[280px]"
+            className="dashboard-surface-input h-12 w-full justify-start rounded-2xl border px-4 text-left text-sm font-medium shadow-none md:w-[280px]"
           />
 
           {/* Clear Filters */}
@@ -88,7 +88,8 @@ export default function AppointmentsPage() {
               variant="ghost"
               size="sm"
               onClick={() => { setFilters({ page: 1, page_size: 20 }); setSearch(''); }}
-              className="h-10 rounded-2xl px-4 text-slate-500 hover:bg-slate-100 hover:text-slate-800"
+              className="h-10 rounded-2xl px-4"
+              style={{ color: 'var(--text-secondary)' }}
             >
               Clear filters
             </Button>
@@ -104,7 +105,7 @@ export default function AppointmentsPage() {
 
       {/* Table Card */}
       <Card
-        className="relative z-0 overflow-hidden rounded-[28px] border-white/80 bg-white/90 p-0 shadow-[0_20px_48px_rgba(15,23,42,0.08)]"
+        className="dashboard-page-panel relative z-0 overflow-hidden rounded-[28px] p-0"
         variant="elevated"
       >
         <AppointmentsTable appointments={data?.items ?? []} isLoading={isLoading} />
@@ -112,7 +113,7 @@ export default function AppointmentsPage() {
 
       {/* Pagination */}
       {data && data.total > data.page_size && (
-        <Card className="rounded-[24px] border-white/70 bg-white/75 p-4 shadow-[0_12px_32px_rgba(15,23,42,0.05)]" variant="default">
+        <Card className="dashboard-page-panel rounded-[24px] p-4" variant="default">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <span className="text-sm text-slate-500">
@@ -127,7 +128,7 @@ export default function AppointmentsPage() {
                 size="sm"
                 disabled={(filters.page ?? 1) <= 1}
                 onClick={() => setFilters((f) => ({ ...f, page: (f.page ?? 1) - 1 }))}
-                className="rounded-2xl border-slate-200 bg-white px-4 text-slate-600 hover:border-primary-200 hover:bg-primary-50 hover:text-primary-700"
+                className="dashboard-action-outline rounded-2xl border px-4"
               >
                 Previous
               </Button>
@@ -136,7 +137,7 @@ export default function AppointmentsPage() {
                 size="sm"
                 disabled={(filters.page ?? 1) >= Math.ceil(data.total / data.page_size)}
                 onClick={() => setFilters((f) => ({ ...f, page: (f.page ?? 1) + 1 }))}
-                className="rounded-2xl border-slate-200 bg-white px-4 text-slate-600 hover:border-primary-200 hover:bg-primary-50 hover:text-primary-700"
+                className="dashboard-action-outline rounded-2xl border px-4"
               >
                 Next
               </Button>

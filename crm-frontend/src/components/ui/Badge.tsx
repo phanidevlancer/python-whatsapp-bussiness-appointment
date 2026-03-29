@@ -1,4 +1,3 @@
-import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { forwardRef, HTMLAttributes, ReactNode } from 'react';
 
@@ -27,13 +26,13 @@ const Badge = forwardRef<HTMLSpanElement, BadgeProps>(
     `;
 
     const variants = {
-      default:  'bg-slate-100 text-slate-600',
-      primary:  'bg-blue-50 text-blue-600',
-      success:  'bg-green-50 text-green-600',
-      warning:  'bg-amber-50 text-amber-600',
-      error:    'bg-red-50 text-red-600',
-      info:     'bg-blue-50 text-blue-600',
-      teal:     'bg-teal-50 text-teal-600',
+      default:  '',
+      primary:  '',
+      success:  '',
+      warning:  '',
+      error:    '',
+      info:     '',
+      teal:     '',
     };
 
     const sizes = {
@@ -48,25 +47,30 @@ const Badge = forwardRef<HTMLSpanElement, BadgeProps>(
       lg: 'w-2 h-2',
     };
 
-    const dotColors = {
-      default:  'bg-slate-500',
-      primary:  'bg-blue-500',
-      success:  'bg-green-600',
-      warning:  'bg-amber-500',
-      error:    'bg-red-500',
-      info:     'bg-blue-500',
-      teal:     'bg-teal-500',
+    const palette = {
+      default: { bg: 'color-mix(in srgb, var(--surface-container-low) 96%, transparent)', text: 'var(--text-secondary)', dot: 'var(--text-secondary)' },
+      primary: { bg: 'color-mix(in srgb, var(--primary-50) 94%, transparent)', text: 'var(--primary-700)', dot: 'var(--primary-500)' },
+      success: { bg: 'color-mix(in srgb, var(--success-50) 94%, transparent)', text: 'var(--success-600)', dot: 'var(--success-500)' },
+      warning: { bg: 'color-mix(in srgb, var(--warning-50) 94%, transparent)', text: 'var(--warning-600)', dot: 'var(--warning-500)' },
+      error: { bg: 'color-mix(in srgb, var(--error-50) 94%, transparent)', text: 'var(--error-600)', dot: 'var(--error-500)' },
+      info: { bg: 'color-mix(in srgb, var(--info-50) 94%, transparent)', text: 'var(--info-600)', dot: 'var(--info-500)' },
+      teal: { bg: 'color-mix(in srgb, var(--primary-50) 94%, transparent)', text: 'var(--primary-600)', dot: 'var(--primary-500)' },
     };
 
     return (
       <span
         ref={ref}
         className={twMerge(baseStyles, variants[variant], sizes[size], className)}
+        style={{
+          background: palette[variant].bg,
+          color: palette[variant].text,
+        }}
         {...props}
       >
         {dot && (
           <span
-            className={twMerge('rounded-full', dotSizes[size], dotColors[variant])}
+            className={twMerge('rounded-full', dotSizes[size])}
+            style={{ background: palette[variant].dot }}
           />
         )}
         {children}

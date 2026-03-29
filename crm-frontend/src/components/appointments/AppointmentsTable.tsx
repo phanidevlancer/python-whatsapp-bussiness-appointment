@@ -53,8 +53,8 @@ export default function AppointmentsTable({ appointments, isLoading }: Props) {
 
   if (appointments.length === 0) {
     return (
-      <div className="py-20 text-center">
-        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary-50">
+        <div className="py-20 text-center">
+        <div className="dashboard-empty-state-icon mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
           <Eye size={32} className="text-primary-400" />
         </div>
         <h3 className="mb-1 text-sm font-semibold text-slate-900">No appointments found</h3>
@@ -66,7 +66,7 @@ export default function AppointmentsTable({ appointments, isLoading }: Props) {
   return (
     <>
     <Table className="min-w-full">
-      <TableHeader className="border-b border-slate-100 bg-slate-50/80">
+      <TableHeader className="dashboard-page-table-head border-b">
         <TableRow hoverable={false}>
           <TableHead className="w-12 py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400"><span className="sr-only">Avatar</span></TableHead>
           <TableHead className="py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Customer</TableHead>
@@ -78,9 +78,9 @@ export default function AppointmentsTable({ appointments, isLoading }: Props) {
           <TableHead align="right" className="py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Actions</TableHead>
         </TableRow>
       </TableHeader>
-      <TableBody className="divide-y divide-slate-100">
+      <TableBody className="divide-y" style={{ borderColor: 'var(--border-light)' }}>
         {appointments.map((appt) => (
-          <TableRow key={appt.id} className="group hover:bg-slate-50/70">
+          <TableRow key={appt.id} className="group">
             <TableCell className="py-4">
               <Avatar
                 name={appt.customer?.name ?? appt.user_phone}
@@ -124,7 +124,8 @@ export default function AppointmentsTable({ appointments, isLoading }: Props) {
               <div className="flex items-center justify-end gap-1">
                 <Link
                   href={`/appointments/${appt.id}`}
-                  className="rounded-xl p-2 text-slate-400 transition-colors hover:bg-primary-50 hover:text-primary-600"
+                  className="rounded-xl p-2 transition-colors hover:bg-primary-50 hover:text-primary-600"
+                  style={{ color: 'var(--text-tertiary)' }}
                   title="View details"
                 >
                   <Eye size={16} />
@@ -139,7 +140,8 @@ export default function AppointmentsTable({ appointments, isLoading }: Props) {
                           onSuccess: () => toast.success('Marked as completed'),
                         })}
                         tooltip="Mark complete"
-                        className="rounded-xl text-slate-400 hover:bg-primary-50 hover:text-primary-600"
+                        className="rounded-xl hover:bg-primary-50 hover:text-primary-600"
+                        style={{ color: 'var(--text-tertiary)' }}
                       >
                         <CheckCircle size={16} />
                       </IconButton>
@@ -149,13 +151,14 @@ export default function AppointmentsTable({ appointments, isLoading }: Props) {
                       size="sm"
                       onClick={() => setCancellingId(appt.id)}
                       tooltip="Cancel"
-                      className="rounded-xl text-slate-400 hover:bg-red-50 hover:text-red-500"
+                      className="rounded-xl hover:bg-red-50 hover:text-red-500"
+                      style={{ color: 'var(--text-tertiary)' }}
                     >
                       <Ban size={16} />
                     </IconButton>
                   </>
                 )}
-                <IconButton variant="default" size="sm" className="rounded-xl text-slate-400 hover:bg-slate-100 hover:text-slate-600">
+                <IconButton variant="default" size="sm" className="rounded-xl hover:text-slate-600" style={{ color: 'var(--text-tertiary)' }}>
                   <MoreVertical size={16} />
                 </IconButton>
               </div>

@@ -1,8 +1,7 @@
 'use client';
 
-import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import { forwardRef, HTMLAttributes, ReactNode, useEffect, useState } from 'react';
+import { HTMLAttributes, ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 
 export interface ModalProps extends HTMLAttributes<HTMLDivElement> {
@@ -22,10 +21,7 @@ export function Modal({
   className,
   ...props
 }: ModalProps) {
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => { setMounted(true); }, []);
-
-  if (!isOpen || !mounted) return null;
+  if (!isOpen || typeof document === 'undefined') return null;
 
   const sizes = {
     sm: 'max-w-md',
@@ -46,16 +42,22 @@ export function Modal({
       {/* Modal */}
       <div
         className={twMerge(
-          'relative bg-white rounded-2xl shadow-2xl w-full animate-scale-in',
+          'relative w-full rounded-2xl animate-scale-in',
           sizes[size],
           className
         )}
+        style={{
+          background: 'var(--surface-container-lowest)',
+          border: '1px solid var(--panel-border)',
+          boxShadow: 'var(--shadow-2xl)',
+        }}
         {...props}
       >
         {showCloseButton && onClose && (
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+            className="absolute top-4 right-4 rounded-lg p-2 transition-colors"
+            style={{ color: 'var(--text-tertiary)' }}
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -78,9 +80,10 @@ function ModalHeader({ className, children, ...props }: ModalHeaderProps) {
   return (
     <div
       className={twMerge(
-        'flex items-center justify-between p-5 border-b border-gray-100',
+        'flex items-center justify-between border-b p-5',
         className
       )}
+      style={{ borderColor: 'var(--border-light)' }}
       {...props}
     >
       {children}
@@ -95,7 +98,8 @@ interface ModalTitleProps extends HTMLAttributes<HTMLHeadingElement> {
 function ModalTitle({ className, children, ...props }: ModalTitleProps) {
   return (
     <h2
-      className={twMerge('text-lg font-semibold text-gray-900', className)}
+      className={twMerge('text-lg font-semibold', className)}
+      style={{ color: 'var(--text-primary)' }}
       {...props}
     >
       {children}
@@ -126,9 +130,10 @@ function ModalFooter({ className, children, ...props }: ModalFooterProps) {
   return (
     <div
       className={twMerge(
-        'flex items-center justify-end gap-3 p-5 border-t border-gray-100',
+        'flex items-center justify-end gap-3 border-t p-5',
         className
       )}
+      style={{ borderColor: 'var(--border-light)' }}
       {...props}
     >
       {children}

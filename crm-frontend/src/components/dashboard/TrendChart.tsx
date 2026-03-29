@@ -28,12 +28,12 @@ export default function TrendChart({ data, range = '30d', onRangeChange }: Trend
   }));
 
   return (
-    <div className="glass-card rounded-2xl p-5 flex flex-col">
+    <div className="dashboard-page-panel flex flex-col rounded-2xl p-5">
       {/* Header */}
       <div className="flex justify-between items-center mb-4">
-        <h3 className="text-sm font-semibold text-slate-900">Appointment Trends</h3>
+        <h3 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Appointment Trends</h3>
         {onRangeChange && (
-          <div className="flex bg-slate-100 rounded-md p-0.5 text-xs font-medium">
+          <div className="dashboard-surface-muted flex rounded-md p-0.5 text-xs font-medium">
             {(['7d', '30d', '90d'] as const).map((r) => (
               <button
                 key={r}
@@ -41,8 +41,9 @@ export default function TrendChart({ data, range = '30d', onRangeChange }: Trend
                 className={`px-3 py-1 rounded transition-all ${
                   range === r
                     ? 'bg-teal-500 text-white shadow-sm'
-                    : 'text-slate-500 hover:text-slate-800'
+                    : ''
                 }`}
+                style={range === r ? undefined : { color: 'var(--text-secondary)' }}
               >
                 {r.toUpperCase()}
               </button>
@@ -52,7 +53,7 @@ export default function TrendChart({ data, range = '30d', onRangeChange }: Trend
       </div>
 
       {/* Legend */}
-      <div className="flex justify-center space-x-6 mb-2 text-xs text-slate-600">
+      <div className="mb-2 flex justify-center space-x-6 text-xs" style={{ color: 'var(--text-secondary)' }}>
         <div className="flex items-center">
           <span className="w-2 h-2 rounded-full bg-blue-500 mr-2" />
           Confirmed
@@ -77,25 +78,25 @@ export default function TrendChart({ data, range = '30d', onRangeChange }: Trend
                 <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
               </linearGradient>
             </defs>
-            <CartesianGrid vertical={false} stroke="#f1f5f9" strokeDasharray="" />
+            <CartesianGrid vertical={false} stroke="var(--border-light)" strokeDasharray="" />
             <XAxis
               dataKey="date"
               interval="preserveStartEnd"
-              tick={{ fill: '#94a3b8', fontSize: 11 }}
+              tick={{ fill: 'var(--text-tertiary)', fontSize: 11 }}
               axisLine={false}
               tickLine={false}
             />
             <YAxis
               domain={[0, 'auto']}
               allowDecimals={false}
-              tick={{ fill: '#94a3b8', fontSize: 11 }}
+              tick={{ fill: 'var(--text-tertiary)', fontSize: 11 }}
               axisLine={false}
               tickLine={false}
             />
             <Tooltip
               contentStyle={{
-                background: 'rgba(255,255,255,0.95)',
-                border: '1px solid #e2e8f0',
+                background: 'var(--surface-container-lowest)',
+                border: '1px solid var(--border-light)',
                 borderRadius: '8px',
                 fontSize: '12px',
               }}

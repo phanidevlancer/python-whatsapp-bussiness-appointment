@@ -50,7 +50,8 @@ interface TableHeaderProps extends HTMLAttributes<HTMLTableSectionElement> {
 function TableHeader({ className, children, ...props }: TableHeaderProps) {
   return (
     <thead
-      className={twMerge('bg-gray-50 border-b border-gray-200', className)}
+      className={twMerge('border-b', className)}
+      style={{ background: 'var(--surface-container-low)', borderColor: 'var(--border-light)' }}
       {...props}
     >
       {children}
@@ -65,7 +66,8 @@ interface TableBodyProps extends HTMLAttributes<HTMLTableSectionElement> {
 function TableBody({ className, children, ...props }: TableBodyProps) {
   return (
     <tbody
-      className={twMerge('divide-y divide-gray-100', className)}
+      className={twMerge('divide-y', className)}
+      style={{ borderColor: 'var(--border-light)' }}
       {...props}
     >
       {children}
@@ -80,7 +82,8 @@ interface TableFooterProps extends HTMLAttributes<HTMLTableSectionElement> {
 function TableFooter({ className, children, ...props }: TableFooterProps) {
   return (
     <tfoot
-      className={twMerge('bg-gray-50 border-t border-gray-200', className)}
+      className={twMerge('border-t', className)}
+      style={{ background: 'var(--surface-container-low)', borderColor: 'var(--border-light)' }}
       {...props}
     >
       {children}
@@ -97,7 +100,7 @@ function TableRow({ className, children, hoverable = true, ...props }: TableRowP
   return (
     <tr
       className={twMerge(
-        hoverable ? 'hover:bg-gray-50 transition-colors' : '',
+        hoverable ? 'transition-colors hover:bg-[var(--surface-container-low)]' : '',
         className
       )}
       {...props}
@@ -116,12 +119,13 @@ function TableHead({ className, children, align = 'left', ...props }: TableHeadP
   return (
     <th
       className={twMerge(
-        'px-4 py-3 text-xs font-semibold text-gray-500',
+        'px-4 py-3 text-xs font-semibold',
         align === 'left' ? 'text-left' : '',
         align === 'center' ? 'text-center' : '',
         align === 'right' ? 'text-right' : '',
         className
       )}
+      style={{ color: 'var(--text-secondary)' }}
       {...props}
     >
       {children}
@@ -138,12 +142,13 @@ function TableCell({ className, children, align = 'left', ...props }: TableCellP
   return (
     <td
       className={twMerge(
-        'px-4 py-3 text-gray-700',
+        'px-4 py-3',
         align === 'left' ? 'text-left' : '',
         align === 'center' ? 'text-center' : '',
         align === 'right' ? 'text-right' : '',
         className
       )}
+      style={{ color: 'var(--text-primary)' }}
       {...props}
     >
       {children}

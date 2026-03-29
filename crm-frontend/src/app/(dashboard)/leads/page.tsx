@@ -99,7 +99,7 @@ function LogCallDialog({ lead, onClose }: { lead: Lead; onClose: () => void }) {
             <select
               value={status}
               onChange={(e) => setStatus(e.target.value as LeadStatus)}
-              className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="dashboard-surface-input w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
             >
               <option value="contacted">Contacted — spoke to them</option>
               <option value="follow_up">Follow Up — call again later</option>
@@ -113,7 +113,7 @@ function LogCallDialog({ lead, onClose }: { lead: Lead; onClose: () => void }) {
               onChange={(e) => setNotes(e.target.value)}
               rows={4}
               placeholder="What did they say? Any special requests?"
-              className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="dashboard-surface-input w-full resize-none rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
             />
           </div>
         </div>
@@ -164,7 +164,7 @@ function ConvertDialog({ lead, onClose }: { lead: Lead; onClose: () => void }) {
       <ModalContent>
         <div className="space-y-4">
           {lead.service && (
-            <div className="bg-blue-50 rounded-lg p-3 text-sm text-blue-700">
+            <div className="rounded-lg p-3 text-sm text-blue-700" style={{ background: 'color-mix(in srgb, var(--info-50) 92%, transparent)' }}>
               <span className="font-medium">Service:</span> {lead.service.name}
             </div>
           )}
@@ -174,7 +174,7 @@ function ConvertDialog({ lead, onClose }: { lead: Lead; onClose: () => void }) {
             <select
               value={selectedProviderId}
               onChange={(e) => setSelectedProviderId(e.target.value)}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="dashboard-surface-input w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
             >
               <option value="">Any available provider</option>
               {providers?.map((p) => (
@@ -198,7 +198,7 @@ function ConvertDialog({ lead, onClose }: { lead: Lead; onClose: () => void }) {
                 value={selectedSlotId}
                 onChange={(e) => setSelectedSlotId(e.target.value)}
                 disabled={loadingSlots}
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed disabled:bg-slate-50"
+                className="dashboard-surface-input w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <option value="">Select a slot</option>
                 {slots?.map((s) => (
@@ -217,7 +217,7 @@ function ConvertDialog({ lead, onClose }: { lead: Lead; onClose: () => void }) {
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={2}
-              className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="dashboard-surface-input w-full resize-none rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
             />
           </div>
         </div>
@@ -250,7 +250,7 @@ function LeadRow({
   
   // Priority badge color based on score
   const getPriorityColor = (score: number | null) => {
-    if (score === null) return 'bg-slate-100 text-slate-600';
+    if (score === null) return 'dashboard-surface-muted text-[color:var(--text-secondary)]';
     if (score >= 70) return 'bg-red-100 text-red-700';
     if (score >= 40) return 'bg-yellow-100 text-yellow-700';
     return 'bg-blue-100 text-blue-700';
@@ -265,7 +265,7 @@ function LeadRow({
 
   return (
     <>
-      <tr className="group transition-colors hover:bg-slate-50/80">
+      <tr className="group transition-colors">
         <td className="px-4 py-4">
           <input
             type="checkbox"
@@ -423,9 +423,9 @@ export default function LeadsPage() {
   };
 
   return (
-    <div className="space-y-5 rounded-[28px] bg-[linear-gradient(180deg,rgba(255,255,255,0.82),rgba(240,249,255,0.62))] p-1">
+    <div className="dashboard-page-shell space-y-5">
       {/* Header */}
-      <div className="flex items-center justify-between rounded-[24px] border border-white/70 bg-white/70 px-6 py-5 shadow-[0_16px_40px_rgba(13,148,136,0.08)] backdrop-blur-sm">
+      <div className="dashboard-page-header flex items-center justify-between rounded-[24px] px-6 py-5">
         <div>
           <h2 className="flex items-center gap-3 text-[1.9rem] font-black tracking-[-0.03em] text-slate-900">
             <UserX size={24} className="text-slate-400" />
@@ -439,7 +439,7 @@ export default function LeadsPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex w-fit gap-8 border-b border-slate-200 px-2">
+      <div className="flex w-fit gap-8 border-b px-2" style={{ borderColor: 'var(--border-medium)' }}>
         {([
           ['open',      'New Prospects'],
           ['returning', 'Returning Customers'],
@@ -460,31 +460,31 @@ export default function LeadsPage() {
       </div>
 
       {/* Filters */}
-      <Card className="rounded-[24px] border-white/80 bg-white/85 p-5 shadow-[0_16px_40px_rgba(15,23,42,0.06)] backdrop-blur-sm" variant="elevated">
+      <Card className="dashboard-page-panel rounded-[24px] p-5" variant="elevated">
         <div className="flex items-center gap-3">
           <Input
             placeholder="Search by phone…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             leftIcon={<Search size={15} />}
-            className="h-12 w-64 rounded-2xl border-0 bg-slate-100/80 text-slate-700 shadow-none ring-1 ring-transparent placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-primary-200"
+            className="dashboard-surface-input h-12 w-64 rounded-2xl border shadow-none ring-1 ring-transparent focus:ring-2 focus:ring-primary-200"
           />
           {search && (
-            <Button variant="ghost" size="sm" onClick={() => setSearch('')} className="rounded-2xl px-4 text-slate-500 hover:bg-slate-100 hover:text-slate-800">
+            <Button variant="ghost" size="sm" onClick={() => setSearch('')} className="rounded-2xl px-4" style={{ color: 'var(--text-secondary)' }}>
               Clear
             </Button>
           )}
           
           {/* Bulk Actions */}
           {selectedLeadIds.length > 0 && (
-            <div className="flex items-center gap-2 ml-4 pl-4 border-l border-slate-200">
-              <span className="text-sm text-slate-600">
+            <div className="ml-4 flex items-center gap-2 border-l pl-4" style={{ borderColor: 'var(--border-medium)' }}>
+              <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>
                 {selectedLeadIds.length} selected
               </span>
               <select
                 value={bulkAssignTo}
                 onChange={(e) => setBulkAssignTo(e.target.value)}
-                className="rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700"
+                className="dashboard-surface-input rounded-2xl border px-3 py-2 text-sm"
               >
                 <option value="">Assign to...</option>
                 {providers?.map((p) => (
@@ -504,7 +504,7 @@ export default function LeadsPage() {
                 variant="outline" 
                 size="sm" 
                 onClick={() => setSelectedLeadIds([])}
-                className="rounded-2xl border-slate-200 bg-white px-4 text-slate-600 hover:border-primary-200 hover:bg-primary-50 hover:text-primary-700"
+                className="dashboard-action-outline rounded-2xl border px-4"
               >
                 Clear
               </Button>
@@ -518,7 +518,7 @@ export default function LeadsPage() {
       </Card>
 
       {/* Table */}
-      <Card className="overflow-hidden rounded-[28px] border-white/80 bg-white/90 p-0 shadow-[0_20px_48px_rgba(15,23,42,0.08)]" variant="elevated">
+      <Card className="dashboard-page-panel overflow-hidden rounded-[28px] p-0" variant="elevated">
         {isLoading ? (
           <div className="p-6 space-y-3">
             {Array.from({ length: 5 }).map((_, i) => (
@@ -527,7 +527,9 @@ export default function LeadsPage() {
           </div>
         ) : items.length === 0 ? (
           <div className="py-20 text-center">
-            <UserX size={36} className="mx-auto mb-3 text-slate-300" />
+            <div className="dashboard-empty-state-icon mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full">
+              <UserX size={36} />
+            </div>
             <p className="text-sm font-semibold text-slate-700">No leads in this queue</p>
             <p className="text-xs text-slate-400 mt-1">
               {tab === 'open'
@@ -538,7 +540,7 @@ export default function LeadsPage() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left">
-              <thead className="border-b border-slate-100 bg-slate-50/80">
+              <thead className="dashboard-page-table-head border-b">
                 <tr>
                   <th className="px-4 py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400 whitespace-nowrap">
                     <input
@@ -555,7 +557,7 @@ export default function LeadsPage() {
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y" style={{ borderColor: 'var(--border-light)' }}>
                 {items.map((lead) => (
                   <LeadRow 
                     key={lead.id} 
@@ -572,14 +574,14 @@ export default function LeadsPage() {
 
       {/* Pagination */}
       {data && data.total > data.page_size && (
-        <Card className="rounded-[24px] border-white/70 bg-white/75 p-4 shadow-[0_12px_32px_rgba(15,23,42,0.05)]" variant="default">
+        <Card className="dashboard-page-panel rounded-[24px] p-4" variant="default">
           <div className="flex items-center justify-between">
             <span className="text-sm text-slate-500">
               Page <span className="font-semibold text-slate-900">{page}</span> of <span className="font-semibold text-slate-900">{Math.ceil(data.total / data.page_size)}</span>
             </span>
             <div className="flex gap-2">
-              <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage((p) => p - 1)} className="rounded-2xl border-slate-200 bg-white px-4 text-slate-600 hover:border-primary-200 hover:bg-primary-50 hover:text-primary-700">Previous</Button>
-              <Button variant="outline" size="sm" disabled={page >= Math.ceil(data.total / data.page_size)} onClick={() => setPage((p) => p + 1)} className="rounded-2xl border-slate-200 bg-white px-4 text-slate-600 hover:border-primary-200 hover:bg-primary-50 hover:text-primary-700">Next</Button>
+              <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage((p) => p - 1)} className="dashboard-action-outline rounded-2xl border px-4">Previous</Button>
+              <Button variant="outline" size="sm" disabled={page >= Math.ceil(data.total / data.page_size)} onClick={() => setPage((p) => p + 1)} className="dashboard-action-outline rounded-2xl border px-4">Next</Button>
             </div>
           </div>
         </Card>

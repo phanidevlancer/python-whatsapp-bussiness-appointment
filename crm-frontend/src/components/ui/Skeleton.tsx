@@ -1,4 +1,3 @@
-import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
 interface SkeletonProps {
@@ -17,7 +16,7 @@ export function Skeleton({
   animation = 'pulse',
 }: SkeletonProps) {
   const baseStyles = `
-    bg-gray-200
+    bg-[color:var(--surface-container-high)]
     overflow-hidden
   `;
 
@@ -30,7 +29,7 @@ export function Skeleton({
 
   const animations = {
     pulse: 'animate-pulse',
-    wave: 'relative overflow-hidden after:content-[""] after:absolute after:inset-0 after:-translate-x-full after:bg-gradient-to-r after:from-transparent after:via-gray-100 after:to-transparent after:animate-[shimmer_1.5s_infinite]',
+    wave: 'relative overflow-hidden after:content-[""] after:absolute after:inset-0 after:-translate-x-full after:bg-gradient-to-r after:from-transparent after:via-white/60 after:to-transparent after:animate-[shimmer_1.5s_infinite]',
     false: '',
   } as const;
 
@@ -90,7 +89,7 @@ export function SkeletonCard({
   className,
 }: SkeletonCardProps) {
   return (
-    <div className={twMerge('bg-white rounded-2xl border border-gray-200 p-5', className)}>
+    <div className={twMerge('dashboard-page-panel rounded-2xl p-5', className)}>
       {showImage && (
         <Skeleton variant="rounded" className="w-full h-32 mb-4" />
       )}
@@ -115,7 +114,7 @@ interface SkeletonTableProps {
 
 export function SkeletonTable({ rows = 5, columns = 4, className }: SkeletonTableProps) {
   return (
-    <div className={twMerge('bg-white rounded-2xl border border-gray-200 p-4', className)}>
+    <div className={twMerge('dashboard-page-panel rounded-2xl p-4', className)}>
       <div className="flex gap-4 mb-4">
         {Array.from({ length: columns }).map((_, i) => (
           <Skeleton key={i} variant="text" className="w-24 h-4" />

@@ -41,7 +41,7 @@ function ProviderHistoryRow({ providerId }: { providerId: string }) {
   const { data: history = [], isLoading } = useProviderHistory(providerId);
   return (
     <tr>
-      <td colSpan={6} className="px-4 pb-4 bg-slate-50/70">
+      <td colSpan={6} className="dashboard-page-table-head px-4 pb-4">
         <ChangeHistoryPanel history={history} isLoading={isLoading} />
       </td>
     </tr>
@@ -106,20 +106,20 @@ function ProviderRow({ p }: { p: Provider }) {
 
   return (
     <>
-      <TableRow className="group hover:bg-slate-50/80">
+      <TableRow className="group">
         <TableCell className="py-4">
           <Avatar name={p.name} size="sm" />
         </TableCell>
         <TableCell className="py-4">
           {editing ? (
-            <Input value={editName} onChange={(e) => setEditName(e.target.value)} className="max-w-[160px] rounded-2xl border-0 bg-slate-100/80 shadow-none ring-1 ring-transparent focus:bg-white focus:ring-2 focus:ring-primary-200" />
+            <Input value={editName} onChange={(e) => setEditName(e.target.value)} className="dashboard-surface-input max-w-[160px] rounded-2xl border shadow-none ring-1 ring-transparent focus:ring-2 focus:ring-primary-200" />
           ) : (
             <span className="font-semibold text-slate-900">{p.name}</span>
           )}
         </TableCell>
         <TableCell className="py-4">
           {editing ? (
-            <Input type="email" value={editEmail} onChange={(e) => setEditEmail(e.target.value)} className="max-w-[200px] rounded-2xl border-0 bg-slate-100/80 shadow-none ring-1 ring-transparent focus:bg-white focus:ring-2 focus:ring-primary-200" />
+            <Input type="email" value={editEmail} onChange={(e) => setEditEmail(e.target.value)} className="dashboard-surface-input max-w-[200px] rounded-2xl border shadow-none ring-1 ring-transparent focus:ring-2 focus:ring-primary-200" />
           ) : (
             <div className="flex items-center gap-2 text-sm text-slate-500">
               <Mail size={14} className="text-slate-400" />
@@ -129,7 +129,7 @@ function ProviderRow({ p }: { p: Provider }) {
         </TableCell>
         <TableCell className="py-4">
           {editing ? (
-            <Input value={editPhone} onChange={(e) => setEditPhone(e.target.value)} className="max-w-[140px] rounded-2xl border-0 bg-slate-100/80 shadow-none ring-1 ring-transparent focus:bg-white focus:ring-2 focus:ring-primary-200" />
+            <Input value={editPhone} onChange={(e) => setEditPhone(e.target.value)} className="dashboard-surface-input max-w-[140px] rounded-2xl border shadow-none ring-1 ring-transparent focus:ring-2 focus:ring-primary-200" />
           ) : (
             <div className="flex items-center gap-2 text-sm text-slate-500">
               <Phone size={14} className="text-slate-400" />
@@ -146,17 +146,18 @@ function ProviderRow({ p }: { p: Provider }) {
           <div className="flex items-center justify-end gap-1">
             {editing ? (
               <>
-                <Button variant="ghost" size="sm" leftIcon={<X size={14} />} onClick={cancelEdit} className="rounded-2xl px-3 text-slate-500 hover:bg-slate-100 hover:text-slate-800">Cancel</Button>
+                <Button variant="ghost" size="sm" leftIcon={<X size={14} />} onClick={cancelEdit} className="rounded-2xl px-3" style={{ color: 'var(--text-secondary)' }}>Cancel</Button>
                 <Button variant="primary" size="sm" leftIcon={<Check size={14} />} onClick={requestSave} className="rounded-2xl px-3">Save</Button>
               </>
             ) : (
               <>
-                <Button variant="ghost" size="sm" leftIcon={<Pencil size={14} />} onClick={startEdit} className="rounded-2xl px-3 text-slate-400 hover:bg-slate-100 hover:text-slate-700">Edit</Button>
+                <Button variant="ghost" size="sm" leftIcon={<Pencil size={14} />} onClick={startEdit} className="rounded-2xl px-3" style={{ color: 'var(--text-tertiary)' }}>Edit</Button>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => setShowHistory((v) => !v)}
-                  className="rounded-2xl px-3 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+                  className="rounded-2xl px-3"
+                  style={{ color: 'var(--text-tertiary)' }}
                   title="Show history"
                 >
                   {showHistory ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
@@ -219,8 +220,8 @@ export default function ProvidersPage() {
   };
 
   return (
-    <div className="space-y-5 rounded-[28px] bg-[linear-gradient(180deg,rgba(255,255,255,0.82),rgba(240,249,255,0.62))] p-1">
-      <div className="flex items-center justify-between rounded-[24px] border border-white/70 bg-white/70 px-6 py-5 shadow-[0_16px_40px_rgba(13,148,136,0.08)] backdrop-blur-sm">
+    <div className="dashboard-page-shell space-y-5">
+      <div className="dashboard-page-header flex items-center justify-between rounded-[24px] px-6 py-5">
         <div>
           <h2 className="text-[1.9rem] font-black tracking-[-0.03em] text-slate-900">Providers</h2>
           <p className="mt-1 text-sm font-medium text-slate-500">Manage your clinic staff and providers</p>
@@ -231,25 +232,25 @@ export default function ProvidersPage() {
       </div>
 
       {showCreate && (
-        <Card className="rounded-[24px] border-white/80 bg-white/85 p-5 shadow-[0_16px_40px_rgba(15,23,42,0.06)] backdrop-blur-sm" variant="elevated">
+        <Card className="dashboard-page-panel rounded-[24px] p-5" variant="elevated">
           <CardHeader className="pb-4 border-0">
             <CardTitle className="text-lg font-bold tracking-[-0.02em] text-slate-900">Add New Provider</CardTitle>
           </CardHeader>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Input placeholder="Full Name *" value={newName} onChange={(e) => setNewName(e.target.value)} leftIcon={<User size={16} />} className="h-12 rounded-2xl border-0 bg-slate-100/80 shadow-none ring-1 ring-transparent focus:bg-white focus:ring-2 focus:ring-primary-200" />
-            <Input placeholder="Email (optional)" type="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} leftIcon={<Mail size={16} />} className="h-12 rounded-2xl border-0 bg-slate-100/80 shadow-none ring-1 ring-transparent focus:bg-white focus:ring-2 focus:ring-primary-200" />
-            <Input placeholder="Phone (optional)" value={newPhone} onChange={(e) => setNewPhone(e.target.value)} leftIcon={<Phone size={16} />} className="h-12 rounded-2xl border-0 bg-slate-100/80 shadow-none ring-1 ring-transparent focus:bg-white focus:ring-2 focus:ring-primary-200" />
+            <Input placeholder="Full Name *" value={newName} onChange={(e) => setNewName(e.target.value)} leftIcon={<User size={16} />} className="dashboard-surface-input h-12 rounded-2xl border shadow-none ring-1 ring-transparent focus:ring-2 focus:ring-primary-200" />
+            <Input placeholder="Email (optional)" type="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} leftIcon={<Mail size={16} />} className="dashboard-surface-input h-12 rounded-2xl border shadow-none ring-1 ring-transparent focus:ring-2 focus:ring-primary-200" />
+            <Input placeholder="Phone (optional)" value={newPhone} onChange={(e) => setNewPhone(e.target.value)} leftIcon={<Phone size={16} />} className="dashboard-surface-input h-12 rounded-2xl border shadow-none ring-1 ring-transparent focus:ring-2 focus:ring-primary-200" />
           </div>
-          <div className="flex gap-3 mt-4 pt-4 border-t border-slate-100">
+          <div className="mt-4 flex gap-3 border-t pt-4" style={{ borderColor: 'var(--border-light)' }}>
             <Button variant="primary" size="md" onClick={handleCreate} isLoading={creating} className="rounded-2xl px-5 shadow-[0_14px_28px_rgba(13,148,136,0.18)]">
               {creating ? 'Creating...' : 'Add Provider'}
             </Button>
-            <Button variant="outline" size="md" onClick={() => setShowCreate(false)} className="rounded-2xl border-slate-200 bg-white px-5 text-slate-600 hover:border-primary-200 hover:bg-primary-50 hover:text-primary-700">Cancel</Button>
+            <Button variant="outline" size="md" onClick={() => setShowCreate(false)} className="dashboard-action-outline rounded-2xl border px-5">Cancel</Button>
           </div>
         </Card>
       )}
 
-      <Card className="overflow-hidden rounded-[28px] border-white/80 bg-white/90 p-0 shadow-[0_20px_48px_rgba(15,23,42,0.08)]" variant="elevated">
+      <Card className="dashboard-page-panel overflow-hidden rounded-[28px] p-0" variant="elevated">
         {isLoading ? (
           <div className="p-4 space-y-3">
             {Array.from({ length: 5 }).map((_, i) => (
@@ -266,7 +267,7 @@ export default function ProvidersPage() {
           </div>
         ) : !providers?.length ? (
           <div className="py-20 text-center">
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary-50">
+            <div className="dashboard-empty-state-icon mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
               <User size={32} className="text-primary-400" />
             </div>
             <h3 className="mb-1 text-sm font-semibold text-slate-900">No providers found</h3>
@@ -274,7 +275,7 @@ export default function ProvidersPage() {
           </div>
         ) : (
           <Table className="min-w-full">
-            <TableHeader className="border-b border-slate-100 bg-slate-50/80">
+            <TableHeader className="dashboard-page-table-head border-b">
               <TableRow hoverable={false}>
                 <TableHead className="w-12 py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400"><span className="sr-only">Avatar</span></TableHead>
                 <TableHead className="py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Name</TableHead>
@@ -284,7 +285,7 @@ export default function ProvidersPage() {
                 <TableHead align="right" className="py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Actions</TableHead>
               </TableRow>
             </TableHeader>
-            <TableBody className="divide-y divide-slate-100">
+            <TableBody className="divide-y" style={{ borderColor: 'var(--border-light)' }}>
               {providers.map((p) => (
                 <ProviderRow key={p.id} p={p} />
               ))}

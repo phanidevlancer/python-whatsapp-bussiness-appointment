@@ -107,9 +107,9 @@ export default function ActivityTimeline({ events, isLoading }: Props) {
 
   if (isLoading) {
     return (
-      <div className="bg-white rounded-xl border border-slate-200 p-4">
-        <h3 className="mb-3 text-sm font-semibold text-slate-700">Activity Timeline</h3>
-        <div className="flex items-center gap-2 text-slate-400 text-sm">
+      <div className="dashboard-page-panel rounded-xl p-4">
+        <h3 className="mb-3 text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Activity Timeline</h3>
+        <div className="flex items-center gap-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
           <Loader2 size={14} className="animate-spin" />
           Loading activity…
         </div>
@@ -119,9 +119,9 @@ export default function ActivityTimeline({ events, isLoading }: Props) {
 
   if (!events.length) {
     return (
-      <div className="bg-white rounded-xl border border-slate-200 p-4">
-        <h3 className="mb-2 text-sm font-semibold text-slate-700">Activity Timeline</h3>
-        <p className="text-sm text-slate-400">No activity recorded yet.</p>
+      <div className="dashboard-page-panel rounded-xl p-4">
+        <h3 className="mb-2 text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Activity Timeline</h3>
+        <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>No activity recorded yet.</p>
       </div>
     );
   }
@@ -134,7 +134,7 @@ export default function ActivityTimeline({ events, isLoading }: Props) {
     const actorLabel = getActorLabel(event.changed_by_name, event.changed_by_email);
     const content = (
       <div
-        className={`flex min-h-[68px] min-w-0 items-center rounded-[22px] border border-slate-200 bg-white px-3 py-2.5 shadow-[0_8px_22px_rgba(15,23,42,0.10)] transition-all duration-300 ease-out ${
+        className={`dashboard-surface-strong flex min-h-[68px] min-w-0 items-center rounded-[22px] px-3 py-2.5 shadow-[0_8px_22px_rgba(15,23,42,0.10)] transition-all duration-300 ease-out ${
           isAppointmentLink ? 'hover:-translate-y-0.5 hover:shadow-[0_14px_36px_rgba(15,23,42,0.16)]' : ''
         }`}
       >
@@ -146,21 +146,21 @@ export default function ActivityTimeline({ events, isLoading }: Props) {
             <div className="min-w-0">
               <p className={`truncate text-sm font-semibold leading-5 ${cfg.label}`}>{event.event}</p>
               {event.detail && (
-                <p className="mt-0.5 line-clamp-2 text-xs text-slate-500">{event.detail}</p>
+                <p className="mt-0.5 line-clamp-2 text-xs" style={{ color: 'var(--text-secondary)' }}>{event.detail}</p>
               )}
             </div>
           </div>
-          <span className="justify-self-end whitespace-nowrap pt-0.5 text-right text-xs font-medium text-slate-500">
+          <span className="justify-self-end whitespace-nowrap pt-0.5 text-right text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>
             {format(new Date(event.created_at), 'MMM d, h:mm a')}
           </span>
           <div className="col-span-1 flex flex-wrap items-center gap-1.5">
             {actorLabel && (
-              <span className="inline-block rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600">
+              <span className="dashboard-surface-muted inline-block rounded-full px-2 py-0.5 text-[11px] font-medium" style={{ color: 'var(--text-secondary)' }}>
                 {actorLabel}
               </span>
             )}
             {event.source && (
-              <span className="inline-block rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-500">
+              <span className="dashboard-surface-muted inline-block rounded-full px-2 py-0.5 text-[11px] font-medium" style={{ color: 'var(--text-secondary)' }}>
                 {getSourceLabel(event.source)}
               </span>
             )}
@@ -189,16 +189,17 @@ export default function ActivityTimeline({ events, isLoading }: Props) {
   };
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 p-4">
+    <div className="dashboard-page-panel rounded-xl p-4">
       <div className="mb-3 flex items-center justify-between gap-3">
-        <h3 className="text-sm font-semibold text-slate-700">Activity Timeline</h3>
-        <div className="inline-flex rounded-lg border border-slate-200 bg-slate-50 p-1">
+        <h3 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Activity Timeline</h3>
+        <div className="dashboard-surface-muted inline-flex rounded-lg p-1">
           <button
             type="button"
             onClick={() => setView('flat')}
             className={`rounded-md px-2.5 py-1 text-[11px] font-medium transition-colors ${
-              view === 'flat' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+              view === 'flat' ? 'shadow-sm dashboard-surface-strong' : ''
             }`}
+            style={view === 'flat' ? { color: 'var(--text-primary)' } : { color: 'var(--text-secondary)' }}
           >
             Timeline View
           </button>
@@ -206,8 +207,9 @@ export default function ActivityTimeline({ events, isLoading }: Props) {
             type="button"
             onClick={() => setView('grouped')}
             className={`rounded-md px-2.5 py-1 text-[11px] font-medium transition-colors ${
-              view === 'grouped' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+              view === 'grouped' ? 'shadow-sm dashboard-surface-strong' : ''
             }`}
+            style={view === 'grouped' ? { color: 'var(--text-primary)' } : { color: 'var(--text-secondary)' }}
           >
             Grouped View
           </button>
@@ -233,18 +235,18 @@ export default function ActivityTimeline({ events, isLoading }: Props) {
                               Booking ID: {group.appointmentRef}
                             </span>
                           )}
-                          <span className="inline-block rounded-full bg-slate-200 px-2 py-0.5 text-[11px] font-medium text-slate-700">
+                          <span className="dashboard-surface-muted inline-block rounded-full px-2 py-0.5 text-[11px] font-medium" style={{ color: 'var(--text-primary)' }}>
                             {getLastStatusLabel(group.events)}
                           </span>
                         </div>
-                        <p className="mt-0.5 text-[11px] text-slate-400">
+                        <p className="mt-0.5 text-[11px]" style={{ color: 'var(--text-tertiary)' }}>
                           {group.events.length} events
                         </p>
                       </div>
                       <button
                         type="button"
                         onClick={() => toggleGroup(group.key)}
-                        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+                        className="dashboard-action-outline flex h-7 w-7 shrink-0 items-center justify-center rounded-full border shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
                         aria-label={collapsedGroups[group.key] ? 'Expand group' : 'Collapse group'}
                       >
                         <ChevronDown size={12} className={`transition-transform ${collapsedGroups[group.key] ? '-rotate-90' : 'rotate-0'}`} />

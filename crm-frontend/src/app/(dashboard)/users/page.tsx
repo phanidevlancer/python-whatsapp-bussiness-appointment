@@ -30,8 +30,8 @@ export default function UsersPage() {
 
   if (!canViewUsers) {
     return (
-      <Card className="p-8 text-center" variant="elevated">
-        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-slate-100 text-slate-500">
+      <Card className="dashboard-page-panel p-8 text-center" variant="elevated">
+        <div className="dashboard-surface-muted mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full" style={{ color: 'var(--text-secondary)' }}>
           <ShieldX size={28} />
         </div>
         <h2 className="text-lg font-semibold text-slate-900">Access denied</h2>
@@ -43,8 +43,8 @@ export default function UsersPage() {
   }
 
   return (
-    <div className="space-y-5 rounded-[28px] bg-[linear-gradient(180deg,rgba(255,255,255,0.82),rgba(240,249,255,0.62))] p-1">
-      <div className="flex items-center justify-between gap-4 rounded-[24px] border border-white/70 bg-white/70 px-6 py-5 shadow-[0_16px_40px_rgba(13,148,136,0.08)] backdrop-blur-sm">
+    <div className="dashboard-page-shell space-y-5">
+      <div className="dashboard-page-header flex items-center justify-between gap-4 rounded-[24px] px-6 py-5">
         <div>
           <h2 className="text-[1.9rem] font-black tracking-[-0.03em] text-slate-900">Users</h2>
           <p className="mt-1 text-sm font-medium text-slate-500">Manage clinic staff, templates, and access.</p>
@@ -55,7 +55,7 @@ export default function UsersPage() {
         </Badge>
       </div>
 
-      <Card className="rounded-[24px] border-white/80 bg-white/85 p-5 shadow-[0_16px_40px_rgba(15,23,42,0.06)] backdrop-blur-sm" variant="elevated">
+      <Card className="dashboard-page-panel rounded-[24px] p-5" variant="elevated">
         <div className="flex flex-col gap-3 md:flex-row md:items-center">
           <div className="flex-1">
             <Input
@@ -66,7 +66,7 @@ export default function UsersPage() {
                 setPage(1);
               }}
               leftIcon={<Search size={16} />}
-              className="h-12 rounded-2xl border-0 bg-slate-100/80 shadow-none ring-1 ring-transparent focus:bg-white focus:ring-2 focus:ring-primary-200"
+              className="dashboard-surface-input h-12 rounded-2xl border shadow-none ring-1 ring-transparent focus:ring-2 focus:ring-primary-200"
             />
           </div>
           <PermissionGuard permission={PERMISSIONS.users.create}>
@@ -75,7 +75,7 @@ export default function UsersPage() {
               size="md"
               leftIcon={<UserPlus size={16} />}
               onClick={() => router.push('/users/new')}
-              className="rounded-2xl border-slate-200 bg-white px-5 text-slate-600 hover:border-primary-200 hover:bg-primary-50 hover:text-primary-700"
+              className="dashboard-action-outline rounded-2xl border px-5"
             >
               Add User
             </Button>
@@ -83,7 +83,7 @@ export default function UsersPage() {
         </div>
       </Card>
 
-      <Card className="overflow-hidden rounded-[28px] border-white/80 bg-white/90 p-0 shadow-[0_20px_48px_rgba(15,23,42,0.08)]" variant="elevated">
+      <Card className="dashboard-page-panel overflow-hidden rounded-[28px] p-0" variant="elevated">
         {isLoading ? (
           <div className="p-4 space-y-3">
             {Array.from({ length: 6 }).map((_, i) => (
@@ -100,7 +100,7 @@ export default function UsersPage() {
           </div>
         ) : !data?.items.length ? (
           <div className="py-20 text-center">
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary-50">
+            <div className="dashboard-empty-state-icon mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
               <Users size={32} className="text-primary-400" />
             </div>
             <h3 className="mb-1 text-sm font-semibold text-slate-900">No users found</h3>
@@ -108,8 +108,8 @@ export default function UsersPage() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-slate-100">
-              <thead className="bg-slate-50/80">
+            <table className="min-w-full divide-y" style={{ borderColor: 'var(--border-light)' }}>
+              <thead className="dashboard-page-table-head">
                 <tr>
                   <th className="px-4 py-4 text-left text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">User</th>
                   <th className="px-4 py-4 text-left text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Contact</th>
@@ -119,9 +119,9 @@ export default function UsersPage() {
                   <th className="px-4 py-4 text-right text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 bg-white">
+              <tbody className="divide-y" style={{ borderColor: 'var(--border-light)' }}>
                 {data.items.map((user) => (
-                  <tr key={user.id} className="hover:bg-slate-50/70">
+                  <tr key={user.id}>
                     <td className="px-4 py-4">
                       <div className="flex items-center gap-3">
                         <Avatar name={user.name} size="sm" />
@@ -165,7 +165,7 @@ export default function UsersPage() {
       </Card>
 
       {data && data.total > data.page_size && (
-        <Card className="rounded-[24px] border-white/70 bg-white/75 p-4 shadow-[0_12px_32px_rgba(15,23,42,0.05)]" variant="default">
+        <Card className="dashboard-page-panel rounded-[24px] p-4" variant="default">
           <div className="flex items-center justify-between gap-3">
             <span className="text-sm text-slate-500">
               Page <span className="font-semibold text-slate-900">{page}</span> of{' '}
@@ -177,7 +177,7 @@ export default function UsersPage() {
                 size="sm"
                 disabled={page <= 1}
                 onClick={() => setPage((current) => current - 1)}
-                className="rounded-2xl border-slate-200 bg-white px-4 text-slate-600 hover:border-primary-200 hover:bg-primary-50 hover:text-primary-700"
+                className="dashboard-action-outline rounded-2xl border px-4"
               >
                 Previous
               </Button>
@@ -186,7 +186,7 @@ export default function UsersPage() {
                 size="sm"
                 disabled={page >= totalPages}
                 onClick={() => setPage((current) => current + 1)}
-                className="rounded-2xl border-slate-200 bg-white px-4 text-slate-600 hover:border-primary-200 hover:bg-primary-50 hover:text-primary-700"
+                className="dashboard-action-outline rounded-2xl border px-4"
               >
                 Next
               </Button>

@@ -54,9 +54,12 @@ export default function Sidebar() {
     .join('') || 'A';
 
   return (
-    <aside className="flex h-full w-72 shrink-0 flex-col border-r border-slate-200/70 bg-slate-50/90 backdrop-blur-xl">
+    <aside
+      className="flex h-full w-72 shrink-0 flex-col border-r backdrop-blur-xl"
+      style={{ borderColor: 'var(--sidebar-border)', background: 'var(--sidebar-background)' }}
+    >
       {/* Logo */}
-      <div className="flex h-20 items-center border-b border-slate-200/70 px-6">
+      <div className="flex h-20 items-center border-b px-6" style={{ borderColor: 'var(--sidebar-border)' }}>
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary-600 text-white shadow-[0_12px_24px_rgba(13,148,136,0.22)]">
             <BriefcaseMedical size={18} />
@@ -84,9 +87,20 @@ export default function Sidebar() {
                   className={clsx(
                     'group flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition-all duration-200',
                     active
-                      ? 'bg-white text-primary-700 shadow-[0_12px_28px_rgba(15,23,42,0.08)]'
-                      : 'text-slate-500 hover:bg-white/80 hover:text-slate-900'
+                      ? 'text-[var(--sidebar-item-active-text)]'
+                      : 'text-slate-500 hover:text-slate-900'
                   )}
+                  style={
+                    active
+                      ? { background: 'var(--sidebar-item-active-bg)', boxShadow: 'var(--sidebar-item-active-shadow)' }
+                      : undefined
+                  }
+                  onMouseEnter={(event) => {
+                    if (!active) event.currentTarget.style.background = 'var(--sidebar-item-hover)';
+                  }}
+                  onMouseLeave={(event) => {
+                    if (!active) event.currentTarget.style.background = 'transparent';
+                  }}
                 >
                   <Icon
                     size={18}
@@ -100,14 +114,20 @@ export default function Sidebar() {
         </div>
 
         {/* Settings Section */}
-        <div className="border-t border-slate-200/70 pt-3">
+        <div className="border-t pt-3" style={{ borderColor: 'var(--sidebar-border)' }}>
           <p className="px-3 py-2 text-[10px] font-bold uppercase tracking-[0.22em] text-slate-400">
             Settings
           </p>
           {hasPermission(PERMISSIONS.settings.view) ? (
             <Link
               href="/settings"
-              className="group flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium text-slate-500 transition-all duration-200 hover:bg-white/80 hover:text-slate-900"
+              className="group flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium text-slate-500 transition-all duration-200 hover:text-slate-900"
+              onMouseEnter={(event) => {
+                event.currentTarget.style.background = 'var(--sidebar-item-hover)';
+              }}
+              onMouseLeave={(event) => {
+                event.currentTarget.style.background = 'transparent';
+              }}
             >
               <Settings size={18} className="text-slate-400 group-hover:text-primary-600" />
               <span>Preferences</span>
@@ -117,8 +137,11 @@ export default function Sidebar() {
       </nav>
 
       {/* User Section */}
-      <div className="border-t border-slate-200/70 p-4">
-        <div className="flex cursor-pointer items-center gap-3 rounded-2xl border border-white/80 bg-white/85 p-3 shadow-[0_12px_28px_rgba(15,23,42,0.06)] transition-colors hover:bg-white">
+      <div className="border-t p-4" style={{ borderColor: 'var(--sidebar-border)' }}>
+        <div
+          className="flex cursor-pointer items-center gap-3 rounded-2xl border p-3 transition-colors"
+          style={{ borderColor: 'var(--panel-border)', background: 'var(--panel-background)', boxShadow: 'var(--shadow-md)' }}
+        >
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-primary-500 to-primary-700 text-sm font-semibold text-white">
             {initials}
           </div>

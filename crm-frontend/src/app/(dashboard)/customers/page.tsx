@@ -26,9 +26,9 @@ export default function CustomersPage() {
   const { data, isLoading } = useCustomersList({ search: search || undefined, page });
 
   return (
-    <div className="space-y-5 rounded-[28px] bg-[linear-gradient(180deg,rgba(255,255,255,0.82),rgba(240,249,255,0.62))] p-1">
+    <div className="dashboard-page-shell space-y-5">
       {/* Page Header */}
-      <div className="flex items-center justify-between rounded-[24px] border border-white/70 bg-white/70 px-6 py-5 shadow-[0_16px_40px_rgba(13,148,136,0.08)] backdrop-blur-sm">
+      <div className="dashboard-page-header flex items-center justify-between rounded-[24px] px-6 py-5">
         <div>
           <h2 className="text-[1.9rem] font-black tracking-[-0.03em] text-slate-900">Customers</h2>
           <p className="mt-1 text-sm font-medium text-slate-500">Manage your customer relationships</p>
@@ -44,7 +44,7 @@ export default function CustomersPage() {
       </div>
 
       {/* Search & Stats */}
-      <Card className="rounded-[24px] border-white/80 bg-white/85 p-5 shadow-[0_16px_40px_rgba(15,23,42,0.06)] backdrop-blur-sm" variant="elevated">
+      <Card className="dashboard-page-panel rounded-[24px] p-5" variant="elevated">
         <div className="flex items-center gap-3">
           <div className="flex-1">
             <Input
@@ -52,7 +52,7 @@ export default function CustomersPage() {
               value={search}
               onChange={(e) => { setSearch(e.target.value); setPage(1); }}
               leftIcon={<Search size={16} />}
-              className="h-12 w-full rounded-2xl border-0 bg-slate-100/80 shadow-none ring-1 ring-transparent focus:bg-white focus:ring-2 focus:ring-primary-200"
+              className="dashboard-surface-input h-12 w-full rounded-2xl border shadow-none ring-1 ring-transparent focus:ring-2 focus:ring-primary-200"
             />
           </div>
           <Badge variant="primary" size="lg" className="rounded-full bg-primary-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-primary-700">
@@ -63,7 +63,7 @@ export default function CustomersPage() {
       </Card>
 
       {/* Table */}
-      <Card className="overflow-hidden rounded-[28px] border-white/80 bg-white/90 p-0 shadow-[0_20px_48px_rgba(15,23,42,0.08)]" variant="elevated">
+      <Card className="dashboard-page-panel overflow-hidden rounded-[28px] p-0" variant="elevated">
         {isLoading ? (
           <div className="p-4 space-y-3">
             {Array.from({ length: 5 }).map((_, i) => (
@@ -80,7 +80,7 @@ export default function CustomersPage() {
           </div>
         ) : !data?.items.length ? (
           <div className="py-20 text-center">
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary-50">
+            <div className="dashboard-empty-state-icon mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
               <Users size={32} className="text-primary-400" />
             </div>
             <h3 className="mb-1 text-sm font-semibold text-slate-900">No customers found</h3>
@@ -88,7 +88,7 @@ export default function CustomersPage() {
           </div>
         ) : (
           <Table className="min-w-full">
-            <TableHeader className="border-b border-slate-100 bg-slate-50/80">
+            <TableHeader className="dashboard-page-table-head border-b">
               <TableRow hoverable={false}>
                 <TableHead className="w-12 py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400"><span className="sr-only">Avatar</span></TableHead>
                 <TableHead className="py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Name</TableHead>
@@ -97,9 +97,9 @@ export default function CustomersPage() {
                 <TableHead className="py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Since</TableHead>
               </TableRow>
             </TableHeader>
-            <TableBody className="divide-y divide-slate-100">
+              <TableBody className="divide-y" style={{ borderColor: 'var(--border-light)' }}>
               {data.items.map((c) => (
-                <TableRow key={c.id} className="group hover:bg-slate-50/80">
+                <TableRow key={c.id} className="group">
                   <TableCell className="py-4">
                     <Avatar name={c.name ?? c.phone} size="sm" />
                   </TableCell>
@@ -137,7 +137,7 @@ export default function CustomersPage() {
 
       {/* Pagination */}
       {data && data.total > 20 && (
-        <Card className="rounded-[24px] border-white/70 bg-white/75 p-4 shadow-[0_12px_32px_rgba(15,23,42,0.05)]" variant="default">
+        <Card className="dashboard-page-panel rounded-[24px] p-4" variant="default">
           <div className="flex items-center justify-between">
             <span className="text-sm text-slate-500">
               Page <span className="font-semibold text-slate-900">{page}</span> of{' '}
@@ -149,7 +149,7 @@ export default function CustomersPage() {
                 size="sm"
                 disabled={page <= 1}
                 onClick={() => setPage(page - 1)}
-                className="rounded-2xl border-slate-200 bg-white px-4 text-slate-600 hover:border-primary-200 hover:bg-primary-50 hover:text-primary-700"
+                className="dashboard-action-outline rounded-2xl border px-4"
               >
                 Previous
               </Button>
@@ -158,7 +158,7 @@ export default function CustomersPage() {
                 size="sm"
                 disabled={page >= Math.ceil(data.total / 20)}
                 onClick={() => setPage(page + 1)}
-                className="rounded-2xl border-slate-200 bg-white px-4 text-slate-600 hover:border-primary-200 hover:bg-primary-50 hover:text-primary-700"
+                className="dashboard-action-outline rounded-2xl border px-4"
               >
                 Next
               </Button>

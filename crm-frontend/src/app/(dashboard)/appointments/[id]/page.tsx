@@ -63,9 +63,9 @@ export default function AppointmentDetailPage() {
 
   if (!appt) {
     return (
-      <div className="max-w-4xl">
+      <div className="dashboard-page-shell max-w-4xl">
         <div className="text-center py-16">
-          <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="dashboard-surface-muted mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
             <AlertCircle size={32} className="text-slate-400" />
           </div>
           <h3 className="text-sm font-medium text-slate-900 mb-1">Appointment not found</h3>
@@ -81,7 +81,7 @@ export default function AppointmentDetailPage() {
   const isSlotPast = appt.slot ? new Date(appt.slot.start_time) < new Date() : false;
 
   return (
-    <div className="max-w-4xl space-y-6">
+    <div className="dashboard-page-shell max-w-4xl space-y-6">
       {/* Back Button */}
       <button
         onClick={() => router.back()}
@@ -91,7 +91,7 @@ export default function AppointmentDetailPage() {
       </button>
 
       {/* Header Card */}
-      <Card className="p-6" variant="elevated">
+      <Card className="dashboard-page-panel p-6" variant="elevated">
         <div className="flex items-start justify-between mb-6">
           <div className="flex items-center gap-4">
             <Avatar
@@ -113,14 +113,14 @@ export default function AppointmentDetailPage() {
 
         {/* Info Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="p-3 bg-slate-50 rounded-xl">
+          <div className="dashboard-surface-muted rounded-xl p-3">
             <div className="flex items-center gap-2 text-xs text-slate-500 mb-1">
               <Stethoscope size={14} />
               <span>Service</span>
             </div>
             <p className="font-medium text-slate-900">{appt.service?.name ?? '—'}</p>
           </div>
-          <div className="p-3 bg-slate-50 rounded-xl">
+          <div className="dashboard-surface-muted rounded-xl p-3">
             <div className="flex items-center gap-2 text-xs text-slate-500 mb-1">
               <Clock size={14} />
               <span>Date/Time</span>
@@ -129,14 +129,14 @@ export default function AppointmentDetailPage() {
               {appt.slot ? format(new Date(appt.slot.start_time), 'MMM d, h:mm a') : '—'}
             </p>
           </div>
-          <div className="p-3 bg-slate-50 rounded-xl">
+          <div className="dashboard-surface-muted rounded-xl p-3">
             <div className="flex items-center gap-2 text-xs text-slate-500 mb-1">
               <User size={14} />
               <span>Provider</span>
             </div>
             <p className="font-medium text-slate-900">{appt.provider?.name ?? '—'}</p>
           </div>
-          <div className="p-3 bg-slate-50 rounded-xl">
+          <div className="dashboard-surface-muted rounded-xl p-3">
             <div className="flex items-center gap-2 text-xs text-slate-500 mb-1">
               <CalendarIcon size={14} />
               <span>Booked</span>
@@ -163,7 +163,7 @@ export default function AppointmentDetailPage() {
 
         {/* Action Buttons */}
         {isConfirmed && (
-          <div className="flex flex-wrap gap-3 mt-6 pt-6 border-t border-slate-100">
+          <div className="mt-6 flex flex-wrap gap-3 border-t pt-6" style={{ borderColor: 'var(--border-light)' }}>
             <Button
               variant="outline"
               size="md"
@@ -207,7 +207,7 @@ export default function AppointmentDetailPage() {
       {/* Two Column Layout */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Status Timeline */}
-        <Card className="p-6" variant="elevated">
+        <Card className="dashboard-page-panel p-6" variant="elevated">
           <CardHeader className="pb-4 border-0">
             <CardTitle>Status History</CardTitle>
           </CardHeader>
@@ -217,7 +217,7 @@ export default function AppointmentDetailPage() {
         </Card>
 
         {/* WhatsApp Logs */}
-        <Card className="p-6" variant="elevated">
+        <Card className="dashboard-page-panel p-6" variant="elevated">
           <CardHeader className="pb-4 border-0">
             <CardTitle>WhatsApp Notifications</CardTitle>
           </CardHeader>
@@ -230,10 +230,7 @@ export default function AppointmentDetailPage() {
             ) : (
               <div className="space-y-3">
                 {notifLogs.items.map((log) => (
-                  <div
-                    key={log.id}
-                    className="flex items-center justify-between p-3 bg-slate-50 rounded-xl"
-                  >
+                  <div key={log.id} className="dashboard-surface-muted flex items-center justify-between rounded-xl p-3">
                     <div>
                       <p className="text-sm font-medium text-slate-900 capitalize">
                         {log.message_type.replace(/_/g, ' ')}

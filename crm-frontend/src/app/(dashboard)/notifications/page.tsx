@@ -35,9 +35,9 @@ export default function NotificationsPage() {
   };
 
   return (
-    <div className="space-y-5 rounded-[28px] bg-[linear-gradient(180deg,rgba(255,255,255,0.82),rgba(240,249,255,0.62))] p-1">
+    <div className="dashboard-page-shell space-y-5">
       {/* Page Header */}
-      <div className="flex items-center justify-between rounded-[24px] border border-white/70 bg-white/70 px-6 py-5 shadow-[0_16px_40px_rgba(13,148,136,0.08)] backdrop-blur-sm">
+      <div className="dashboard-page-header flex items-center justify-between rounded-[24px] px-6 py-5">
         <div>
           <h2 className="text-[1.9rem] font-black tracking-[-0.03em] text-slate-900">Notifications</h2>
           <p className="mt-1 text-sm font-medium text-slate-500">Track WhatsApp message delivery status</p>
@@ -51,7 +51,7 @@ export default function NotificationsPage() {
       </div>
 
       {/* Notifications Table */}
-      <Card className="overflow-hidden rounded-[28px] border-white/80 bg-white/90 p-0 shadow-[0_20px_48px_rgba(15,23,42,0.08)]" variant="elevated">
+      <Card className="dashboard-page-panel overflow-hidden rounded-[28px] p-0" variant="elevated">
         {isLoading ? (
           <div className="p-4 space-y-3">
             {Array.from({ length: 5 }).map((_, i) => (
@@ -66,7 +66,7 @@ export default function NotificationsPage() {
           </div>
         ) : !data?.items.length ? (
           <div className="py-20 text-center">
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary-50">
+            <div className="dashboard-empty-state-icon mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
               <MessageSquare size={32} className="text-primary-400" />
             </div>
             <h3 className="mb-1 text-sm font-semibold text-slate-900">No notification logs</h3>
@@ -74,7 +74,7 @@ export default function NotificationsPage() {
           </div>
         ) : (
           <Table className="min-w-full">
-            <TableHeader className="border-b border-slate-100 bg-slate-50/80">
+            <TableHeader className="dashboard-page-table-head border-b">
               <TableRow hoverable={false}>
                 <TableHead className="py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Phone</TableHead>
                 <TableHead className="py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Type</TableHead>
@@ -84,9 +84,9 @@ export default function NotificationsPage() {
                 <TableHead align="right" className="py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Actions</TableHead>
               </TableRow>
             </TableHeader>
-            <TableBody className="divide-y divide-slate-100">
+            <TableBody className="divide-y" style={{ borderColor: 'var(--border-light)' }}>
               {data.items.map((log) => (
-                <TableRow key={log.id} className="group hover:bg-slate-50/80">
+                <TableRow key={log.id} className="group">
                   <TableCell className="py-4">
                     <div className="flex items-center gap-2">
                       <MessageSquare size={16} className="text-slate-400" />
@@ -145,7 +145,8 @@ export default function NotificationsPage() {
                             onError: () => toast.error('Failed to resend notification'),
                           })
                         }
-                        className="rounded-2xl px-3 text-slate-400 hover:bg-primary-50 hover:text-primary-600"
+                        className="rounded-2xl px-3 hover:bg-primary-50 hover:text-primary-600"
+                        style={{ color: 'var(--text-tertiary)' }}
                       >
                         Resend
                       </Button>
@@ -160,7 +161,7 @@ export default function NotificationsPage() {
 
       {/* Pagination */}
       {data && data.total > data.page_size && (
-        <Card className="rounded-[24px] border-white/70 bg-white/75 p-4 shadow-[0_12px_32px_rgba(15,23,42,0.05)]" variant="default">
+        <Card className="dashboard-page-panel rounded-[24px] p-4" variant="default">
           <div className="flex items-center justify-between">
             <span className="text-sm text-slate-500">
               Page <span className="font-semibold text-slate-900">{page}</span> of{' '}
@@ -172,7 +173,7 @@ export default function NotificationsPage() {
                 size="sm"
                 disabled={page <= 1}
                 onClick={() => setPage((p) => p - 1)}
-                className="rounded-2xl border-slate-200 bg-white px-4 text-slate-600 hover:border-primary-200 hover:bg-primary-50 hover:text-primary-700"
+                className="dashboard-action-outline rounded-2xl border px-4"
               >
                 Previous
               </Button>
@@ -181,7 +182,7 @@ export default function NotificationsPage() {
                 size="sm"
                 disabled={page >= Math.ceil(data.total / data.page_size)}
                 onClick={() => setPage((p) => p + 1)}
-                className="rounded-2xl border-slate-200 bg-white px-4 text-slate-600 hover:border-primary-200 hover:bg-primary-50 hover:text-primary-700"
+                className="dashboard-action-outline rounded-2xl border px-4"
               >
                 Next
               </Button>
