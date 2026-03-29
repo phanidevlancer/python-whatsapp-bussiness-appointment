@@ -51,7 +51,7 @@ async def count_customer_campaign_bookings(
     campaign_id: uuid.UUID,
     user_phone: str,
 ) -> int:
-    normalized_phone = user_phone.lstrip("+").lstrip("0")
+    normalized_phone = customer_repo.normalize_phone(user_phone)
     variants = [normalized_phone, f"+{normalized_phone}"]
     result = await db.execute(
         select(func.count(Appointment.id)).where(
@@ -162,6 +162,35 @@ async def update_recipient_status(
 
     await db.flush()
     return recipient
+
+
+async def mark_campaign_recipient_clicked(
+    db: AsyncSession,
+    *,
+    campaign_id: uuid.UUID,
+    user_phone: str,
+) -> CampaignRecipient | None:
+    normalized_phone = customer_repo.normalize_phone(user_phone)
+    phone_variants = {normalized_phone, f"+{normalized_phone}"}
+
+    result = await db.execute(
+        select(CampaignRecipient)
+        .where(
+            CampaignRecipient.campaign_id == campaign_id,
+            CampaignRecipient.phone.in_(phone_variants),
+        )
+        .order_by(CampaignRecipient.created_at.desc())
+        .limit(1)
+    )
+    recipient = result.scalar_one_or_none()
+    if recipient is None:
+        return None
+
+    return await update_recipient_status(
+        db,
+        recipient=recipient,
+        delivery_status=CampaignDeliveryStatus.CLICKED,
+    )
 
 
 async def create_send_log(

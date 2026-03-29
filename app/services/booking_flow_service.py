@@ -40,11 +40,13 @@ CAPTURABLE_STEPS = {
 
 from app.repositories import (
     appointment_repository as appt_repo,
+    campaign_repository as campaign_repo,
     customer_repository as customer_repo,
     service_repository as svc_repo,
     session_repository as sess_repo,
     slot_repository as slot_repo,
 )
+from app.services import campaign_service
 from app.services.session_service import SessionService
 from app.utils.whatsapp_parser import (
     MessageType,
@@ -174,9 +176,6 @@ async def _process_message(
         logger.debug("Skipping duplicate message id=%s", message_id)
         return
 
-    if message_id:
-        await session_svc.mark_message_processed(message_id)
-
     # --- Load or create session ---
     user_session = await sess_repo.get_or_create_session(db, sender)
     text_body = get_text_body(message)
@@ -233,18 +232,79 @@ async def _process_message(
     # --- Button clicks for quick actions ---
     if msg_type == MessageType.BUTTON_REPLY:
         button_id = get_button_reply_id(message)
+        campaign_code = campaign_service.parse_campaign_button_id(button_id)
+        if campaign_code:
+            campaign = await campaign_repo.get_campaign_by_code(db, campaign_code)
+            if campaign and campaign_service.is_campaign_active(campaign):
+                existing_count = await campaign_repo.count_customer_campaign_bookings(
+                    db,
+                    campaign_id=campaign.id,
+                    user_phone=sender,
+                )
+                if campaign_service.is_booking_limit_reached(campaign, existing_count=existing_count):
+                    await _send_campaign_limit_reached(sender, wa_client, campaign.name)
+                    if message_id:
+                        await session_svc.mark_message_processed(message_id)
+                    return
+                await campaign_repo.mark_campaign_recipient_clicked(
+                    db,
+                    campaign_id=campaign.id,
+                    user_phone=sender,
+                )
+                await campaign_service.start_campaign_journey(
+                    db,
+                    sender,
+                    campaign=campaign,
+                    entry_point="button_campaign",
+                    entry_message_id=message_id,
+                )
+                await _handle_greeting(sender, db, wa_client, uname)
+                if message_id:
+                    await session_svc.mark_message_processed(message_id)
+            else:
+                await campaign_service.start_organic_journey(
+                    db,
+                    sender,
+                    entry_point="campaign_fallback",
+                    entry_message_id=message_id,
+                )
+                await wa_client.send_text(
+                    sender,
+                    "That offer is no longer available. Send *hi* to browse our standard booking options.",
+                )
+                if message_id:
+                    await session_svc.mark_message_processed(message_id)
+            return
         if button_id == "book_appointment":
+            await campaign_service.start_organic_journey(
+                db,
+                sender,
+                entry_point="button_organic",
+                entry_message_id=message_id,
+            )
             await _handle_greeting(sender, db, wa_client, uname)
+            if message_id:
+                await session_svc.mark_message_processed(message_id)
             return
         if button_id == "my_appointments":
             await _handle_manage_menu(sender, db, wa_client, uname)
+            if message_id:
+                await session_svc.mark_message_processed(message_id)
             return
         if button_id == "update_name":
             await _handle_update_name_prompt(sender, db, wa_client, uname)
+            if message_id:
+                await session_svc.mark_message_processed(message_id)
             return
 
     # --- Greeting always shows the main menu buttons ---
     if msg_type == MessageType.TEXT and is_greeting(text_body):
+        await campaign_service.start_organic_journey(
+            db,
+            sender,
+            entry_point="text_hi",
+            entry_message_id=message_id,
+        )
         await _handle_main_menu(sender, db, wa_client, uname)
         return
 
@@ -366,11 +426,38 @@ async def _handle_main_menu(
     await wa_client.send_button_message(to=sender, body=body, buttons=buttons)
 
 
+async def _send_campaign_limit_reached(
+    sender: str,
+    wa_client: WhatsAppClient,
+    campaign_name: str,
+) -> None:
+    _log_action(sender, f"Campaign limit reached for {campaign_name} — sent My Bookings shortcut")
+    await wa_client.send_button_message(
+        to=sender,
+        body=(
+            f"You have already availed the *{campaign_name}* offer.\n\n"
+            "Please check your existing booking using the button below."
+        ),
+        buttons=[
+            {"id": "my_appointments", "title": "My Bookings"},
+            {"id": "book_appointment", "title": "Book Organic"},
+        ],
+    )
+
+
 async def _handle_greeting(
     sender: str, db: AsyncSession, wa_client: WhatsAppClient, uname: str | None = None
 ) -> None:
     """Show the service selection list (called when user taps 'Book an appointment')."""
     services = await svc_repo.get_active_services(db)
+    user_session = await sess_repo.get_or_create_session(db, sender)
+    active_campaign = await campaign_service.resolve_active_campaign(db, user_session)
+
+    if active_campaign is not None and campaign_service.is_campaign_active(active_campaign):
+        services = [
+            service for service in services
+            if campaign_service.is_service_eligible(active_campaign, service.id)
+        ]
 
     if not services:
         await wa_client.send_text(
@@ -431,7 +518,22 @@ async def _handle_service_selection(
         await wa_client.send_text(sender, "That service is no longer available. Please select another service.")
         return
 
+    user_session = await sess_repo.get_or_create_session(db, sender)
+    active_campaign = await campaign_service.resolve_active_campaign(db, user_session)
+    if active_campaign is not None and campaign_service.is_campaign_active(active_campaign):
+        if not campaign_service.is_service_eligible(active_campaign, service_id):
+            await wa_client.send_text(
+                sender,
+                "That service is not available under the current offer. Please choose one of the eligible services.",
+            )
+            return
+
     slots = await slot_repo.get_available_slots(db, service_id)
+    if active_campaign is not None and campaign_service.is_campaign_active(active_campaign):
+        slots = [
+            slot for slot in slots
+            if campaign_service.is_slot_eligible(active_campaign, slot.start_time)
+        ]
     if not slots:
         await wa_client.send_text(
             sender,
@@ -568,6 +670,46 @@ async def _handle_booking_confirmation(
             return
 
         customer, _ = await customer_repo.get_or_create_by_phone(db, sender)
+        service = await svc_repo.get_service_by_id(db, user_session.selected_service_id)
+        active_campaign = await campaign_service.resolve_active_campaign(db, user_session)
+
+        booking_snapshot = campaign_service.build_booking_snapshot(user_session, active_campaign)
+        service_cost = service.cost if service else None
+        final_cost = service_cost
+
+        if active_campaign is not None and user_session.active_journey_type.value == "campaign":
+            if not campaign_service.is_campaign_active(active_campaign):
+                await campaign_service.start_organic_journey(
+                    db,
+                    sender,
+                    entry_point="campaign_expired",
+                    entry_message_id=None,
+                )
+                await wa_client.send_text(
+                    sender,
+                    "That offer has expired. Send *hi* to start a standard booking.",
+                )
+                return
+            if service and not campaign_service.is_service_eligible(active_campaign, service.id):
+                await wa_client.send_text(
+                    sender,
+                    "This booking is not eligible for the selected campaign.",
+                )
+                return
+            if not campaign_service.is_slot_eligible(active_campaign, slot.start_time):
+                await wa_client.send_text(
+                    sender,
+                    "This time slot is not eligible for the selected campaign. Please choose another slot.",
+                )
+                return
+            existing_count = await campaign_repo.count_customer_campaign_bookings(
+                db,
+                campaign_id=active_campaign.id,
+                user_phone=sender,
+            )
+            campaign_service.ensure_booking_limit(active_campaign, existing_count=existing_count)
+            if service_cost is not None:
+                final_cost = campaign_service.calculate_final_cost(service_cost, active_campaign)
 
         # Create the appointment record
         appointment = await appt_repo.create_appointment(
@@ -576,6 +718,13 @@ async def _handle_booking_confirmation(
             service_id=user_session.selected_service_id,
             slot_id=slot_id,
             customer_id=customer.id,
+            campaign_id=booking_snapshot["campaign_id"],
+            campaign_code_snapshot=booking_snapshot["campaign_code_snapshot"],
+            campaign_name_snapshot=booking_snapshot["campaign_name_snapshot"],
+            discount_type_snapshot=booking_snapshot["discount_type_snapshot"],
+            discount_value_snapshot=booking_snapshot["discount_value_snapshot"],
+            service_cost_snapshot=service_cost,
+            final_cost_snapshot=final_cost,
         )
         
         # Write status history for the booking
@@ -599,7 +748,6 @@ async def _handle_booking_confirmation(
         sse_broadcast("appointment_created", {"appointment_id": str(appointment.id)})
 
         # Fetch service name for the confirmation message
-        service = await svc_repo.get_service_by_id(db, user_session.selected_service_id)
         service_name = service.name if service else "your service"
 
         time_display = slot.start_time.strftime("%A, %B %d at %I:%M %p")
@@ -608,11 +756,17 @@ async def _handle_booking_confirmation(
         _log_action(sender, f'BOOKED: {service_name} on {time_display} (ref: {booking_ref})')
 
         name_part = f", *{uname}*" if uname else ""
+        cost_lines = ""
+        if service_cost is not None and final_cost is not None:
+            cost_lines = f"Price: Rs {service_cost:.2f}\nFinal Price: Rs {final_cost:.2f}\n"
+            if booking_snapshot["campaign_name_snapshot"]:
+                cost_lines += f"Offer: {booking_snapshot['campaign_name_snapshot']}\n"
         await wa_client.send_text(
             sender,
             f"🎉 Your appointment at *ORA Clinic* is confirmed{name_part}!\n\n"
             f"Service: {service_name}\n"
             f"Date & Time: {time_display}\n"
+            f"{cost_lines}"
             f"Booking Ref: {booking_ref}\n\n"
             f"Reply *my appointments* to manage your bookings, or *hi* to book another.",
         )
