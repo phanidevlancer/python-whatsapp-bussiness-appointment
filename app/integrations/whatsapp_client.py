@@ -1,4 +1,5 @@
 import logging
+from pathlib import Path
 
 import httpx
 
@@ -26,9 +27,11 @@ class WhatsAppClient:
     """
 
     def __init__(self, token: str, phone_number_id: str) -> None:
-        self._url = f"{_GRAPH_API_BASE}/{phone_number_id}/messages"
-        self._headers = {
-            "Authorization": f"Bearer {token}",
+        self._messages_url = f"{_GRAPH_API_BASE}/{phone_number_id}/messages"
+        self._media_url = f"{_GRAPH_API_BASE}/{phone_number_id}/media"
+        self._auth_headers = {"Authorization": f"Bearer {token}"}
+        self._json_headers = {
+            **self._auth_headers,
             "Content-Type": "application/json",
         }
         self._client = httpx.AsyncClient(timeout=10.0)
@@ -99,16 +102,43 @@ class WhatsAppClient:
             "interactive": {
                 "type": "button",
                 "body": {"text": body},
-                "action": {
-                    "buttons": [
-                        {
-                            "type": "reply",
-                            "reply": {"id": b["id"], "title": b["title"]},
-                        }
-                        for b in buttons
-                    ]
-                },
+                "action": {"buttons": self._build_reply_buttons(buttons)},
             },
+        }
+        return await self._post(payload)
+
+    async def send_image_button_message(
+        self,
+        to: str,
+        body: str,
+        *,
+        media_id: str,
+        buttons: list[dict],
+        footer: str | None = None,
+    ) -> dict:
+        """
+        Send an interactive button message with an image header.
+
+        buttons format:
+        [{"id": "button_id", "title": "Button Label"}]
+        """
+        interactive: dict[str, object] = {
+            "type": "button",
+            "header": {
+                "type": "image",
+                "image": {"id": media_id},
+            },
+            "body": {"text": body},
+            "action": {"buttons": self._build_reply_buttons(buttons)},
+        }
+        if footer:
+            interactive["footer"] = {"text": footer}
+
+        payload = {
+            "messaging_product": "whatsapp",
+            "to": to,
+            "type": "interactive",
+            "interactive": interactive,
         }
         return await self._post(payload)
 
@@ -152,11 +182,69 @@ class WhatsAppClient:
         }
         return await self._post(payload)
 
+    async def upload_media(
+        self,
+        *,
+        file_path: str | Path,
+        mime_type: str,
+        filename: str | None = None,
+    ) -> str:
+        """
+        Upload media to the WhatsApp Cloud API and return the Meta media id.
+        """
+        path = Path(file_path)
+        upload_name = filename or path.name
+        file_handle = path.open("rb")
+        try:
+            response = await self._client.post(
+                self._media_url,
+                headers=self._auth_headers,
+                data={
+                    "messaging_product": "whatsapp",
+                    "type": mime_type,
+                },
+                files={
+                    "file": (upload_name, file_handle, mime_type),
+                },
+            )
+            response.raise_for_status()
+            payload = response.json()
+            media_id = payload.get("id")
+            if not media_id and isinstance(payload.get("media"), list) and payload["media"]:
+                media_id = payload["media"][0].get("id")
+            if not media_id:
+                raise WhatsAppAPIError(response.status_code, f"Missing media id in response: {payload}")
+            return media_id
+        except httpx.HTTPStatusError as e:
+            logger.error(
+                "WhatsApp media upload HTTP error: status=%s body=%s",
+                e.response.status_code,
+                e.response.text,
+            )
+            raise WhatsAppAPIError(e.response.status_code, e.response.text) from e
+        except httpx.TimeoutException as e:
+            logger.error("WhatsApp media upload timed out: %s", e)
+            raise
+        except httpx.ConnectError as e:
+            logger.error("WhatsApp media upload connection error: %s", e)
+            raise
+        finally:
+            file_handle.close()
+
+    def _build_reply_buttons(self, buttons: list[dict]) -> list[dict]:
+        return [
+            {
+                "type": "reply",
+                "reply": {"id": button["id"], "title": button["title"]},
+            }
+            for button in buttons
+        ]
+
     async def _post(self, payload: dict) -> dict:
         """Internal helper: POST to the messages endpoint with error handling."""
         try:
             response = await self._client.post(
-                self._url, headers=self._headers, json=payload
+                self._messages_url, headers=self._json_headers, json=payload
             )
             response.raise_for_status()
             return response.json()
