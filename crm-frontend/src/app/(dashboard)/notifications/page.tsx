@@ -35,15 +35,15 @@ export default function NotificationsPage() {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5 rounded-[28px] bg-[linear-gradient(180deg,rgba(255,255,255,0.82),rgba(240,249,255,0.62))] p-1">
       {/* Page Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between rounded-[24px] border border-white/70 bg-white/70 px-6 py-5 shadow-[0_16px_40px_rgba(13,148,136,0.08)] backdrop-blur-sm">
         <div>
-          <h2 className="text-xl font-bold text-slate-900">Notifications</h2>
-          <p className="text-sm text-slate-500 mt-0.5">Track WhatsApp message delivery status</p>
+          <h2 className="text-[1.9rem] font-black tracking-[-0.03em] text-slate-900">Notifications</h2>
+          <p className="mt-1 text-sm font-medium text-slate-500">Track WhatsApp message delivery status</p>
         </div>
         <div className="flex items-center gap-3">
-          <Badge variant="primary" size="md">
+          <Badge variant="primary" size="md" className="rounded-full bg-primary-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-primary-700">
             <MessageSquare size={16} />
             {data?.total ?? 0} messages
           </Badge>
@@ -51,7 +51,7 @@ export default function NotificationsPage() {
       </div>
 
       {/* Notifications Table */}
-      <Card className="p-0 overflow-hidden" variant="elevated">
+      <Card className="overflow-hidden rounded-[28px] border-white/80 bg-white/90 p-0 shadow-[0_20px_48px_rgba(15,23,42,0.08)]" variant="elevated">
         {isLoading ? (
           <div className="p-4 space-y-3">
             {Array.from({ length: 5 }).map((_, i) => (
@@ -65,40 +65,40 @@ export default function NotificationsPage() {
             ))}
           </div>
         ) : !data?.items.length ? (
-          <div className="text-center py-16">
-            <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <MessageSquare size={32} className="text-slate-400" />
+          <div className="py-20 text-center">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary-50">
+              <MessageSquare size={32} className="text-primary-400" />
             </div>
-            <h3 className="text-sm font-medium text-slate-900 mb-1">No notification logs</h3>
+            <h3 className="mb-1 text-sm font-semibold text-slate-900">No notification logs</h3>
             <p className="text-sm text-slate-500">WhatsApp messages will appear here</p>
           </div>
         ) : (
-          <Table>
-            <TableHeader>
+          <Table className="min-w-full">
+            <TableHeader className="border-b border-slate-100 bg-slate-50/80">
               <TableRow hoverable={false}>
-                <TableHead>Phone</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Sent At</TableHead>
-                <TableHead>Error</TableHead>
-                <TableHead align="right">Actions</TableHead>
+                <TableHead className="py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Phone</TableHead>
+                <TableHead className="py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Type</TableHead>
+                <TableHead className="py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Status</TableHead>
+                <TableHead className="py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Sent At</TableHead>
+                <TableHead className="py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Error</TableHead>
+                <TableHead align="right" className="py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Actions</TableHead>
               </TableRow>
             </TableHeader>
-            <TableBody>
+            <TableBody className="divide-y divide-slate-100">
               {data.items.map((log) => (
-                <TableRow key={log.id}>
-                  <TableCell>
+                <TableRow key={log.id} className="group hover:bg-slate-50/80">
+                  <TableCell className="py-4">
                     <div className="flex items-center gap-2">
                       <MessageSquare size={16} className="text-slate-400" />
                       <span className="text-sm text-slate-700">{log.customer_phone}</span>
                     </div>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="py-4">
                     <span className="text-sm text-slate-700 capitalize">
                       {log.message_type.replace(/_/g, ' ')}
                     </span>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="py-4">
                     <div className="flex items-center gap-2">
                       {getStatusIcon(log.status)}
                       <Badge
@@ -110,17 +110,18 @@ export default function NotificationsPage() {
                             : 'default'
                         }
                         size="sm"
+                        className="rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em]"
                       >
                         {log.status}
                       </Badge>
                     </div>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="py-4">
                     <span className="text-sm text-slate-500">
                       {log.sent_at ? format(new Date(log.sent_at), 'MMM d, h:mm a') : '—'}
                     </span>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="py-4">
                     {log.error_message ? (
                       <div className="flex items-center gap-1 text-sm text-error-600 max-w-xs">
                         <AlertCircle size={14} />
@@ -132,7 +133,7 @@ export default function NotificationsPage() {
                       <span className="text-sm text-slate-400">—</span>
                     )}
                   </TableCell>
-                  <TableCell align="right">
+                  <TableCell align="right" className="py-4">
                     {log.appointment_id && (
                       <Button
                         variant="ghost"
@@ -144,7 +145,7 @@ export default function NotificationsPage() {
                             onError: () => toast.error('Failed to resend notification'),
                           })
                         }
-                        className="text-slate-400 hover:text-primary-600"
+                        className="rounded-2xl px-3 text-slate-400 hover:bg-primary-50 hover:text-primary-600"
                       >
                         Resend
                       </Button>
@@ -159,11 +160,11 @@ export default function NotificationsPage() {
 
       {/* Pagination */}
       {data && data.total > data.page_size && (
-        <Card className="p-4" variant="default">
+        <Card className="rounded-[24px] border-white/70 bg-white/75 p-4 shadow-[0_12px_32px_rgba(15,23,42,0.05)]" variant="default">
           <div className="flex items-center justify-between">
             <span className="text-sm text-slate-500">
-              Page <span className="font-medium text-slate-900">{page}</span> of{' '}
-              <span className="font-medium text-slate-900">{Math.ceil(data.total / data.page_size)}</span>
+              Page <span className="font-semibold text-slate-900">{page}</span> of{' '}
+              <span className="font-semibold text-slate-900">{Math.ceil(data.total / data.page_size)}</span>
             </span>
             <div className="flex gap-2">
               <Button
@@ -171,6 +172,7 @@ export default function NotificationsPage() {
                 size="sm"
                 disabled={page <= 1}
                 onClick={() => setPage((p) => p - 1)}
+                className="rounded-2xl border-slate-200 bg-white px-4 text-slate-600 hover:border-primary-200 hover:bg-primary-50 hover:text-primary-700"
               >
                 Previous
               </Button>
@@ -179,6 +181,7 @@ export default function NotificationsPage() {
                 size="sm"
                 disabled={page >= Math.ceil(data.total / data.page_size)}
                 onClick={() => setPage((p) => p + 1)}
+                className="rounded-2xl border-slate-200 bg-white px-4 text-slate-600 hover:border-primary-200 hover:bg-primary-50 hover:text-primary-700"
               >
                 Next
               </Button>

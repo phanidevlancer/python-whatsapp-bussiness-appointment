@@ -22,6 +22,21 @@ import {
 import { Skeleton } from '@/components/ui/Skeleton';
 import type { Service } from '@/types/appointment';
 
+function getErrorMessage(error: unknown, fallback: string) {
+  if (
+    typeof error === 'object' &&
+    error !== null &&
+    'response' in error &&
+    typeof (error as { response?: unknown }).response === 'object' &&
+    (error as { response?: { data?: unknown } }).response?.data &&
+    typeof (error as { response?: { data?: { detail?: unknown } } }).response?.data?.detail === 'string'
+  ) {
+    return (error as { response?: { data?: { detail?: string } } }).response?.data?.detail ?? fallback;
+  }
+
+  return fallback;
+}
+
 function ServiceHistoryRow({ serviceId }: { serviceId: string }) {
   const { data: history = [], isLoading } = useServiceHistory(serviceId);
   return (
@@ -75,9 +90,11 @@ function ServiceRow({
   };
 
   const confirmSave = () => {
-    const payload: any = {};
+    const payload: { name?: string; description?: string; duration_minutes?: number } = {};
     pendingChanges.forEach((c) => {
-      payload[c.field] = c.field === 'duration_minutes' ? parseInt(c.newValue ?? '0') : c.newValue;
+      if (c.field === 'name') payload.name = c.newValue ?? '';
+      if (c.field === 'description') payload.description = c.newValue || undefined;
+      if (c.field === 'duration_minutes') payload.duration_minutes = parseInt(c.newValue ?? '0');
     });
     update(
       { id: s.id, ...payload },
@@ -87,39 +104,39 @@ function ServiceRow({
           setShowConfirm(false);
           setEditing(false);
         },
-        onError: (err: any) => {
-          toast.error(err?.response?.data?.detail ?? 'Failed to update service');
+        onError: (err: unknown) => {
+          toast.error(getErrorMessage(err, 'Failed to update service'));
           setShowConfirm(false);
         },
       }
     );
   };
 
-  return (
+    return (
     <>
-      <TableRow key={s.id}>
-        <TableCell>
-          <div className="w-10 h-10 bg-gradient-to-br from-primary-100 to-primary-200 rounded-xl flex items-center justify-center">
+      <TableRow key={s.id} className="group hover:bg-slate-50/80">
+        <TableCell className="py-4">
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary-50 text-primary-600">
             <Tag size={18} className="text-primary-600" />
           </div>
         </TableCell>
-        <TableCell>
+        <TableCell className="py-4">
           {editing ? (
-            <Input value={editName} onChange={(e) => setEditName(e.target.value)} className="max-w-[180px]" />
+            <Input value={editName} onChange={(e) => setEditName(e.target.value)} className="max-w-[180px] rounded-2xl border-0 bg-slate-100/80 shadow-none ring-1 ring-transparent focus:bg-white focus:ring-2 focus:ring-primary-200" />
           ) : (
-            <span className="font-medium text-slate-900">{s.name}</span>
+            <span className="font-semibold text-slate-900">{s.name}</span>
           )}
         </TableCell>
-        <TableCell>
+        <TableCell className="py-4">
           {editing ? (
-            <Textarea value={editDesc} onChange={(e) => setEditDesc(e.target.value)} rows={1} resize="none" className="max-w-[220px] text-sm" />
+            <Textarea value={editDesc} onChange={(e) => setEditDesc(e.target.value)} rows={1} resize="none" className="max-w-[220px] rounded-2xl border-0 bg-slate-100/80 text-sm shadow-none ring-1 ring-transparent focus:bg-white focus:ring-2 focus:ring-primary-200" />
           ) : (
             <span className="text-sm text-slate-500">{s.description ?? '—'}</span>
           )}
         </TableCell>
-        <TableCell>
+        <TableCell className="py-4">
           {editing ? (
-            <Input type="number" value={editDuration} onChange={(e) => setEditDuration(e.target.value)} className="max-w-[90px]" />
+            <Input type="number" value={editDuration} onChange={(e) => setEditDuration(e.target.value)} className="max-w-[90px] rounded-2xl border-0 bg-slate-100/80 shadow-none ring-1 ring-transparent focus:bg-white focus:ring-2 focus:ring-primary-200" />
           ) : (
             <div className="flex items-center gap-2">
               <Clock size={14} className="text-slate-400" />
@@ -127,36 +144,41 @@ function ServiceRow({
             </div>
           )}
         </TableCell>
-        <TableCell>
-          <Badge variant={s.is_active ? 'success' : 'default'} size="sm" dot>
+        <TableCell className="py-4">
+          <Badge
+            variant={s.is_active ? 'success' : 'default'}
+            size="sm"
+            dot
+            className="rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em]"
+          >
             {s.is_active ? 'Active' : 'Inactive'}
           </Badge>
         </TableCell>
-        <TableCell align="right">
+        <TableCell align="right" className="py-4">
           <div className="flex items-center justify-end gap-1">
             {editing ? (
               <>
-                <Button variant="ghost" size="sm" leftIcon={<X size={14} />} onClick={cancelEdit}>Cancel</Button>
-                <Button variant="primary" size="sm" leftIcon={<Check size={14} />} onClick={requestSave}>Save</Button>
+                <Button variant="ghost" size="sm" leftIcon={<X size={14} />} onClick={cancelEdit} className="rounded-2xl px-3 text-slate-500 hover:bg-slate-100 hover:text-slate-800">Cancel</Button>
+                <Button variant="primary" size="sm" leftIcon={<Check size={14} />} onClick={requestSave} className="rounded-2xl px-3">Save</Button>
               </>
             ) : (
               <>
-                <Button variant="ghost" size="sm" leftIcon={<Pencil size={14} />} onClick={startEdit} className="text-slate-400 hover:text-slate-700">Edit</Button>
+                <Button variant="ghost" size="sm" leftIcon={<Pencil size={14} />} onClick={startEdit} className="rounded-2xl px-3 text-slate-400 hover:bg-slate-100 hover:text-slate-700">Edit</Button>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => setShowHistory((v) => !v)}
-                  className="text-slate-400 hover:text-slate-700"
+                  className="rounded-2xl px-3 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
                   title="Show history"
                 >
                   {showHistory ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                 </Button>
                 {s.is_active ? (
-                  <Button variant="ghost" size="sm" leftIcon={<PowerOff size={14} />} onClick={() => onDeactivate(s.id)} className="text-slate-400 hover:text-error-600">
+                  <Button variant="ghost" size="sm" leftIcon={<PowerOff size={14} />} onClick={() => onDeactivate(s.id)} className="rounded-2xl px-3 text-slate-400 hover:bg-red-50 hover:text-error-600">
                     Deactivate
                   </Button>
                 ) : (
-                  <Button variant="ghost" size="sm" onClick={() => onActivate(s.id)} className="text-slate-400 hover:text-success-600">
+                  <Button variant="ghost" size="sm" onClick={() => onActivate(s.id)} className="rounded-2xl px-3 text-slate-400 hover:bg-emerald-50 hover:text-success-600">
                     Activate
                   </Button>
                 )}
@@ -201,43 +223,49 @@ export default function ServicesPage() {
           setShowCreate(false);
           setNewName(''); setNewDuration('30'); setNewDesc('');
         },
-        onError: (err: any) => toast.error(err?.response?.data?.detail ?? 'Failed to create service'),
+        onError: (err: unknown) => toast.error(getErrorMessage(err, 'Failed to create service')),
       }
     );
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
+    <div className="space-y-5 rounded-[28px] bg-[linear-gradient(180deg,rgba(255,255,255,0.82),rgba(240,249,255,0.62))] p-1">
+      <div className="flex items-center justify-between rounded-[24px] border border-white/70 bg-white/70 px-6 py-5 shadow-[0_16px_40px_rgba(13,148,136,0.08)] backdrop-blur-sm">
         <div>
-          <h2 className="text-xl font-bold text-slate-900">Services</h2>
-          <p className="text-sm text-slate-500 mt-0.5">Manage your clinic services and pricing</p>
+          <h2 className="text-[1.9rem] font-black tracking-[-0.03em] text-slate-900">Services</h2>
+          <p className="mt-1 text-sm font-medium text-slate-500">Manage your clinic services and pricing</p>
         </div>
-        <Button variant="primary" size="md" leftIcon={<Plus size={18} />} onClick={() => setShowCreate(true)}>
+        <Button
+          variant="primary"
+          size="md"
+          leftIcon={<Plus size={18} />}
+          onClick={() => setShowCreate(true)}
+          className="h-11 rounded-2xl border border-primary-500/20 px-5 font-semibold shadow-[0_14px_28px_rgba(13,148,136,0.18)]"
+        >
           New Service
         </Button>
       </div>
 
       {showCreate && (
-        <Card className="p-5" variant="elevated">
+        <Card className="rounded-[24px] border-white/80 bg-white/85 p-5 shadow-[0_16px_40px_rgba(15,23,42,0.06)] backdrop-blur-sm" variant="elevated">
           <CardHeader className="pb-4 border-0">
-            <CardTitle>Create New Service</CardTitle>
+            <CardTitle className="text-lg font-bold tracking-[-0.02em] text-slate-900">Create New Service</CardTitle>
           </CardHeader>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Input placeholder="Service Name" value={newName} onChange={(e) => setNewName(e.target.value)} leftIcon={<Tag size={16} />} />
-            <Input placeholder="Duration (minutes)" type="number" value={newDuration} onChange={(e) => setNewDuration(e.target.value)} leftIcon={<Clock size={16} />} />
-            <Textarea placeholder="Description (optional)" value={newDesc} onChange={(e) => setNewDesc(e.target.value)} resize="none" rows={1} />
+            <Input placeholder="Service Name" value={newName} onChange={(e) => setNewName(e.target.value)} leftIcon={<Tag size={16} />} className="h-12 rounded-2xl border-0 bg-slate-100/80 shadow-none ring-1 ring-transparent focus:bg-white focus:ring-2 focus:ring-primary-200" />
+            <Input placeholder="Duration (minutes)" type="number" value={newDuration} onChange={(e) => setNewDuration(e.target.value)} leftIcon={<Clock size={16} />} className="h-12 rounded-2xl border-0 bg-slate-100/80 shadow-none ring-1 ring-transparent focus:bg-white focus:ring-2 focus:ring-primary-200" />
+            <Textarea placeholder="Description (optional)" value={newDesc} onChange={(e) => setNewDesc(e.target.value)} resize="none" rows={1} className="rounded-2xl border-0 bg-slate-100/80 shadow-none ring-1 ring-transparent focus:bg-white focus:ring-2 focus:ring-primary-200" />
           </div>
-          <div className="flex gap-3 mt-4 pt-4 border-t border-slate-100">
-            <Button variant="primary" size="md" onClick={handleCreate} isLoading={creating}>
+          <div className="mt-4 flex gap-3 border-t border-slate-100 pt-4">
+            <Button variant="primary" size="md" onClick={handleCreate} isLoading={creating} className="rounded-2xl px-5 shadow-[0_14px_28px_rgba(13,148,136,0.18)]">
               {creating ? 'Creating...' : 'Create Service'}
             </Button>
-            <Button variant="outline" size="md" onClick={() => setShowCreate(false)}>Cancel</Button>
+            <Button variant="outline" size="md" onClick={() => setShowCreate(false)} className="rounded-2xl border-slate-200 bg-white px-5 text-slate-600 hover:border-primary-200 hover:bg-primary-50 hover:text-primary-700">Cancel</Button>
           </div>
         </Card>
       )}
 
-      <Card className="p-0 overflow-hidden" variant="elevated">
+      <Card className="overflow-hidden rounded-[28px] border-white/80 bg-white/90 p-0 shadow-[0_20px_48px_rgba(15,23,42,0.08)]" variant="elevated">
         {isLoading ? (
           <div className="p-4 space-y-3">
             {Array.from({ length: 5 }).map((_, i) => (
@@ -253,26 +281,26 @@ export default function ServicesPage() {
             ))}
           </div>
         ) : !services?.length ? (
-          <div className="text-center py-16">
-            <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Tag size={32} className="text-slate-400" />
+          <div className="py-20 text-center">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary-50">
+              <Tag size={32} className="text-primary-400" />
             </div>
-            <h3 className="text-sm font-medium text-slate-900 mb-1">No services found</h3>
+            <h3 className="mb-1 text-sm font-semibold text-slate-900">No services found</h3>
             <p className="text-sm text-slate-500">Create your first service to get started</p>
           </div>
         ) : (
-          <Table>
-            <TableHeader>
+          <Table className="min-w-full">
+            <TableHeader className="border-b border-slate-100 bg-slate-50/80">
               <TableRow hoverable={false}>
-                <TableHead className="w-12"><span className="sr-only">Icon</span></TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead>Description</TableHead>
-                <TableHead>Duration</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead align="right">Actions</TableHead>
+                <TableHead className="w-12 py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400"><span className="sr-only">Icon</span></TableHead>
+                <TableHead className="py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Name</TableHead>
+                <TableHead className="py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Description</TableHead>
+                <TableHead className="py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Duration</TableHead>
+                <TableHead className="py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Status</TableHead>
+                <TableHead align="right" className="py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Actions</TableHead>
               </TableRow>
             </TableHeader>
-            <TableBody>
+            <TableBody className="divide-y divide-slate-100">
               {services.map((s) => (
                 <ServiceRow
                   key={s.id}

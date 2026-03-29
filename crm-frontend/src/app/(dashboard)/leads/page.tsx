@@ -3,18 +3,16 @@
 import { useState } from 'react';
 import { format } from 'date-fns';
 import {
-  UserX, Phone, Tag, Clock, CheckCircle2, XCircle,
-  PhoneCall, RefreshCw, ChevronDown, Search, Filter,
+  UserX, Phone, CheckCircle2, PhoneCall, Search,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
 import { useLeadsList, useUpdateLead, useConvertLead, useBulkAssignLeads } from '@/hooks/useLeads';
-import { useServicesListForForm, useProvidersListForForm, useSlotsList } from '@/hooks/useAppointments';
+import { useProvidersListForForm, useSlotsList } from '@/hooks/useAppointments';
 import type { Lead, LeadStatus, CustomerType } from '@/types/lead';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { Select } from '@/components/ui/Select';
 import { Badge } from '@/components/ui/Badge';
 import { Modal, ModalHeader, ModalTitle, ModalContent, ModalFooter } from '@/components/ui/Modal';
 import { Skeleton } from '@/components/ui/Skeleton';
@@ -29,8 +27,8 @@ const STATUS_LABELS: Record<LeadStatus, string> = {
   lost:       'Lost',
 };
 
-const STATUS_COLORS: Record<LeadStatus, 'danger' | 'warning' | 'primary' | 'success' | 'default'> = {
-  new_lead:  'danger',
+const STATUS_COLORS: Record<LeadStatus, 'error' | 'warning' | 'primary' | 'success' | 'default'> = {
+  new_lead:  'error',
   contacted: 'warning',
   follow_up: 'primary',
   converted: 'success',
@@ -56,6 +54,21 @@ const STEP_LABELS: Record<string, string> = {
   AWAITING_EMAIL:         'Mid-registration',
   APPOINTMENT_CANCELLED:  'Clinic cancelled — re-book',
 };
+
+function getErrorMessage(error: unknown, fallback: string) {
+  if (
+    typeof error === 'object' &&
+    error !== null &&
+    'response' in error &&
+    typeof (error as { response?: unknown }).response === 'object' &&
+    (error as { response?: { data?: unknown } }).response?.data &&
+    typeof (error as { response?: { data?: { detail?: unknown } } }).response?.data?.detail === 'string'
+  ) {
+    return (error as { response?: { data?: { detail?: string } } }).response?.data?.detail ?? fallback;
+  }
+
+  return fallback;
+}
 
 // ─── Log Call Dialog ────────────────────────────────────────────────────────
 
@@ -138,7 +151,7 @@ function ConvertDialog({ lead, onClose }: { lead: Lead; onClose: () => void }) {
       },
       {
         onSuccess: () => { toast.success('Lead converted — appointment created!'); onClose(); },
-        onError: (err: any) => toast.error(err?.response?.data?.detail ?? 'Failed to convert'),
+        onError: (err: unknown) => toast.error(getErrorMessage(err, 'Failed to convert')),
       }
     );
   };
@@ -156,15 +169,19 @@ function ConvertDialog({ lead, onClose }: { lead: Lead; onClose: () => void }) {
             </div>
           )}
 
-          <Select
-            label="Provider (optional)"
-            value={selectedProviderId}
-            onChange={(e) => setSelectedProviderId(e.target.value)}
-            options={[
-              { value: '', label: 'Any available provider' },
-              ...(providers?.map((p) => ({ value: p.id, label: p.name })) ?? []),
-            ]}
-          />
+          <div>
+            <label className="mb-1 block text-sm font-medium text-slate-700">Provider (optional)</label>
+            <select
+              value={selectedProviderId}
+              onChange={(e) => setSelectedProviderId(e.target.value)}
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">Any available provider</option>
+              {providers?.map((p) => (
+                <option key={p.id} value={p.id}>{p.name}</option>
+              ))}
+            </select>
+          </div>
 
           <Input
             label="Date *"
@@ -175,17 +192,23 @@ function ConvertDialog({ lead, onClose }: { lead: Lead; onClose: () => void }) {
           />
 
           {selectedDate && serviceId && (
-            <Select
-              label="Time Slot *"
-              value={selectedSlotId}
-              onChange={(e) => setSelectedSlotId(e.target.value)}
-              options={[
-                { value: '', label: 'Select a slot' },
-                ...(slots?.map((s) => ({ value: s.id, label: format(new Date(s.start_time), 'h:mm a') })) ?? []),
-              ]}
-              disabled={loadingSlots}
-              helperText={slots?.length ? `${slots.length} slot(s) available` : selectedDate ? 'No slots available' : undefined}
-            />
+            <div>
+              <label className="mb-1 block text-sm font-medium text-slate-700">Time Slot *</label>
+              <select
+                value={selectedSlotId}
+                onChange={(e) => setSelectedSlotId(e.target.value)}
+                disabled={loadingSlots}
+                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed disabled:bg-slate-50"
+              >
+                <option value="">Select a slot</option>
+                {slots?.map((s) => (
+                  <option key={s.id} value={s.id}>{format(new Date(s.start_time), 'h:mm a')}</option>
+                ))}
+              </select>
+              <p className="mt-1.5 text-xs text-slate-500">
+                {slots?.length ? `${slots.length} slot(s) available` : selectedDate ? 'No slots available' : ''}
+              </p>
+            </div>
           )}
 
           <div>
@@ -242,80 +265,80 @@ function LeadRow({
 
   return (
     <>
-      <tr className="hover:bg-slate-50 transition-colors">
-        <td className="px-4 py-3">
+      <tr className="group transition-colors hover:bg-slate-50/80">
+        <td className="px-4 py-4">
           <input
             type="checkbox"
             checked={isSelected}
             onChange={() => onToggleSelect(lead.id)}
-            className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+            className="rounded border-slate-300 text-primary-600 focus:ring-primary-500"
           />
         </td>
-        <td className="px-4 py-3">
+        <td className="px-4 py-4">
           <div>
             {lead.customer?.id ? (
-              <Link href={`/customers/${lead.customer.id}`} className="text-sm font-medium text-blue-600 hover:underline">
+              <Link href={`/customers/${lead.customer.id}`} className="text-sm font-semibold text-primary-700 hover:text-primary-800 hover:underline">
                 {lead.customer.name ?? 'Unknown'}
               </Link>
             ) : (
-              <p className="text-sm font-medium text-slate-900">{lead.customer?.name ?? 'Unknown'}</p>
+              <p className="text-sm font-semibold text-slate-900">{lead.customer?.name ?? 'Unknown'}</p>
             )}
             <p className="text-xs text-slate-500 flex items-center gap-1 mt-0.5">
               <Phone size={11} /> {lead.phone}
             </p>
           </div>
         </td>
-        <td className="px-4 py-3">
+        <td className="px-4 py-4">
           <div className="flex items-center gap-2">
-            <span className={`inline-block text-xs font-medium px-2 py-0.5 rounded-full ${TYPE_COLORS[lead.customer_type]}`}>
+            <span className={`inline-block rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] ${TYPE_COLORS[lead.customer_type]}`}>
               {TYPE_LABELS[lead.customer_type]}
             </span>
             {lead.priority_score !== null && (
-              <span className={`inline-block text-xs font-medium px-2 py-0.5 rounded-full ${getPriorityColor(lead.priority_score)}`}>
+              <span className={`inline-block rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] ${getPriorityColor(lead.priority_score)}`}>
                 {getPriorityLabel(lead.priority_score)} ({lead.priority_score})
               </span>
             )}
           </div>
         </td>
-        <td className="px-4 py-3 text-sm text-slate-600">
+        <td className="px-4 py-4 text-sm text-slate-700">
           {lead.service?.name ?? '—'}
         </td>
-        <td className="px-4 py-3 text-sm text-slate-500">
+        <td className="px-4 py-4 text-sm text-slate-500">
           {STEP_LABELS[lead.dropped_at_step] ?? lead.dropped_at_step}
         </td>
-        <td className="px-4 py-3 text-xs text-slate-500 whitespace-nowrap">
+        <td className="px-4 py-4 text-xs text-slate-500 whitespace-nowrap">
           {format(new Date(lead.dropped_at), 'MMM d, h:mm a')}
         </td>
-        <td className="px-4 py-3">
-          <Badge variant={STATUS_COLORS[lead.status]} size="sm">
+        <td className="px-4 py-4">
+          <Badge variant={STATUS_COLORS[lead.status]} size="sm" className="rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em]">
             {STATUS_LABELS[lead.status]}
           </Badge>
         </td>
-        <td className="px-4 py-3 text-xs text-slate-500">
+        <td className="px-4 py-4 text-xs text-slate-500">
           {lead.assigned_to?.name ?? <span className="text-slate-300">Unassigned</span>}
         </td>
-        <td className="px-4 py-3">
+        <td className="px-4 py-4">
           <div className="flex items-center gap-1 justify-end">
             {isOpen && (
               <>
                 <button
                   onClick={() => setShowLog(true)}
                   title="Log call"
-                  className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                  className="rounded-xl p-2 text-slate-400 transition-colors hover:bg-primary-50 hover:text-primary-600"
                 >
                   <PhoneCall size={15} />
                 </button>
                 <button
                   onClick={() => setShowConvert(true)}
                   title="Convert to appointment"
-                  className="p-1.5 rounded-lg text-slate-400 hover:text-teal-600 hover:bg-teal-50 transition-colors"
+                  className="rounded-xl p-2 text-slate-400 transition-colors hover:bg-teal-50 hover:text-teal-600"
                 >
                   <CheckCircle2 size={15} />
                 </button>
               </>
             )}
             {lead.crm_notes && (
-              <span title={lead.crm_notes} className="p-1.5 text-slate-300 hover:text-slate-500 cursor-help">
+              <span title={lead.crm_notes} className="cursor-help p-1.5 text-slate-300 transition-colors hover:text-slate-500">
                 💬
               </span>
             )}
@@ -400,23 +423,23 @@ export default function LeadsPage() {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5 rounded-[28px] bg-[linear-gradient(180deg,rgba(255,255,255,0.82),rgba(240,249,255,0.62))] p-1">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between rounded-[24px] border border-white/70 bg-white/70 px-6 py-5 shadow-[0_16px_40px_rgba(13,148,136,0.08)] backdrop-blur-sm">
         <div>
-          <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-            <UserX size={22} className="text-slate-500" />
+          <h2 className="flex items-center gap-3 text-[1.9rem] font-black tracking-[-0.03em] text-slate-900">
+            <UserX size={24} className="text-slate-400" />
             Leads
           </h2>
-          <p className="text-sm text-slate-500 mt-0.5">Incomplete bookings — follow up to convert</p>
+          <p className="mt-1 text-sm font-medium text-slate-500">Incomplete bookings — follow up to convert</p>
         </div>
         {openCount > 0 && (
-          <Badge variant="danger" size="md">{openCount} new</Badge>
+          <Badge variant="error" size="md" className="rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em]">{openCount} new</Badge>
         )}
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 bg-slate-100 rounded-lg p-1 w-fit">
+      <div className="flex w-fit gap-8 border-b border-slate-200 px-2">
         {([
           ['open',      'New Prospects'],
           ['returning', 'Returning Customers'],
@@ -427,8 +450,8 @@ export default function LeadsPage() {
             onClick={() => { setTab(key); setPage(1); }}
             className={`px-4 py-1.5 text-sm rounded-md font-medium transition-all ${
               tab === key
-                ? 'bg-white text-slate-900 shadow-sm'
-                : 'text-slate-500 hover:text-slate-700'
+                ? 'rounded-none border-b-2 border-primary-600 px-0 pb-4 text-primary-700 shadow-none'
+                : 'rounded-none border-b-2 border-transparent px-0 pb-4 text-slate-500 hover:text-slate-700'
             }`}
           >
             {label}
@@ -437,17 +460,17 @@ export default function LeadsPage() {
       </div>
 
       {/* Filters */}
-      <Card className="p-4" variant="elevated">
+      <Card className="rounded-[24px] border-white/80 bg-white/85 p-5 shadow-[0_16px_40px_rgba(15,23,42,0.06)] backdrop-blur-sm" variant="elevated">
         <div className="flex items-center gap-3">
           <Input
             placeholder="Search by phone…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             leftIcon={<Search size={15} />}
-            className="w-64"
+            className="h-12 w-64 rounded-2xl border-0 bg-slate-100/80 text-slate-700 shadow-none ring-1 ring-transparent placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-primary-200"
           />
           {search && (
-            <Button variant="ghost" size="sm" onClick={() => setSearch('')}>
+            <Button variant="ghost" size="sm" onClick={() => setSearch('')} className="rounded-2xl px-4 text-slate-500 hover:bg-slate-100 hover:text-slate-800">
               Clear
             </Button>
           )}
@@ -461,7 +484,7 @@ export default function LeadsPage() {
               <select
                 value={bulkAssignTo}
                 onChange={(e) => setBulkAssignTo(e.target.value)}
-                className="text-sm border border-slate-300 rounded-md px-2 py-1"
+                className="rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700"
               >
                 <option value="">Assign to...</option>
                 {providers?.map((p) => (
@@ -473,6 +496,7 @@ export default function LeadsPage() {
                 size="sm" 
                 onClick={handleBulkAssign}
                 disabled={!bulkAssignTo}
+                className="rounded-2xl px-4"
               >
                 Assign
               </Button>
@@ -480,6 +504,7 @@ export default function LeadsPage() {
                 variant="outline" 
                 size="sm" 
                 onClick={() => setSelectedLeadIds([])}
+                className="rounded-2xl border-slate-200 bg-white px-4 text-slate-600 hover:border-primary-200 hover:bg-primary-50 hover:text-primary-700"
               >
                 Clear
               </Button>
@@ -487,13 +512,13 @@ export default function LeadsPage() {
           )}
           
           <div className="ml-auto">
-            <Badge variant="primary" size="md">{data?.total ?? 0} results</Badge>
+            <Badge variant="primary" size="md" className="rounded-full bg-primary-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-primary-700">{data?.total ?? 0} results</Badge>
           </div>
         </div>
       </Card>
 
       {/* Table */}
-      <Card className="p-0 overflow-hidden" variant="elevated">
+      <Card className="overflow-hidden rounded-[28px] border-white/80 bg-white/90 p-0 shadow-[0_20px_48px_rgba(15,23,42,0.08)]" variant="elevated">
         {isLoading ? (
           <div className="p-6 space-y-3">
             {Array.from({ length: 5 }).map((_, i) => (
@@ -501,9 +526,9 @@ export default function LeadsPage() {
             ))}
           </div>
         ) : items.length === 0 ? (
-          <div className="text-center py-16">
-            <UserX size={36} className="text-slate-300 mx-auto mb-3" />
-            <p className="text-sm font-medium text-slate-600">No leads in this queue</p>
+          <div className="py-20 text-center">
+            <UserX size={36} className="mx-auto mb-3 text-slate-300" />
+            <p className="text-sm font-semibold text-slate-700">No leads in this queue</p>
             <p className="text-xs text-slate-400 mt-1">
               {tab === 'open'
                 ? 'Leads appear here when WhatsApp users start booking but don\'t complete.'
@@ -513,18 +538,18 @@ export default function LeadsPage() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left">
-              <thead className="bg-slate-50 border-b border-slate-200">
+              <thead className="border-b border-slate-100 bg-slate-50/80">
                 <tr>
-                  <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap">
+                  <th className="px-4 py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400 whitespace-nowrap">
                     <input
                       type="checkbox"
                       checked={selectedLeadIds.length === items.length && items.length > 0}
                       onChange={toggleSelectAll}
-                      className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                      className="rounded border-slate-300 text-primary-600 focus:ring-primary-500"
                     />
                   </th>
                   {['Customer', 'Type', 'Service', 'Dropped At', 'Date', 'Status', 'Assigned To', ''].map((h) => (
-                    <th key={h} className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap">
+                    <th key={h} className="px-4 py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400 whitespace-nowrap">
                       {h}
                     </th>
                   ))}
@@ -547,14 +572,14 @@ export default function LeadsPage() {
 
       {/* Pagination */}
       {data && data.total > data.page_size && (
-        <Card className="p-4" variant="default">
+        <Card className="rounded-[24px] border-white/70 bg-white/75 p-4 shadow-[0_12px_32px_rgba(15,23,42,0.05)]" variant="default">
           <div className="flex items-center justify-between">
             <span className="text-sm text-slate-500">
-              Page {page} of {Math.ceil(data.total / data.page_size)}
+              Page <span className="font-semibold text-slate-900">{page}</span> of <span className="font-semibold text-slate-900">{Math.ceil(data.total / data.page_size)}</span>
             </span>
             <div className="flex gap-2">
-              <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>Previous</Button>
-              <Button variant="outline" size="sm" disabled={page >= Math.ceil(data.total / data.page_size)} onClick={() => setPage((p) => p + 1)}>Next</Button>
+              <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage((p) => p - 1)} className="rounded-2xl border-slate-200 bg-white px-4 text-slate-600 hover:border-primary-200 hover:bg-primary-50 hover:text-primary-700">Previous</Button>
+              <Button variant="outline" size="sm" disabled={page >= Math.ceil(data.total / data.page_size)} onClick={() => setPage((p) => p + 1)} className="rounded-2xl border-slate-200 bg-white px-4 text-slate-600 hover:border-primary-200 hover:bg-primary-50 hover:text-primary-700">Next</Button>
             </div>
           </div>
         </Card>

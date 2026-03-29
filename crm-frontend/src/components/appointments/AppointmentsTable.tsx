@@ -53,11 +53,11 @@ export default function AppointmentsTable({ appointments, isLoading }: Props) {
 
   if (appointments.length === 0) {
     return (
-      <div className="text-center py-16">
-        <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <Eye size={32} className="text-slate-400" />
+      <div className="py-20 text-center">
+        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary-50">
+          <Eye size={32} className="text-primary-400" />
         </div>
-        <h3 className="text-sm font-medium text-slate-900 mb-1">No appointments found</h3>
+        <h3 className="mb-1 text-sm font-semibold text-slate-900">No appointments found</h3>
         <p className="text-sm text-slate-500">Try adjusting your search or filters</p>
       </div>
     );
@@ -65,37 +65,37 @@ export default function AppointmentsTable({ appointments, isLoading }: Props) {
 
   return (
     <>
-    <Table>
-      <TableHeader>
+    <Table className="min-w-full">
+      <TableHeader className="border-b border-slate-100 bg-slate-50/80">
         <TableRow hoverable={false}>
-          <TableHead className="w-12"><span className="sr-only">Avatar</span></TableHead>
-          <TableHead>Customer</TableHead>
-          <TableHead>Service</TableHead>
-          <TableHead>Date/Time</TableHead>
-          <TableHead>Provider</TableHead>
-          <TableHead>Source</TableHead>
-          <TableHead>Status</TableHead>
-          <TableHead align="right">Actions</TableHead>
+          <TableHead className="w-12 py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400"><span className="sr-only">Avatar</span></TableHead>
+          <TableHead className="py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Customer</TableHead>
+          <TableHead className="py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Service</TableHead>
+          <TableHead className="py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Date/Time</TableHead>
+          <TableHead className="py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Provider</TableHead>
+          <TableHead className="py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Source</TableHead>
+          <TableHead className="py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Status</TableHead>
+          <TableHead align="right" className="py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Actions</TableHead>
         </TableRow>
       </TableHeader>
-      <TableBody>
+      <TableBody className="divide-y divide-slate-100">
         {appointments.map((appt) => (
-          <TableRow key={appt.id}>
-            <TableCell>
+          <TableRow key={appt.id} className="group hover:bg-slate-50/70">
+            <TableCell className="py-4">
               <Avatar
                 name={appt.customer?.name ?? appt.user_phone}
                 size="sm"
               />
             </TableCell>
-            <TableCell>
+            <TableCell className="py-4">
               <div>
-                <p className="font-medium text-slate-900">
+                <p className="font-semibold text-slate-900">
                   {appt.customer?.name ?? 'Walk-in Customer'}
                 </p>
                 <p className="text-xs text-slate-500">{appt.user_phone}</p>
               </div>
             </TableCell>
-            <TableCell>
+            <TableCell className="py-4">
               <div>
                 <p className="text-sm text-slate-900">{appt.service?.name ?? '—'}</p>
                 {appt.service?.duration_minutes && (
@@ -103,28 +103,28 @@ export default function AppointmentsTable({ appointments, isLoading }: Props) {
                 )}
               </div>
             </TableCell>
-            <TableCell>
+            <TableCell className="py-4">
               <div className="flex items-center gap-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-primary-500" />
+                <div className="h-1.5 w-1.5 rounded-full bg-primary-500" />
                 <span className="text-sm text-slate-700 whitespace-nowrap">
                   {appt.slot ? format(new Date(appt.slot.start_time), 'MMM d, h:mm a') : '—'}
                 </span>
               </div>
             </TableCell>
-            <TableCell>
+            <TableCell className="py-4">
               <span className="text-sm text-slate-700">{appt.provider?.name ?? '—'}</span>
             </TableCell>
-            <TableCell>
+            <TableCell className="py-4">
               <SourceBadge source={appt.source} size="sm" />
             </TableCell>
-            <TableCell>
+            <TableCell className="py-4">
               <StatusBadge status={appt.status} size="sm" />
             </TableCell>
-            <TableCell align="right">
+            <TableCell align="right" className="py-4">
               <div className="flex items-center justify-end gap-1">
                 <Link
                   href={`/appointments/${appt.id}`}
-                  className="text-slate-400 hover:text-primary-600 hover:bg-primary-50 p-2 rounded-lg transition-colors"
+                  className="rounded-xl p-2 text-slate-400 transition-colors hover:bg-primary-50 hover:text-primary-600"
                   title="View details"
                 >
                   <Eye size={16} />
@@ -139,6 +139,7 @@ export default function AppointmentsTable({ appointments, isLoading }: Props) {
                           onSuccess: () => toast.success('Marked as completed'),
                         })}
                         tooltip="Mark complete"
+                        className="rounded-xl text-slate-400 hover:bg-primary-50 hover:text-primary-600"
                       >
                         <CheckCircle size={16} />
                       </IconButton>
@@ -148,12 +149,13 @@ export default function AppointmentsTable({ appointments, isLoading }: Props) {
                       size="sm"
                       onClick={() => setCancellingId(appt.id)}
                       tooltip="Cancel"
+                      className="rounded-xl text-slate-400 hover:bg-red-50 hover:text-red-500"
                     >
                       <Ban size={16} />
                     </IconButton>
                   </>
                 )}
-                <IconButton variant="default" size="sm">
+                <IconButton variant="default" size="sm" className="rounded-xl text-slate-400 hover:bg-slate-100 hover:text-slate-600">
                   <MoreVertical size={16} />
                 </IconButton>
               </div>

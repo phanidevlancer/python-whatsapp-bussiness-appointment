@@ -43,19 +43,19 @@ export default function UsersPage() {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between gap-4">
+    <div className="space-y-5 rounded-[28px] bg-[linear-gradient(180deg,rgba(255,255,255,0.82),rgba(240,249,255,0.62))] p-1">
+      <div className="flex items-center justify-between gap-4 rounded-[24px] border border-white/70 bg-white/70 px-6 py-5 shadow-[0_16px_40px_rgba(13,148,136,0.08)] backdrop-blur-sm">
         <div>
-          <h2 className="text-xl font-bold text-slate-900">Users</h2>
-          <p className="text-sm text-slate-500 mt-0.5">Manage clinic staff, templates, and access.</p>
+          <h2 className="text-[1.9rem] font-black tracking-[-0.03em] text-slate-900">Users</h2>
+          <p className="mt-1 text-sm font-medium text-slate-500">Manage clinic staff, templates, and access.</p>
         </div>
-        <Badge variant="primary" size="lg">
+        <Badge variant="primary" size="lg" className="rounded-full bg-primary-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-primary-700">
           <Users size={16} />
           {data?.total ?? 0} users
         </Badge>
       </div>
 
-      <Card className="p-4" variant="elevated">
+      <Card className="rounded-[24px] border-white/80 bg-white/85 p-5 shadow-[0_16px_40px_rgba(15,23,42,0.06)] backdrop-blur-sm" variant="elevated">
         <div className="flex flex-col gap-3 md:flex-row md:items-center">
           <div className="flex-1">
             <Input
@@ -66,6 +66,7 @@ export default function UsersPage() {
                 setPage(1);
               }}
               leftIcon={<Search size={16} />}
+              className="h-12 rounded-2xl border-0 bg-slate-100/80 shadow-none ring-1 ring-transparent focus:bg-white focus:ring-2 focus:ring-primary-200"
             />
           </div>
           <PermissionGuard permission={PERMISSIONS.users.create}>
@@ -74,6 +75,7 @@ export default function UsersPage() {
               size="md"
               leftIcon={<UserPlus size={16} />}
               onClick={() => router.push('/users/new')}
+              className="rounded-2xl border-slate-200 bg-white px-5 text-slate-600 hover:border-primary-200 hover:bg-primary-50 hover:text-primary-700"
             >
               Add User
             </Button>
@@ -81,7 +83,7 @@ export default function UsersPage() {
         </div>
       </Card>
 
-      <Card className="p-0 overflow-hidden" variant="elevated">
+      <Card className="overflow-hidden rounded-[28px] border-white/80 bg-white/90 p-0 shadow-[0_20px_48px_rgba(15,23,42,0.08)]" variant="elevated">
         {isLoading ? (
           <div className="p-4 space-y-3">
             {Array.from({ length: 6 }).map((_, i) => (
@@ -97,24 +99,24 @@ export default function UsersPage() {
             ))}
           </div>
         ) : !data?.items.length ? (
-          <div className="text-center py-16">
-            <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Users size={32} className="text-slate-400" />
+          <div className="py-20 text-center">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary-50">
+              <Users size={32} className="text-primary-400" />
             </div>
-            <h3 className="text-sm font-medium text-slate-900 mb-1">No users found</h3>
+            <h3 className="mb-1 text-sm font-semibold text-slate-900">No users found</h3>
             <p className="text-sm text-slate-500">Try adjusting your search</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-slate-200">
-              <thead className="bg-slate-50">
+            <table className="min-w-full divide-y divide-slate-100">
+              <thead className="bg-slate-50/80">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">User</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Contact</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Template</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Status</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Created</th>
-                  <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">Action</th>
+                  <th className="px-4 py-4 text-left text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">User</th>
+                  <th className="px-4 py-4 text-left text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Contact</th>
+                  <th className="px-4 py-4 text-left text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Template</th>
+                  <th className="px-4 py-4 text-left text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Status</th>
+                  <th className="px-4 py-4 text-left text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Created</th>
+                  <th className="px-4 py-4 text-right text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 bg-white">
@@ -139,7 +141,7 @@ export default function UsersPage() {
                       <span className="text-sm text-slate-700">{user.template_name ?? 'Unassigned'}</span>
                     </td>
                     <td className="px-4 py-4">
-                      <Badge variant={user.is_active ? 'success' : 'error'} size="sm" dot>
+                      <Badge variant={user.is_active ? 'success' : 'error'} size="sm" dot className="rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em]">
                         {user.is_active ? 'Active' : 'Inactive'}
                       </Badge>
                     </td>
@@ -163,11 +165,11 @@ export default function UsersPage() {
       </Card>
 
       {data && data.total > data.page_size && (
-        <Card className="p-4" variant="default">
+        <Card className="rounded-[24px] border-white/70 bg-white/75 p-4 shadow-[0_12px_32px_rgba(15,23,42,0.05)]" variant="default">
           <div className="flex items-center justify-between gap-3">
             <span className="text-sm text-slate-500">
-              Page <span className="font-medium text-slate-900">{page}</span> of{' '}
-              <span className="font-medium text-slate-900">{totalPages}</span>
+              Page <span className="font-semibold text-slate-900">{page}</span> of{' '}
+              <span className="font-semibold text-slate-900">{totalPages}</span>
             </span>
             <div className="flex gap-2">
               <Button
@@ -175,6 +177,7 @@ export default function UsersPage() {
                 size="sm"
                 disabled={page <= 1}
                 onClick={() => setPage((current) => current - 1)}
+                className="rounded-2xl border-slate-200 bg-white px-4 text-slate-600 hover:border-primary-200 hover:bg-primary-50 hover:text-primary-700"
               >
                 Previous
               </Button>
@@ -183,6 +186,7 @@ export default function UsersPage() {
                 size="sm"
                 disabled={page >= totalPages}
                 onClick={() => setPage((current) => current + 1)}
+                className="rounded-2xl border-slate-200 bg-white px-4 text-slate-600 hover:border-primary-200 hover:bg-primary-50 hover:text-primary-700"
               >
                 Next
               </Button>

@@ -232,44 +232,45 @@ export default function RoleTemplateDetailPage() {
       : `This template is assigned to ${assignedCount} users. Saving changes will immediately change the permissions for those accounts.`;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5 rounded-[28px] bg-[linear-gradient(180deg,rgba(255,255,255,0.82),rgba(240,249,255,0.62))] p-1">
       <button
         onClick={() => router.back()}
-        className="flex items-center gap-2 text-sm text-slate-500 transition-colors hover:text-slate-800"
+        className="flex items-center gap-2 px-2 text-sm text-slate-500 transition-colors hover:text-slate-800"
       >
         <ArrowLeft size={15} /> Back
       </button>
 
-      <div className="flex flex-wrap items-start justify-between gap-4">
+      <div className="flex flex-wrap items-start justify-between gap-4 rounded-[24px] border border-white/70 bg-white/70 px-6 py-5 shadow-[0_16px_40px_rgba(13,148,136,0.08)] backdrop-blur-sm">
         <div className="space-y-2">
           <div className="flex flex-wrap items-center gap-2">
-            <h2 className="text-xl font-bold text-slate-900">{template.name}</h2>
-            <Badge variant={template.is_system ? 'warning' : 'default'} size="sm">
+            <h2 className="text-[1.9rem] font-black tracking-[-0.03em] text-slate-900">{template.name}</h2>
+            <Badge variant={template.is_system ? 'warning' : 'default'} size="sm" className="rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em]">
               {template.is_system ? 'System' : 'Custom'}
             </Badge>
-            <Badge variant={template.is_active ? 'success' : 'error'} size="sm" dot>
+            <Badge variant={template.is_active ? 'success' : 'error'} size="sm" dot className="rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em]">
               {template.is_active ? 'Active' : 'Inactive'}
             </Badge>
           </div>
-          <p className="text-sm text-slate-500">
+          <p className="text-sm font-medium text-slate-500">
             {template.description ?? 'No description provided'}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Badge variant="primary" size="lg">
+          <Badge variant="primary" size="lg" className="rounded-full bg-primary-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-primary-700">
             <Users size={16} />
             {assignedCount} users
           </Badge>
-            <Badge variant="default" size="lg">
-              <Shield size={16} />
+          <Badge variant="default" size="lg" className="rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em]">
+            <Shield size={16} />
             {selectedPermissionIds.length} permissions
-            </Badge>
+          </Badge>
           <PermissionGuard permission={PERMISSIONS.roles.create}>
             <Button
               variant="outline"
               size="md"
               leftIcon={<Copy size={16} />}
               onClick={openCopyModal}
+              className="rounded-2xl border-slate-200 bg-white px-5 text-slate-600 hover:border-primary-200 hover:bg-primary-50 hover:text-primary-700"
             >
               Copy Template
             </Button>
@@ -282,6 +283,7 @@ export default function RoleTemplateDetailPage() {
                   size="md"
                   leftIcon={<Pencil size={16} />}
                   onClick={editing ? () => setEditing(false) : startEditing}
+                  className="h-11 rounded-2xl border border-primary-500/20 px-5 font-semibold shadow-[0_14px_28px_rgba(13,148,136,0.18)]"
                 >
                   {editing ? 'Editing' : 'Edit Template'}
                 </Button>
@@ -291,8 +293,11 @@ export default function RoleTemplateDetailPage() {
                   variant="danger"
                   size="md"
                   leftIcon={<Trash2 size={16} />}
-                  onClick={confirmDelete}
+                  onClick={() => {
+                    void confirmDelete();
+                  }}
                   isLoading={deletingTemplate}
+                  className="h-11 rounded-2xl px-5"
                 >
                   Delete
                 </Button>
@@ -303,16 +308,16 @@ export default function RoleTemplateDetailPage() {
       </div>
 
       {isReadOnly ? (
-        <Card className="border-amber-200 bg-amber-50/70 p-4 text-sm text-amber-900" variant="outlined">
+        <Card className="rounded-[24px] border-amber-200 bg-amber-50/70 p-4 text-sm text-amber-900" variant="outlined">
           System templates are read-only. You can copy this template, but edits and deletes are blocked.
         </Card>
       ) : null}
 
       <div className="grid gap-6 xl:grid-cols-[1fr_1.25fr]">
-        <Card className="p-6" variant="elevated">
+        <Card className="rounded-[28px] border-white/80 bg-white/90 p-6 shadow-[0_20px_48px_rgba(15,23,42,0.08)]" variant="elevated">
           <CardHeader className="border-0 pb-4">
             <div>
-              <CardTitle>Template details</CardTitle>
+              <CardTitle className="text-lg font-bold tracking-[-0.02em] text-slate-900">Template details</CardTitle>
               <CardSubtitle>Basic information and usage summary</CardSubtitle>
             </div>
           </CardHeader>
@@ -353,22 +358,23 @@ export default function RoleTemplateDetailPage() {
                   placeholder="Optional template description"
                 />
                 <div className="flex items-center justify-end gap-3">
-                  <Button variant="outline" size="md" onClick={() => setEditing(false)}>
+                  <Button variant="outline" size="md" onClick={() => setEditing(false)} className="rounded-2xl border-slate-200 bg-white px-5 text-slate-600 hover:border-primary-200 hover:bg-primary-50 hover:text-primary-700">
                     Cancel
                   </Button>
                   <PermissionGuard permission={PERMISSIONS.roles.update}>
-                  <Button
-                    variant="primary"
-                    size="md"
-                    leftIcon={<Pencil size={14} />}
-                    onClick={() => {
-                      void handleSave();
-                    }}
+                    <Button
+                      variant="primary"
+                      size="md"
+                      leftIcon={<Pencil size={14} />}
+                      onClick={() => {
+                        void handleSave();
+                      }}
                       isLoading={updatingTemplate || updatingPermissions}
+                      className="rounded-2xl px-5 shadow-[0_14px_28px_rgba(13,148,136,0.18)]"
                     >
                       Save Changes
-                  </Button>
-                </PermissionGuard>
+                    </Button>
+                  </PermissionGuard>
                 </div>
               </div>
             )}

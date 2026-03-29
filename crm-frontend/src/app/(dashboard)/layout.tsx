@@ -91,12 +91,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   if (!hydrated || !token || mustChangePassword || bootstrappingSession) return null;
 
   return (
-    <div className="flex h-screen overflow-hidden bg-slate-100">
+    <div className="flex h-screen overflow-hidden bg-[linear-gradient(180deg,#f8fbff_0%,#eef7fb_100%)]">
       <Sidebar />
       <div className="flex flex-col flex-1 overflow-hidden relative">
-        <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-br from-blue-50/50 to-purple-50/50 pointer-events-none -z-10 rounded-br-3xl" />
+        <div className="pointer-events-none absolute left-0 top-0 -z-10 h-96 w-full rounded-br-[40px] bg-[radial-gradient(circle_at_top_left,rgba(13,148,136,0.12),transparent_32%),radial-gradient(circle_at_top_right,rgba(59,130,246,0.08),transparent_28%)]" />
         <Header />
-        <main className="flex-1 overflow-y-auto p-6 pt-2 relative z-10">{children}</main>
+        <main className="relative z-10 flex-1 overflow-y-auto p-6">{children}</main>
       </div>
     </div>
   );
