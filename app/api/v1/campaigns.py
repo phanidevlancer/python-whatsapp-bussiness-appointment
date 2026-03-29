@@ -3,12 +3,13 @@ import uuid
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.deps import require_permission
+from app.core.deps import get_whatsapp_client, require_permission
 from app.db.session import get_db
 from app.models.campaign import Campaign
 from app.repositories import campaign_repository as campaign_repo
 from app.schemas.campaign import CampaignCreate, CampaignRead, CampaignUpdate
 from app.services import campaign_media_service as campaign_media_svc
+from app.services import campaign_runner_service as campaign_runner_svc
 
 router = APIRouter()
 
@@ -84,3 +85,64 @@ async def upload_campaign_image(
         "content_type": stored_image.content_type,
         "size_bytes": stored_image.size_bytes,
     }
+
+
+@router.post("/{campaign_id}/start")
+@router.post("/{campaign_id}/send-now")
+async def start_campaign(
+    campaign_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    whatsapp_client=Depends(get_whatsapp_client),
+    _=Depends(require_permission("services.manage")),
+):
+    campaign = await campaign_runner_svc.launch_campaign(
+        db,
+        campaign_id=campaign_id,
+        whatsapp_client=whatsapp_client,
+    )
+    await db.commit()
+    await campaign_runner_svc.dispatch_campaign(
+        campaign_id=campaign.id,
+        whatsapp_client=whatsapp_client,
+    )
+    detail = await campaign_repo.get_campaign_detail(db, campaign_id=campaign.id)
+    if detail is None:
+        raise HTTPException(status_code=404, detail="Campaign not found")
+    return detail
+
+
+@router.post("/{campaign_id}/pause")
+async def pause_campaign(
+    campaign_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    _=Depends(require_permission("services.manage")),
+):
+    campaign = await campaign_runner_svc.pause_campaign(db, campaign_id=campaign_id)
+    detail = await campaign_repo.get_campaign_detail(db, campaign_id=campaign.id)
+    if detail is None:
+        raise HTTPException(status_code=404, detail="Campaign not found")
+    return detail
+
+
+@router.get("/{campaign_id}")
+async def get_campaign_detail(
+    campaign_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    _=Depends(require_permission("services.manage")),
+):
+    detail = await campaign_repo.get_campaign_detail(db, campaign_id=campaign_id)
+    if detail is None:
+        raise HTTPException(status_code=404, detail="Campaign not found")
+    return detail
+
+
+@router.get("/{campaign_id}/recipients")
+async def list_campaign_recipients(
+    campaign_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    _=Depends(require_permission("services.manage")),
+):
+    recipients = await campaign_repo.list_campaign_recipients(db, campaign_id=campaign_id)
+    if recipients is None:
+        raise HTTPException(status_code=404, detail="Campaign not found")
+    return recipients
