@@ -21,7 +21,7 @@ import {
 import { useQuery } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import api from '@/lib/api';
-import { useDeactivateUser, useActivateUser, useAssignUserTemplate, useForcePasswordReset, useUpdateUser, useUserAuditLog, useUserDetail, type UserUpdateRequest } from '@/hooks/useUsers';
+import { useDeactivateUser, useActivateUser, useAdminPasswordReset, useAssignUserTemplate, useForcePasswordReset, useUpdateUser, useUserAuditLog, useUserDetail, type UserUpdateRequest } from '@/hooks/useUsers';
 import { usePermission } from '@/hooks/usePermission';
 import PermissionGuard from '@/components/auth/PermissionGuard';
 import { Avatar } from '@/components/ui/Avatar';
@@ -31,6 +31,7 @@ import { Card, CardHeader, CardTitle, CardSubtitle, CardContent } from '@/compon
 import { Input } from '@/components/ui/Input';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { ConfirmChangeDialog, type FieldChange } from '@/components/ui/ConfirmChangeDialog';
+import { Modal, ModalContent, ModalFooter, ModalHeader, ModalTitle } from '@/components/ui/Modal';
 import { PERMISSIONS } from '@/lib/permissions';
 
 interface RoleTemplateOption {
@@ -69,6 +70,7 @@ export default function UserDetailPage() {
   const { mutate: activateUser, isPending: activatingUser } = useActivateUser();
   const { mutate: assignTemplate, isPending: assigningTemplate } = useAssignUserTemplate();
   const { mutate: forcePasswordReset, isPending: forcingReset } = useForcePasswordReset();
+  const { mutate: adminResetPassword, isPending: adminResettingPassword } = useAdminPasswordReset();
 
   const { data: templates } = useQuery({
     queryKey: ['role-templates', 'users-form'],
@@ -88,6 +90,9 @@ export default function UserDetailPage() {
   const [pendingChanges, setPendingChanges] = useState<FieldChange[]>([]);
   const [pendingUpdate, setPendingUpdate] = useState<UserUpdateRequest | null>(null);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [showResetPasswordModal, setShowResetPasswordModal] = useState(false);
+  const [temporaryPassword, setTemporaryPassword] = useState('');
+  const [confirmTemporaryPassword, setConfirmTemporaryPassword] = useState('');
 
   useEffect(() => {
     if (!user) return;
@@ -257,6 +262,44 @@ export default function UserDetailPage() {
             typeof (err as { response?: { data?: { detail?: string } } }).response?.data?.detail === 'string'
               ? (err as { response?: { data?: { detail?: string } } }).response!.data!.detail!
               : 'Failed to force password reset';
+          toast.error(message);
+        },
+      }
+    );
+  };
+
+  const resetPasswordModalState = () => {
+    setShowResetPasswordModal(false);
+    setTemporaryPassword('');
+    setConfirmTemporaryPassword('');
+  };
+
+  const handleAdminPasswordReset = () => {
+    if (!user) return;
+    if (!temporaryPassword || !confirmTemporaryPassword) {
+      toast.error('Enter and confirm the temporary password');
+      return;
+    }
+    if (temporaryPassword !== confirmTemporaryPassword) {
+      toast.error('Temporary passwords do not match');
+      return;
+    }
+
+    adminResetPassword(
+      { user_id: user.id, new_password: temporaryPassword },
+      {
+        onSuccess: () => {
+          toast.success('Temporary password updated. User must change it on next login.');
+          resetPasswordModalState();
+        },
+        onError: (err: unknown) => {
+          const message =
+            typeof err === 'object' &&
+            err !== null &&
+            'response' in err &&
+            typeof (err as { response?: { data?: { detail?: string } } }).response?.data?.detail === 'string'
+              ? (err as { response?: { data?: { detail?: string } } }).response!.data!.detail!
+              : 'Failed to reset password';
           toast.error(message);
         },
       }
@@ -503,6 +546,15 @@ export default function UserDetailPage() {
                 >
                   Force Password Reset
                 </Button>
+                <Button
+                  variant="primary"
+                  size="md"
+                  className="w-full"
+                  leftIcon={<RotateCcw size={16} />}
+                  onClick={() => setShowResetPasswordModal(true)}
+                >
+                  Set Temporary Password
+                </Button>
               </CardContent>
             </Card>
             </>
@@ -528,6 +580,38 @@ export default function UserDetailPage() {
         title="Confirm user changes"
         changes={pendingChanges}
       />
+
+      <Modal isOpen={showResetPasswordModal} onClose={resetPasswordModalState} size="md">
+        <ModalHeader>
+          <ModalTitle>Set Temporary Password</ModalTitle>
+        </ModalHeader>
+        <ModalContent className="space-y-4">
+          <p className="text-sm text-slate-500">
+            Set a temporary password for {user.name}. They will be required to change it on next login.
+          </p>
+          <Input
+            label="Temporary Password"
+            type="password"
+            value={temporaryPassword}
+            onChange={(e) => setTemporaryPassword(e.target.value)}
+            helperText="Must meet the password policy."
+          />
+          <Input
+            label="Confirm Temporary Password"
+            type="password"
+            value={confirmTemporaryPassword}
+            onChange={(e) => setConfirmTemporaryPassword(e.target.value)}
+          />
+        </ModalContent>
+        <ModalFooter>
+          <Button variant="outline" size="md" onClick={resetPasswordModalState} disabled={adminResettingPassword}>
+            Cancel
+          </Button>
+          <Button variant="primary" size="md" onClick={handleAdminPasswordReset} isLoading={adminResettingPassword}>
+            Reset Password
+          </Button>
+        </ModalFooter>
+      </Modal>
     </div>
   );
 }

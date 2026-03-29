@@ -63,6 +63,11 @@ export interface UserForcePasswordResetRequest {
   must_change_password?: boolean;
 }
 
+export interface AdminPasswordResetRequest {
+  user_id: string;
+  new_password: string;
+}
+
 type UserListParams = {
   search?: string;
   page?: number;
@@ -204,6 +209,19 @@ export function useForcePasswordReset() {
   return useMutation({
     mutationFn: async ({ id, ...payload }: { id: string } & UserForcePasswordResetRequest) => {
       const res = await api.patch<UserRead>(`/api/v1/users/${id}/force-password-reset`, payload);
+      return res.data;
+    },
+    onSuccess: (user) => {
+      invalidateUserQueries(qc, user.id);
+    },
+  });
+}
+
+export function useAdminPasswordReset() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload: AdminPasswordResetRequest) => {
+      const res = await api.post<UserRead>('/api/v1/auth/admin-reset-password', payload);
       return res.data;
     },
     onSuccess: (user) => {
