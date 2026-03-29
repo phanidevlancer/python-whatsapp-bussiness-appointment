@@ -31,6 +31,7 @@ The component will move from the current generic shared-table presentation to a 
 - Pill-style status badge styling.
 - Minimal actions column that preserves the current controls and links.
 
+
 ## Behavior Preservation
 
 The restyle must not change:

@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Lumina Clinical - Services</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "background": "#f8f9ff",
+              "surface-variant": "#d2e4ff",
+              "inverse-on-surface": "#8e9eb7",
+              "on-surface": "#05345c",
+              "surface-dim": "#c4dcff",
+              "secondary-container": "#cce8e3",
+              "primary-dim": "#005e57",
+              "on-secondary-fixed-variant": "#47605c",
+              "on-primary-fixed-variant": "#006760",
+              "on-primary-fixed": "#004842",
+              "inverse-primary": "#a7fef3",
+              "error-container": "#fa746f",
+              "surface-container-high": "#dce9ff",
+              "tertiary-fixed-dim": "#a8d9ef",
+              "secondary-fixed-dim": "#bedad5",
+              "primary-container": "#9cf2e8",
+              "primary-fixed": "#9cf2e8",
+              "tertiary": "#346578",
+              "primary": "#006b63",
+              "on-secondary-container": "#3d5653",
+              "on-tertiary": "#f2faff",
+              "surface-container-low": "#eff4ff",
+              "tertiary-fixed": "#b6e7fe",
+              "surface-tint": "#006b63",
+              "secondary": "#4b6460",
+              "on-secondary": "#e3fff9",
+              "primary-fixed-dim": "#8ee4d9",
+              "on-tertiary-container": "#235669",
+              "error-dim": "#67040d",
+              "on-error": "#fff7f6",
+              "error": "#a83836",
+              "on-tertiary-fixed-variant": "#2e6073",
+              "outline-variant": "#91b4e4",
+              "tertiary-dim": "#27596c",
+              "surface-container-lowest": "#ffffff",
+              "surface": "#f8f9ff",
+              "on-secondary-fixed": "#2b4440",
+              "on-primary": "#e2fffa",
+              "surface-bright": "#f8f9ff",
+              "secondary-dim": "#3f5854",
+              "inverse-surface": "#000f21",
+              "tertiary-container": "#b6e7fe",
+              "on-primary-container": "#005c56",
+              "on-background": "#05345c",
+              "surface-container-highest": "#d2e4ff",
+              "outline": "#5a7da9",
+              "on-error-container": "#6e0a12",
+              "secondary-fixed": "#cce8e3",
+              "surface-container": "#e5eeff",
+              "on-surface-variant": "#3d618c",
+              "on-tertiary-fixed": "#084355"
+            },
+            fontFamily: {
+              "headline": ["Manrope"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8f9ff; color: #05345c; }
+        .font-manrope { font-family: 'Manrope', sans-serif; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+    </style>
+</head>
+<body class="bg-background text-on-surface">
+<!-- TopNavBar -->
+<header class="fixed top-0 w-full z-50 bg-white/70 backdrop-blur-md shadow-sm h-16 flex justify-between items-center px-6">
+<div class="flex items-center gap-8">
+<h1 class="text-xl font-bold text-primary tracking-tight font-headline">Lumina Clinical</h1>
+<div class="hidden md:flex items-center bg-surface-container-low px-4 py-2 rounded-full w-96">
+<span class="material-symbols-outlined text-outline mr-2">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-sm w-full placeholder:text-outline" placeholder="Search patients, services, or records..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="bg-primary text-on-primary px-4 py-2 rounded-xl text-sm font-semibold flex items-center gap-2 hover:opacity-90 transition-opacity">
+<span class="material-symbols-outlined text-[20px]">add</span>
+                Create
+            </button>
+<div class="flex items-center gap-3 text-on-surface-variant">
+<button class="p-2 hover:bg-surface-container rounded-full transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="p-2 hover:bg-surface-container rounded-full transition-colors">
+<span class="material-symbols-outlined">help_outline</span>
+</button>
+<div class="h-8 w-8 rounded-full bg-surface-container-highest overflow-hidden border border-outline-variant/20">
+<img alt="User Profile" data-alt="close-up portrait of a professional healthcare administrator in a bright modern office setting, soft clinical lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDoSV-zm-aZkLN0WUEi42AisD6hIqoblG1zw8fUzI_owJuXtg-glBeNaHFJxNaF3Ybyh6uzX-SNubd7ZCIvt2pS2D8YhSIA4fGxDEfWMQIxNW8DlsHhTOIa0JSWlQbDYIRphBWjk1yKL9kzNcynLy_Hp2ByHrN4akJdOrw7kRuU3jIxLbG0eFT1gQErVIN0Rj9gRZ9PEfz_jjbo9GdZhAG2j1IeoWrv-tOibTaCBBxJdk6xSf8-UGovhNYf1urCLXaLoS7n43XvvWZM"/>
+</div>
+</div>
+</div>
+</header>
+<!-- SideNavBar -->
+<aside class="h-screen w-64 fixed left-0 top-0 pt-20 bg-slate-50 border-r-0 flex flex-col z-40">
+<div class="px-6 mb-8 flex items-center gap-3">
+<div class="w-10 h-10 bg-primary-container rounded-xl flex items-center justify-center">
+<span class="material-symbols-outlined text-primary">medical_services</span>
+</div>
+<div>
+<div class="font-headline font-bold text-primary tracking-tight">Lumina Health</div>
+<div class="text-[10px] uppercase tracking-wider text-outline font-bold">Medical Group</div>
+</div>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="text-slate-600 hover:bg-slate-200/50 rounded-lg mx-2 px-4 py-3 flex items-center gap-3 transition-transform hover:translate-x-1" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="text-sm font-medium">Dashboard</span>
+</a>
+<a class="text-slate-600 hover:bg-slate-200/50 rounded-lg mx-2 px-4 py-3 flex items-center gap-3 transition-transform hover:translate-x-1" href="#">
+<span class="material-symbols-outlined">calendar_today</span>
+<span class="text-sm font-medium">Appointments</span>
+</a>
+<a class="text-slate-600 hover:bg-slate-200/50 rounded-lg mx-2 px-4 py-3 flex items-center gap-3 transition-transform hover:translate-x-1" href="#">
+<span class="material-symbols-outlined">group</span>
+<span class="text-sm font-medium">Patients</span>
+</a>
+<a class="bg-white text-primary shadow-sm rounded-lg mx-2 px-4 py-3 flex items-center gap-3 font-semibold" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">medical_services</span>
+<span class="text-sm">Services</span>
+</a>
+<a class="text-slate-600 hover:bg-slate-200/50 rounded-lg mx-2 px-4 py-3 flex items-center gap-3 transition-transform hover:translate-x-1" href="#">
+<span class="material-symbols-outlined">badge</span>
+<span class="text-sm font-medium">Staff</span>
+</a>
+<a class="text-slate-600 hover:bg-slate-200/50 rounded-lg mx-2 px-4 py-3 flex items-center gap-3 transition-transform hover:translate-x-1" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="text-sm font-medium">Settings</span>
+</a>
+</nav>
+<div class="p-4 bg-primary-container/30 rounded-2xl mx-4 mb-6">
+<p class="text-[11px] text-on-primary-container font-bold uppercase mb-2">Inventory Alert</p>
+<p class="text-xs text-on-primary-container leading-relaxed mb-3">Dental supplies are running low (12% remaining).</p>
+<button class="w-full bg-primary text-on-primary py-2 rounded-lg text-xs font-bold">Refill Now</button>
+</div>
+<div class="mt-auto border-t border-outline-variant/10 pt-4 pb-6">
+<a class="text-slate-600 hover:bg-slate-200/50 rounded-lg mx-2 px-4 py-2 flex items-center gap-3" href="#">
+<span class="material-symbols-outlined">contact_support</span>
+<span class="text-sm font-medium">Support</span>
+</a>
+<a class="text-error hover:bg-error-container/10 rounded-lg mx-2 px-4 py-2 flex items-center gap-3" href="#">
+<span class="material-symbols-outlined">logout</span>
+<span class="text-sm font-medium">Logout</span>
+</a>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="ml-64 pt-20 p-8 min-h-screen">
+<header class="flex justify-between items-end mb-8">
+<div>
+<h2 class="text-3xl font-extrabold text-on-surface font-headline tracking-tight">Services</h2>
+<p class="text-on-surface-variant mt-1">Manage your clinic services and pricing</p>
+</div>
+<button class="bg-primary text-on-primary px-6 py-3 rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-primary/20 hover:scale-[1.02] transition-transform">
+<span class="material-symbols-outlined">add_circle</span>
+                New Service
+            </button>
+</header>
+<!-- Stats Overview (Asymmetric Pattern) -->
+<div class="grid grid-cols-12 gap-6 mb-8">
+<div class="col-span-12 md:col-span-4 bg-surface-container-lowest p-6 rounded-2xl shadow-sm relative overflow-hidden">
+<div class="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16"></div>
+<p class="text-label-md text-on-surface-variant font-medium mb-1">Total Services</p>
+<h3 class="text-4xl font-extrabold text-on-surface font-headline mb-4">12</h3>
+<div class="flex items-center gap-2 text-primary text-sm font-bold">
+<span class="material-symbols-outlined text-[18px]">trending_up</span>
+                    +2 added this month
+                </div>
+</div>
+<div class="col-span-12 md:col-span-8 bg-surface-container p-6 rounded-2xl flex items-center justify-between border border-primary/10">
+<div class="flex gap-12">
+<div>
+<p class="text-xs text-on-surface-variant uppercase font-bold tracking-widest mb-2">Avg. Session</p>
+<p class="text-xl font-bold font-headline text-primary">32 min</p>
+</div>
+<div>
+<p class="text-xs text-on-surface-variant uppercase font-bold tracking-widest mb-2">Efficiency</p>
+<p class="text-xl font-bold font-headline text-primary">94.2%</p>
+</div>
+</div>
+<div class="w-48 h-12 bg-surface-container-lowest/50 rounded-full flex items-center px-4 gap-3 border border-outline-variant/20">
+<span class="material-symbols-outlined text-primary">analytics</span>
+<span class="text-xs font-bold text-on-surface-variant">View Revenue Report</span>
+</div>
+</div>
+</div>
+<!-- Services Table Container -->
+<div class="bg-surface-container-lowest rounded-3xl shadow-sm overflow-hidden mb-12">
+<!-- Table Header -->
+<div class="bg-surface-container-low/50 px-8 py-4 flex items-center border-b border-outline-variant/10">
+<div class="w-2/5 text-xs font-bold uppercase tracking-widest text-on-surface-variant">Service Details</div>
+<div class="w-1/5 text-xs font-bold uppercase tracking-widest text-on-surface-variant">Duration</div>
+<div class="w-1/5 text-xs font-bold uppercase tracking-widest text-on-surface-variant">Status</div>
+<div class="w-1/5 text-xs font-bold uppercase tracking-widest text-on-surface-variant text-right">Actions</div>
+</div>
+<!-- Table Rows -->
+<div class="divide-y divide-outline-variant/5">
+<!-- Row 1 -->
+<div class="px-8 py-5 flex items-center hover:bg-surface-container-low/30 transition-colors group">
+<div class="w-2/5 flex items-center gap-4">
+<div class="w-12 h-12 rounded-xl bg-primary/5 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">dentistry</span>
+</div>
+<div>
+<h4 class="font-bold text-on-surface font-headline">Dental Checkup</h4>
+<p class="text-sm text-on-surface-variant">Routine dental examination and cleaning</p>
+</div>
+</div>
+<div class="w-1/5">
+<span class="flex items-center gap-2 text-on-surface-variant font-medium">
+<span class="material-symbols-outlined text-[18px]">schedule</span>
+                            45 min
+                        </span>
+</div>
+<div class="w-1/5">
+<span class="bg-secondary-container text-on-secondary-container text-[10px] font-bold uppercase px-2.5 py-1 rounded-full tracking-wider">Active</span>
+</div>
+<div class="w-1/5 flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-2 hover:bg-primary/10 text-primary rounded-lg transition-colors" title="Edit">
+<span class="material-symbols-outlined">edit</span>
+</button>
+<button class="p-2 hover:bg-error-container/10 text-error rounded-lg transition-colors" title="Deactivate">
+<span class="material-symbols-outlined">block</span>
+</button>
+</div>
+</div>
+<!-- Row 2 -->
+<div class="px-8 py-5 flex items-center hover:bg-surface-container-low/30 transition-colors group">
+<div class="w-2/5 flex items-center gap-4">
+<div class="w-12 h-12 rounded-xl bg-primary/5 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">rebase_edit</span>
+</div>
+<div>
+<h4 class="font-bold text-on-surface font-headline">Follow-up Visit</h4>
+<p class="text-sm text-on-surface-variant">Follow-up appointment for ongoing treatment</p>
+</div>
+</div>
+<div class="w-1/5">
+<span class="flex items-center gap-2 text-on-surface-variant font-medium">
+<span class="material-symbols-outlined text-[18px]">schedule</span>
+                            20 min
+                        </span>
+</div>
+<div class="w-1/5">
+<span class="bg-secondary-container text-on-secondary-container text-[10px] font-bold uppercase px-2.5 py-1 rounded-full tracking-wider">Active</span>
+</div>
+<div class="w-1/5 flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-2 hover:bg-primary/10 text-primary rounded-lg transition-colors" title="Edit">
+<span class="material-symbols-outlined">edit</span>
+</button>
+<button class="p-2 hover:bg-error-container/10 text-error rounded-lg transition-colors" title="Deactivate">
+<span class="material-symbols-outlined">block</span>
+</button>
+</div>
+</div>
+<!-- Row 3 -->
+<div class="px-8 py-5 flex items-center hover:bg-surface-container-low/30 transition-colors group">
+<div class="w-2/5 flex items-center gap-4">
+<div class="w-12 h-12 rounded-xl bg-primary/5 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">stethoscope</span>
+</div>
+<div>
+<h4 class="font-bold text-on-surface font-headline">General Consultation</h4>
+<p class="text-sm text-on-surface-variant">Initial consultation with a clinic doctor</p>
+</div>
+</div>
+<div class="w-1/5">
+<span class="flex items-center gap-2 text-on-surface-variant font-medium">
+<span class="material-symbols-outlined text-[18px]">schedule</span>
+                            30 min
+                        </span>
+</div>
+<div class="w-1/5">
+<span class="bg-secondary-container text-on-secondary-container text-[10px] font-bold uppercase px-2.5 py-1 rounded-full tracking-wider">Active</span>
+</div>
+<div class="w-1/5 flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-2 hover:bg-primary/10 text-primary rounded-lg transition-colors" title="Edit">
+<span class="material-symbols-outlined">edit</span>
+</button>
+<button class="p-2 hover:bg-error-container/10 text-error rounded-lg transition-colors" title="Deactivate">
+<span class="material-symbols-outlined">block</span>
+</button>
+</div>
+</div>
+<!-- Row 4 -->
+<div class="px-8 py-5 flex items-center hover:bg-surface-container-low/30 transition-colors group">
+<div class="w-2/5 flex items-center gap-4">
+<div class="w-12 h-12 rounded-xl bg-primary/5 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">face_5</span>
+</div>
+<div>
+<h4 class="font-bold text-on-surface font-headline">Hydra Facial</h4>
+<p class="text-sm text-on-surface-variant">Hydra Facial</p>
+</div>
+</div>
+<div class="w-1/5">
+<span class="flex items-center gap-2 text-on-surface-variant font-medium">
+<span class="material-symbols-outlined text-[18px]">schedule</span>
+                            30 min
+                        </span>
+</div>
+<div class="w-1/5">
+<span class="bg-secondary-container text-on-secondary-container text-[10px] font-bold uppercase px-2.5 py-1 rounded-full tracking-wider">Active</span>
+</div>
+<div class="w-1/5 flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-2 hover:bg-primary/10 text-primary rounded-lg transition-colors" title="Edit">
+<span class="material-symbols-outlined">edit</span>
+</button>
+<button class="p-2 hover:bg-error-container/10 text-error rounded-lg transition-colors" title="Deactivate">
+<span class="material-symbols-outlined">block</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Pagination / Footer Actions -->
+<div class="flex justify-between items-center px-4">
+<p class="text-sm text-on-surface-variant">Showing 4 of 12 services</p>
+<div class="flex gap-2">
+<button class="px-4 py-2 bg-surface-container rounded-lg text-sm font-bold text-on-surface-variant hover:bg-surface-container-high transition-colors">Previous</button>
+<button class="px-4 py-2 bg-surface-container rounded-lg text-sm font-bold text-on-surface-variant hover:bg-surface-container-high transition-colors">Next</button>
+</div>
+</div>
+</main>
+</body></html>
