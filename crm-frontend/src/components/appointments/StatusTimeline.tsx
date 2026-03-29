@@ -28,8 +28,8 @@ export default function StatusTimeline({ history, appointmentSource }: { history
   if (!history.length) {
     return (
       <div className="text-center py-8">
-        <Clock size={40} className="mx-auto text-gray-300 mb-2" />
-        <p className="text-sm text-gray-500">No history available</p>
+        <Clock size={40} className="mx-auto mb-2" style={{ color: 'var(--text-tertiary)' }} />
+        <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>No history available</p>
       </div>
     );
   }
@@ -111,43 +111,43 @@ export default function StatusTimeline({ history, appointmentSource }: { history
           <div key={entry.id} className="relative flex gap-3">
             {/* Timeline line */}
             {!isLast && (
-              <div className="absolute left-[19px] top-10 -bottom-4 w-px bg-gray-200" />
+              <div className="absolute left-[19px] top-10 -bottom-4 w-px" style={{ background: 'var(--border-light)' }} />
             )}
 
             {/* Icon */}
             <div className={clsx(
-              'w-10 h-10 rounded-full shrink-0 flex items-center justify-center border-2 bg-white',
+              'w-10 h-10 rounded-full shrink-0 flex items-center justify-center border-2',
               event.color
-            )}>
+            )} style={{ background: 'var(--surface-container-lowest)' }}>
               {event.icon}
             </div>
 
             {/* Content */}
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <p className="text-sm font-semibold text-gray-900">{event.title}</p>
-                <span className="text-xs text-gray-400">
+                <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{event.title}</p>
+                <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
                   {format(new Date(entry.created_at), 'MMM d, yyyy h:mm a')}
                 </span>
               </div>
               {event.description && (
-                <p className="text-sm text-gray-600 mt-0.5">{event.description}</p>
+                <p className="mt-0.5 text-sm" style={{ color: 'var(--text-secondary)' }}>{event.description}</p>
               )}
               {/* Show rescheduled slot times: old → new */}
               {entry.reschedule_source && entry.old_slot_start_time && entry.slot_start_time && (
-                <div className="mt-1 text-xs text-gray-500 space-y-0.5">
-                  <p>From: <span className="font-medium text-gray-700">{format(new Date(entry.old_slot_start_time), 'MMM d, yyyy h:mm a')}</span></p>
+                <div className="mt-1 space-y-0.5 text-xs" style={{ color: 'var(--text-secondary)' }}>
+                  <p>From: <span className="font-medium" style={{ color: 'var(--text-primary)' }}>{format(new Date(entry.old_slot_start_time), 'MMM d, yyyy h:mm a')}</span></p>
                   <p>To: <span className="font-medium text-indigo-700">{format(new Date(entry.slot_start_time), 'MMM d, yyyy h:mm a')}</span></p>
                 </div>
               )}
               {/* Show appointment slot time for booking/cancellation/completion */}
               {!entry.reschedule_source && entry.slot_start_time && (
-                <p className="text-xs text-gray-500 mt-1">
-                  Appointment: <span className="font-medium text-gray-700">{format(new Date(entry.slot_start_time), 'MMM d, yyyy h:mm a')}</span>
+                <p className="mt-1 text-xs" style={{ color: 'var(--text-secondary)' }}>
+                  Appointment: <span className="font-medium" style={{ color: 'var(--text-primary)' }}>{format(new Date(entry.slot_start_time), 'MMM d, yyyy h:mm a')}</span>
                 </p>
               )}
               {entry.reason && !entry.reschedule_source && (
-                <p className="text-xs text-gray-500 mt-1">Reason: {entry.reason}</p>
+                <p className="mt-1 text-xs" style={{ color: 'var(--text-secondary)' }}>Reason: {entry.reason}</p>
               )}
             </div>
           </div>

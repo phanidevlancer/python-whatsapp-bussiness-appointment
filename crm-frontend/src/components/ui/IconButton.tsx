@@ -1,4 +1,3 @@
-import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { forwardRef, ButtonHTMLAttributes, ReactNode } from 'react';
 
@@ -32,7 +31,7 @@ const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
 
     const variants = {
       default: `
-        text-gray-500 hover:text-gray-700 hover:bg-gray-100
+        hover:bg-[color:var(--surface-container-low)]
         focus-visible:ring-gray-500
       `,
       primary: `
@@ -44,7 +43,7 @@ const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
         focus-visible:ring-error-500
       `,
       ghost: `
-        text-gray-500 hover:text-gray-700 hover:bg-transparent
+        hover:text-[color:var(--text-primary)] hover:bg-transparent
         focus-visible:ring-gray-500
       `,
     };
@@ -64,6 +63,11 @@ const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
           sizes[size],
           className
         )}
+        style={
+          variant === 'default' || variant === 'ghost'
+            ? { color: 'var(--text-tertiary)' }
+            : undefined
+        }
         disabled={disabled}
         data-tooltip={tooltip}
         {...props}

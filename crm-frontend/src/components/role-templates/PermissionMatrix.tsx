@@ -142,10 +142,10 @@ export default function PermissionMatrix({
 
   return (
     <Card className={clsx('overflow-hidden', className)} variant="elevated" padding="none">
-      <div className="flex items-center justify-between gap-3 border-b border-slate-100 px-5 py-4">
+      <div className="flex items-center justify-between gap-3 border-b px-5 py-4" style={{ borderColor: 'var(--border-light)' }}>
         <div>
-          <h3 className="text-base font-semibold text-slate-900">Permission matrix</h3>
-          <p className="text-sm text-slate-500">
+          <h3 className="text-base font-semibold" style={{ color: 'var(--text-primary)' }}>Permission matrix</h3>
+          <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
             Grouped by module and action. {readOnly ? 'Read-only for system templates.' : 'Toggle permissions to update the template.'}
           </p>
         </div>
@@ -157,9 +157,9 @@ export default function PermissionMatrix({
 
       <div className="overflow-x-auto">
         <table className="min-w-full border-separate border-spacing-0">
-          <thead className="bg-slate-50">
+          <thead style={{ background: 'color-mix(in srgb, var(--surface-container-low) 92%, transparent)' }}>
             <tr>
-              <th className="sticky left-0 z-10 border-b border-slate-200 bg-slate-50 px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+              <th className="sticky left-0 z-10 border-b px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide" style={{ background: 'color-mix(in srgb, var(--surface-container-low) 92%, transparent)', borderColor: 'var(--border-medium)', color: 'var(--text-secondary)' }}>
                 Module
               </th>
               {actions.map((action) => {
@@ -175,7 +175,8 @@ export default function PermissionMatrix({
                 return (
                   <th
                     key={action}
-                    className="border-b border-slate-200 px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-slate-500"
+                    className="border-b px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide"
+                    style={{ borderColor: 'var(--border-medium)', color: 'var(--text-secondary)' }}
                   >
                     <div className="flex flex-col items-center gap-2">
                       <PermissionCheckbox
@@ -192,8 +193,8 @@ export default function PermissionMatrix({
             </tr>
           </thead>
           <tbody>
-            <tr className="bg-white">
-              <td className="sticky left-0 z-10 border-b border-slate-100 bg-white px-4 py-3">
+            <tr style={{ background: 'var(--surface-container-lowest)' }}>
+              <td className="sticky left-0 z-10 border-b px-4 py-3" style={{ background: 'var(--surface-container-lowest)', borderColor: 'var(--border-light)' }}>
                 <div className="flex items-center gap-3">
                   <PermissionCheckbox
                     checked={allChecked}
@@ -201,7 +202,7 @@ export default function PermissionMatrix({
                     disabled={readOnly}
                     onChange={() => toggleAll(!allChecked)}
                   />
-                  <span className="text-sm font-medium text-slate-900">All modules</span>
+                  <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>All modules</span>
                 </div>
               </td>
               {actions.map((action) => {
@@ -212,7 +213,7 @@ export default function PermissionMatrix({
                 );
                 const checkedCount = columnPermissions.filter((permission) => selectedSet.has(permission.code)).length;
                 return (
-                  <td key={action} className="border-b border-slate-100 px-4 py-3 text-center text-xs text-slate-500">
+                  <td key={action} className="border-b px-4 py-3 text-center text-xs" style={{ borderColor: 'var(--border-light)', color: 'var(--text-secondary)' }}>
                     {checkedCount} / {columnPermissions.length}
                   </td>
                 );
@@ -226,8 +227,8 @@ export default function PermissionMatrix({
               const groupIndeterminate = groupCheckedCount > 0 && groupCheckedCount < groupCodes.length;
 
               return (
-                <tr key={group.module} className="bg-white hover:bg-slate-50/60">
-                  <td className="sticky left-0 z-10 border-b border-slate-100 bg-inherit px-4 py-3">
+                <tr key={group.module} className="transition-colors hover:[background:color-mix(in_srgb,var(--surface-container-low)_72%,transparent)]" style={{ background: 'var(--surface-container-lowest)' }}>
+                  <td className="sticky left-0 z-10 border-b bg-inherit px-4 py-3" style={{ borderColor: 'var(--border-light)' }}>
                     <div className="flex items-center gap-3">
                       <PermissionCheckbox
                         checked={groupChecked}
@@ -236,8 +237,8 @@ export default function PermissionMatrix({
                         onChange={() => toggleGroup(group.module, !groupChecked)}
                       />
                       <div>
-                        <p className="text-sm font-medium text-slate-900">{titleCase(group.module)}</p>
-                        <p className="text-xs text-slate-500">{group.permissions.length} permissions</p>
+                        <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{titleCase(group.module)}</p>
+                        <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>{group.permissions.length} permissions</p>
                       </div>
                     </div>
                   </td>
@@ -257,7 +258,7 @@ export default function PermissionMatrix({
                     const checked = selectedSet.has(permission.code);
 
                     return (
-                      <td key={action} className="border-b border-slate-100 px-4 py-3 text-center">
+                      <td key={action} className="border-b px-4 py-3 text-center" style={{ borderColor: 'var(--border-light)' }}>
                         <PermissionCheckbox
                           checked={checked}
                           disabled={readOnly}

@@ -65,8 +65,8 @@ export default function Sidebar() {
             <BriefcaseMedical size={18} />
           </div>
           <div>
-            <span className="block text-lg font-black tracking-[-0.03em] text-slate-900">ORA Clinic</span>
-            <span className="block text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-400">Clinical Workspace</span>
+            <span className="block text-lg font-black tracking-[-0.03em]" style={{ color: 'var(--text-primary)' }}>ORA Clinic</span>
+            <span className="block text-[10px] font-semibold uppercase tracking-[0.22em]" style={{ color: 'var(--text-tertiary)' }}>Clinical Workspace</span>
           </div>
         </div>
       </div>
@@ -74,7 +74,7 @@ export default function Sidebar() {
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto p-4">
         <div className="mb-6">
-          <p className="px-3 py-2 text-[10px] font-bold uppercase tracking-[0.22em] text-slate-400">
+          <p className="px-3 py-2 text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: 'var(--text-tertiary)' }}>
             Main Menu
           </p>
           <div className="space-y-1">
@@ -86,14 +86,12 @@ export default function Sidebar() {
                   href={href}
                   className={clsx(
                     'group flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition-all duration-200',
-                    active
-                      ? 'text-[var(--sidebar-item-active-text)]'
-                      : 'text-slate-500 hover:text-slate-900'
+                    active ? 'text-[var(--sidebar-item-active-text)]' : 'hover:text-[color:var(--text-primary)]'
                   )}
                   style={
                     active
                       ? { background: 'var(--sidebar-item-active-bg)', boxShadow: 'var(--sidebar-item-active-shadow)' }
-                      : undefined
+                      : { color: 'var(--text-secondary)' }
                   }
                   onMouseEnter={(event) => {
                     if (!active) event.currentTarget.style.background = 'var(--sidebar-item-hover)';
@@ -104,7 +102,8 @@ export default function Sidebar() {
                 >
                   <Icon
                     size={18}
-                    className={clsx('shrink-0', active ? 'text-primary-600' : 'text-slate-400 group-hover:text-primary-600')}
+                    className={clsx('shrink-0', active ? 'text-primary-600' : 'group-hover:text-primary-600')}
+                    style={active ? undefined : { color: 'var(--text-tertiary)' }}
                   />
                   <span>{label}</span>
                 </Link>
@@ -115,13 +114,14 @@ export default function Sidebar() {
 
         {/* Settings Section */}
         <div className="border-t pt-3" style={{ borderColor: 'var(--sidebar-border)' }}>
-          <p className="px-3 py-2 text-[10px] font-bold uppercase tracking-[0.22em] text-slate-400">
+          <p className="px-3 py-2 text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: 'var(--text-tertiary)' }}>
             Settings
           </p>
           {hasPermission(PERMISSIONS.settings.view) ? (
             <Link
               href="/settings"
-              className="group flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium text-slate-500 transition-all duration-200 hover:text-slate-900"
+              className="group flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition-all duration-200 hover:text-[color:var(--text-primary)]"
+              style={{ color: 'var(--text-secondary)' }}
               onMouseEnter={(event) => {
                 event.currentTarget.style.background = 'var(--sidebar-item-hover)';
               }}
@@ -129,7 +129,7 @@ export default function Sidebar() {
                 event.currentTarget.style.background = 'transparent';
               }}
             >
-              <Settings size={18} className="text-slate-400 group-hover:text-primary-600" />
+              <Settings size={18} className="group-hover:text-primary-600" style={{ color: 'var(--text-tertiary)' }} />
               <span>Preferences</span>
             </Link>
           ) : null}
@@ -146,10 +146,10 @@ export default function Sidebar() {
             {initials}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="truncate text-sm font-semibold text-slate-900">{user?.name ?? 'Admin'}</p>
-            <p className="truncate text-xs text-slate-500">{user?.email ?? 'admin@clinic.com'}</p>
+            <p className="truncate text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{user?.name ?? 'Admin'}</p>
+            <p className="truncate text-xs" style={{ color: 'var(--text-secondary)' }}>{user?.email ?? 'admin@clinic.com'}</p>
           </div>
-          <ChevronDown size={14} className="shrink-0 text-slate-400" />
+          <ChevronDown size={14} className="shrink-0" style={{ color: 'var(--text-tertiary)' }} />
         </div>
       </div>
     </aside>
