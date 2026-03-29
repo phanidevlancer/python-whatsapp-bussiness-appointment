@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from decimal import Decimal
 from types import SimpleNamespace
 import uuid
 
@@ -10,8 +11,9 @@ from sqlalchemy.dialects import postgresql
 
 from app.api.v1 import campaigns as campaigns_api
 from app.db.base import Base  # noqa: F401
-from app.models.campaign import CampaignRunStatus, CampaignStatus
+from app.models.campaign import Campaign, CampaignAudienceType, CampaignDiscountType, CampaignRunStatus, CampaignStatus
 from app.models.campaign_recipient import CampaignDeliveryStatus
+from app.schemas.campaign import CampaignCreate, CampaignUpdate
 from app.repositories import campaign_repository as campaign_repo
 from app.services import campaign_audience_service as campaign_audience_svc
 from app.services import campaign_runner_service as svc
@@ -21,8 +23,31 @@ from app.services import campaign_runner_service as svc
 class FakeDB:
     flush_calls: int = 0
     commit_calls: int = 0
+    added: list[object] | None = None
+
+    def __post_init__(self) -> None:
+        if self.added is None:
+            self.added = []
+
+    def add(self, obj: object) -> None:
+        self.added.append(obj)
 
     async def flush(self) -> None:
+        now = datetime.now(timezone.utc)
+        for obj in self.added:
+            if isinstance(obj, Campaign):
+                if obj.id is None:
+                    obj.id = uuid.uuid4()
+                if obj.status is None:
+                    obj.status = CampaignStatus.ACTIVE
+                if obj.audience_type is None:
+                    obj.audience_type = CampaignAudienceType.ALL_CUSTOMERS
+                if obj.audience_filters is None:
+                    obj.audience_filters = {}
+                if obj.created_at is None:
+                    obj.created_at = now
+                if obj.updated_at is None:
+                    obj.updated_at = now
         self.flush_calls += 1
 
     async def commit(self) -> None:
@@ -72,6 +97,30 @@ def _recipient(**overrides):
     }
     defaults.update(overrides)
     return SimpleNamespace(**defaults)
+
+
+def _campaign_create_payload() -> CampaignCreate:
+    return CampaignCreate(
+        code="hydra-winback-sunday",
+        name="Hydra Winback Sunday",
+        description="Sunday-only push for Hydra clients.",
+        booking_button_id="campaign_book:hydra-winback-sunday",
+        allowed_service_ids=[uuid.uuid4()],
+        allowed_weekdays=[0],
+        valid_from=datetime(2026, 3, 30, 4, 30, tzinfo=timezone.utc),
+        valid_to=datetime(2026, 4, 6, 4, 30, tzinfo=timezone.utc),
+        per_user_booking_limit=2,
+        discount_type=CampaignDiscountType.PERCENT,
+        discount_value=Decimal("50"),
+        audience_type=CampaignAudienceType.CUSTOMERS_INACTIVE_FOR_DAYS,
+        audience_filters={"inactive_days": 90},
+        message_body="Hydra Facial at 50% off this Sunday.",
+        message_footer="ORA Clinic",
+        button_label="Book Offer",
+        image_path="uploads/campaigns/hydra.png",
+        batch_size=25,
+        batch_delay_seconds=15,
+    )
 
 
 class _ScalarResult:
@@ -245,6 +294,87 @@ async def test_start_campaign_endpoint_commits_before_dispatch(monkeypatch: pyte
     assert result == detail_payload
     assert events == ["launch", "commit", "dispatch", "detail"]
     assert db.commit_calls == 1
+
+
+@pytest.mark.asyncio
+async def test_create_campaign_persists_builder_fields(monkeypatch: pytest.MonkeyPatch) -> None:
+    db = FakeDB()
+    payload = _campaign_create_payload()
+
+    async def fake_get_campaign_by_code(_db, code):
+        assert _db is db
+        assert code == payload.code
+        return None
+
+    monkeypatch.setattr(campaigns_api.campaign_repo, "get_campaign_by_code", fake_get_campaign_by_code)
+
+    created = await campaigns_api.create_campaign(payload, db=db)
+
+    assert db.flush_calls == 1
+    assert len(db.added) == 1
+    stored = db.added[0]
+    assert isinstance(stored, Campaign)
+    assert stored.audience_type == CampaignAudienceType.CUSTOMERS_INACTIVE_FOR_DAYS
+    assert stored.audience_filters == {"inactive_days": 90}
+    assert stored.message_body == "Hydra Facial at 50% off this Sunday."
+    assert stored.message_footer == "ORA Clinic"
+    assert stored.button_label == "Book Offer"
+    assert stored.image_path == "uploads/campaigns/hydra.png"
+    assert stored.batch_size == 25
+    assert stored.batch_delay_seconds == 15
+    assert created.audience_type == CampaignAudienceType.CUSTOMERS_INACTIVE_FOR_DAYS
+    assert created.button_label == "Book Offer"
+
+
+@pytest.mark.asyncio
+async def test_update_campaign_persists_builder_fields(monkeypatch: pytest.MonkeyPatch) -> None:
+    db = FakeDB()
+    campaign = Campaign(
+        code="hydra-winback-sunday",
+        name="Hydra Winback Sunday",
+        booking_button_id="campaign_book:hydra-winback-sunday",
+        allowed_service_ids=[str(uuid.uuid4())],
+        allowed_weekdays=[],
+        discount_type=CampaignDiscountType.NONE,
+        discount_value=None,
+    )
+    campaign.id = uuid.uuid4()
+    campaign.status = CampaignStatus.ACTIVE
+    campaign.audience_type = CampaignAudienceType.ALL_CUSTOMERS
+    campaign.audience_filters = {}
+    campaign.created_at = datetime.now(timezone.utc)
+    campaign.updated_at = campaign.created_at
+    update = CampaignUpdate(
+        audience_type=CampaignAudienceType.UPLOADED_PHONE_LIST,
+        audience_filters={"phones": ["919999999999", "918888888888"]},
+        message_body="Targeted list campaign.",
+        message_footer="ORA Clinic",
+        button_label="Book Targeted Offer",
+        image_path="uploads/campaigns/targeted.png",
+        batch_size=40,
+        batch_delay_seconds=5,
+    )
+
+    async def fake_get_campaign_by_id(_db, campaign_id):
+        assert _db is db
+        assert campaign_id == campaign.id
+        return campaign
+
+    monkeypatch.setattr(campaigns_api.campaign_repo, "get_campaign_by_id", fake_get_campaign_by_id)
+
+    updated = await campaigns_api.update_campaign(campaign.id, update, db=db)
+
+    assert db.flush_calls == 1
+    assert campaign.audience_type == CampaignAudienceType.UPLOADED_PHONE_LIST
+    assert campaign.audience_filters == {"phones": ["919999999999", "918888888888"]}
+    assert campaign.message_body == "Targeted list campaign."
+    assert campaign.message_footer == "ORA Clinic"
+    assert campaign.button_label == "Book Targeted Offer"
+    assert campaign.image_path == "uploads/campaigns/targeted.png"
+    assert campaign.batch_size == 40
+    assert campaign.batch_delay_seconds == 5
+    assert updated.audience_type == CampaignAudienceType.UPLOADED_PHONE_LIST
+    assert updated.image_path == "uploads/campaigns/targeted.png"
 
 
 @pytest.mark.asyncio

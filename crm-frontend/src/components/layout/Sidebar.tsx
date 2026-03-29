@@ -16,6 +16,7 @@ import {
   UserX,
   Users,
   Shield,
+  Megaphone,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useAuthStore } from '@/store/authStore';
@@ -35,6 +36,7 @@ const nav = [
   { href: '/customers', label: 'Patients', icon: BookUser, permission: PERMISSIONS.customers.view },
   { href: '/leads', label: 'Leads', icon: UserX, permission: PERMISSIONS.leads.view },
   { href: '/services', label: 'Services', icon: BriefcaseMedical, permission: PERMISSIONS.services.view },
+  { href: '/campaigns', label: 'Campaigns', icon: Megaphone, permission: PERMISSIONS.services.manage },
   { href: '/providers', label: 'Providers', icon: UserRound, permission: PERMISSIONS.providers.view },
   { href: '/notifications', label: 'Notifications', icon: Bell, permission: PERMISSIONS.notifications.view },
   { href: '/users', label: 'Users', icon: Users, permission: PERMISSIONS.users.view },

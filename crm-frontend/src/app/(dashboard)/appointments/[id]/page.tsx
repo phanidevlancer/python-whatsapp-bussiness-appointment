@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { format } from 'date-fns';
-import { ArrowLeft, RefreshCw, Ban, CheckCircle, AlertCircle, MessageSquare, Clock, User, Stethoscope } from 'lucide-react';
+import { ArrowLeft, RefreshCw, Ban, CheckCircle, AlertCircle, MessageSquare, Clock, User, Stethoscope, CalendarIcon, IndianRupee, TicketPercent } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAppointmentDetail, useAppointmentHistory, useCompleteAppointment, useNoShowAppointment } from '@/hooks/useAppointments';
 import { useNotificationLogs } from '@/hooks/useNotifications';
@@ -79,6 +79,8 @@ export default function AppointmentDetailPage() {
 
   const isConfirmed = appt.status === 'confirmed';
   const isSlotPast = appt.slot ? new Date(appt.slot.start_time) < new Date() : false;
+  const serviceCost = appt.service_cost_snapshot ? Number(appt.service_cost_snapshot) : null;
+  const finalCost = appt.final_cost_snapshot ? Number(appt.final_cost_snapshot) : null;
 
   return (
     <div className="dashboard-page-shell max-w-4xl space-y-6">
@@ -148,6 +150,32 @@ export default function AppointmentDetailPage() {
         </div>
 
         {/* Notes */}
+        {(appt.campaign_name_snapshot || serviceCost !== null || finalCost !== null) && (
+          <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-3">
+            <div className="rounded-xl border border-amber-100 bg-amber-50 p-3 text-sm text-amber-800">
+              <div className="mb-1 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em]">
+                <TicketPercent size={14} />
+                <span>Campaign</span>
+              </div>
+              <p className="font-medium">{appt.campaign_name_snapshot ?? 'Organic'}</p>
+            </div>
+            <div className="rounded-xl border border-emerald-100 bg-emerald-50 p-3 text-sm text-emerald-800">
+              <div className="mb-1 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em]">
+                <IndianRupee size={14} />
+                <span>Service Cost</span>
+              </div>
+              <p className="font-medium">{serviceCost !== null ? `Rs ${serviceCost.toFixed(2)}` : '—'}</p>
+            </div>
+            <div className="rounded-xl border border-sky-100 bg-sky-50 p-3 text-sm text-sky-800">
+              <div className="mb-1 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em]">
+                <IndianRupee size={14} />
+                <span>Final Price</span>
+              </div>
+              <p className="font-medium">{finalCost !== null ? `Rs ${finalCost.toFixed(2)}` : '—'}</p>
+            </div>
+          </div>
+        )}
+
         {appt.notes && (
           <div className="mt-4 p-3 bg-blue-50 rounded-xl text-sm text-blue-800 border border-blue-100">
             <span className="font-medium">Notes: </span>{appt.notes}
@@ -308,27 +336,5 @@ export default function AppointmentDetailPage() {
         </ModalFooter>
       </Modal>
     </div>
-  );
-}
-
-// Import CalendarIcon
-function CalendarIcon({ size = 24, className = '' }: { size?: number; className?: string }) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-    >
-      <rect width="18" height="18" x="3" y="4" rx="2" ry="2" />
-      <line x1="16" x2="16" y1="2" y2="6" />
-      <line x1="8" x2="8" y1="2" y2="6" />
-      <line x1="3" x2="21" y1="10" y2="10" />
-    </svg>
   );
 }

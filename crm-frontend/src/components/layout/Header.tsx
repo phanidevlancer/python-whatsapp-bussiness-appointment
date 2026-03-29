@@ -20,7 +20,7 @@ export default function Header() {
   const user = useAuthStore((s) => s.user);
   const { themeId, setThemeId, themes, appearancePreference, setAppearancePreference } =
     useTheme();
-  const themeOptions: Array<FluidDropdownOption<AppThemeId>> = themes.map((theme) => ({
+  const themeOptions: Array<FluidDropdownOption<AppThemeId>> = themes.map((theme: { id: AppThemeId; label: string }) => ({
     id: theme.id,
     label: theme.label,
     icon: Palette,

@@ -1,8 +1,9 @@
 import enum
 import uuid
 from datetime import datetime
+from decimal import Decimal
 
-from sqlalchemy import DateTime, Enum as SQLEnum, ForeignKey, Index, String, Text, func
+from sqlalchemy import DateTime, Enum as SQLEnum, ForeignKey, Index, Numeric, String, Text, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -55,6 +56,15 @@ class Appointment(Base):
     customer_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("customers.id", ondelete="SET NULL"), nullable=True, index=True
     )
+    campaign_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("campaigns.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    campaign_code_snapshot: Mapped[str | None] = mapped_column(String(80), nullable=True, index=True)
+    campaign_name_snapshot: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    discount_type_snapshot: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    discount_value_snapshot: Mapped[Decimal | None] = mapped_column(Numeric(10, 2), nullable=True)
+    service_cost_snapshot: Mapped[Decimal | None] = mapped_column(Numeric(10, 2), nullable=True)
+    final_cost_snapshot: Mapped[Decimal | None] = mapped_column(Numeric(10, 2), nullable=True)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
     cancellation_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
     cancellation_source: Mapped[AppointmentSource | None] = mapped_column(
@@ -90,6 +100,7 @@ class Appointment(Base):
     slot = relationship("TimeSlot", foreign_keys=[slot_id], lazy="select")
     provider = relationship("Provider", foreign_keys=[provider_id], back_populates="appointments", lazy="select")
     customer = relationship("Customer", foreign_keys=[customer_id], lazy="select")
+    campaign = relationship("Campaign", foreign_keys=[campaign_id], back_populates="appointments", lazy="select")
     status_history = relationship("AppointmentStatusHistory", back_populates="appointment", lazy="select")
 
     def __repr__(self) -> str:

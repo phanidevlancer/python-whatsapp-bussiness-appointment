@@ -7,8 +7,11 @@ from dataclasses import dataclass
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+import app.db.base  # noqa: F401
+
 from app.db.session import AsyncSessionLocal
 from app.models.admin_user import AdminUser, AdminRole
+from app.models.campaign import Campaign, CampaignDiscountType, CampaignStatus
 from app.repositories import permission_repository as perm_repo
 from app.repositories import role_template_repository as template_repo
 
@@ -245,6 +248,50 @@ async def backfill_legacy_admin_templates(db) -> int:
     return updated
 
 
+async def seed_test_campaigns(db: AsyncSession) -> None:
+    service_result = await db.execute(select(Service.id, Service.name))
+    service_ids_by_name = {name: str(service_id) for service_id, name in service_result.all()}
+
+    campaign_specs = (
+        {
+            "code": "diwali-hydra-50-sun",
+            "name": "Diwali Hydra 50",
+            "description": "Hydra facial at 50% off on Sundays",
+            "booking_button_id": "campaign_book:diwali-hydra-50-sun",
+            "allowed_service_ids": [service_ids_by_name["Hydra Facial"]] if "Hydra Facial" in service_ids_by_name else [],
+            "allowed_weekdays": [6],
+            "per_user_booking_limit": 1,
+            "discount_type": CampaignDiscountType.PERCENT,
+            "discount_value": 50,
+            "status": CampaignStatus.ACTIVE,
+        },
+        {
+            "code": "weekday-consult-20",
+            "name": "Weekday Consult 20",
+            "description": "Flat Rs 20 off weekday consultations",
+            "booking_button_id": "campaign_book:weekday-consult-20",
+            "allowed_service_ids": [service_ids_by_name["General Consultation"]] if "General Consultation" in service_ids_by_name else [],
+            "allowed_weekdays": [0, 1, 2, 3, 4],
+            "per_user_booking_limit": 2,
+            "discount_type": CampaignDiscountType.FLAT,
+            "discount_value": 20,
+            "status": CampaignStatus.ACTIVE,
+        },
+    )
+
+    for spec in campaign_specs:
+        existing = await db.execute(select(Campaign).where(Campaign.code == spec["code"]))
+        campaign = existing.scalar_one_or_none()
+        if campaign is None:
+            campaign = Campaign(**spec)
+            db.add(campaign)
+        else:
+            for key, value in spec.items():
+                setattr(campaign, key, value)
+
+    await db.flush()
+
+
 async def run_seed(db: AsyncSession | None = None) -> None:
     if db is None:
         async with AsyncSessionLocal() as session:
@@ -258,6 +305,7 @@ async def _run_seed(db: AsyncSession) -> None:
     await seed_permissions(db)
     await seed_system_templates(db)
     updated = await backfill_legacy_admin_templates(db)
+    await seed_test_campaigns(db)
     await db.commit()
     logger.info("RBAC seed complete; backfilled %s legacy admin users", updated)
 

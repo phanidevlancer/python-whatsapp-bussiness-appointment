@@ -67,6 +67,8 @@ def _customer_draft(customer: object, *, source_type: str) -> AudienceRecipientD
 
 def _parse_positive_days(filters: dict[str, object], field_name: str = "inactive_days") -> int:
     value = filters.get(field_name)
+    if value is None and field_name == "inactive_days":
+        value = filters.get("inactivity_days")
     if value is None:
         raise ValueError(
             "audience_filters['inactive_days'] is required for customers_inactive_for_days campaigns"

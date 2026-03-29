@@ -1,5 +1,6 @@
 import uuid
 from datetime import datetime, date
+from decimal import Decimal
 from pydantic import BaseModel, ConfigDict
 from app.models.appointment import AppointmentStatus, AppointmentSource
 from app.schemas.customer import CustomerRead
@@ -33,6 +34,13 @@ class AppointmentCRMRead(BaseModel):
     status: AppointmentStatus
     provider_id: uuid.UUID | None
     customer_id: uuid.UUID | None
+    campaign_id: uuid.UUID | None
+    campaign_code_snapshot: str | None
+    campaign_name_snapshot: str | None
+    discount_type_snapshot: str | None
+    discount_value_snapshot: Decimal | None
+    service_cost_snapshot: Decimal | None
+    final_cost_snapshot: Decimal | None
     notes: str | None
     cancellation_reason: str | None
     cancellation_source: AppointmentSource | None

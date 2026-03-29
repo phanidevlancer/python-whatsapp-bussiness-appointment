@@ -5,6 +5,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.appointment import Appointment, AppointmentStatus, AppointmentSource
+from app.models.campaign import Campaign
 from app.models.customer import Customer
 from app.models.provider import Provider
 from app.models.service import Service
@@ -18,6 +19,7 @@ from app.schemas.dashboard import (
     ChannelCancellationStats,
     ChannelRescheduleStats,
 )
+from app.schemas.campaign import CampaignPerformance
 
 logger = logging.getLogger(__name__)
 
@@ -334,3 +336,57 @@ async def get_channel_reschedule_stats(db: AsyncSession) -> list[ChannelReschedu
     result_list.sort(key=lambda x: x.reschedules, reverse=True)
     
     return result_list
+
+
+async def get_campaign_performance(db: AsyncSession) -> list[CampaignPerformance]:
+    result = await db.execute(
+        select(
+            Appointment.campaign_id,
+            Appointment.campaign_code_snapshot,
+            Appointment.campaign_name_snapshot,
+            Appointment.status,
+            Appointment.service_cost_snapshot,
+            Appointment.final_cost_snapshot,
+            func.count(Appointment.id).label("cnt"),
+        )
+        .group_by(
+            Appointment.campaign_id,
+            Appointment.campaign_code_snapshot,
+            Appointment.campaign_name_snapshot,
+            Appointment.status,
+            Appointment.service_cost_snapshot,
+            Appointment.final_cost_snapshot,
+        )
+    )
+    rows = result.all()
+
+    performance_map: dict[str, dict] = {}
+    for row in rows:
+        key = row.campaign_code_snapshot or "organic"
+        if key not in performance_map:
+            performance_map[key] = {
+                "campaign_id": row.campaign_id,
+                "campaign_code": row.campaign_code_snapshot or "organic",
+                "campaign_name": row.campaign_name_snapshot or "Organic",
+                "bookings": 0,
+                "confirmed": 0,
+                "cancelled": 0,
+                "completed": 0,
+                "no_show": 0,
+                "total_service_value": 0,
+                "total_final_value": 0,
+            }
+
+        stats = performance_map[key]
+        status_key = row.status.value if hasattr(row.status, "value") else str(row.status)
+        stats["bookings"] += row.cnt
+        if status_key in {"confirmed", "cancelled", "completed", "no_show"}:
+            stats[status_key] += row.cnt
+        service_value = row.service_cost_snapshot or 0
+        final_value = row.final_cost_snapshot or service_value or 0
+        stats["total_service_value"] += service_value * row.cnt
+        stats["total_final_value"] += final_value * row.cnt
+
+    performances = [CampaignPerformance(**stats) for stats in performance_map.values()]
+    performances.sort(key=lambda item: item.bookings, reverse=True)
+    return performances

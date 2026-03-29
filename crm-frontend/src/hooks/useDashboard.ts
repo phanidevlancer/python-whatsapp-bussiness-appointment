@@ -7,6 +7,7 @@ import type {
   ChannelStats,
   ChannelCancellationStats,
   ChannelRescheduleStats,
+  CampaignPerformance,
 } from '@/types/dashboard';
 
 export function useStats() {
@@ -71,6 +72,16 @@ export function useRescheduleStats() {
     queryKey: ['dashboard', 'reschedules'],
     queryFn: async () => {
       const res = await api.get<ChannelRescheduleStats[]>('/api/v1/dashboard/reschedules');
+      return res.data;
+    },
+  });
+}
+
+export function useCampaignPerformance() {
+  return useQuery({
+    queryKey: ['dashboard', 'campaigns'],
+    queryFn: async () => {
+      const res = await api.get<CampaignPerformance[]>('/api/v1/dashboard/campaigns');
       return res.data;
     },
   });

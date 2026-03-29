@@ -1,3 +1,5 @@
+import type { CampaignPerformance } from '@/types/campaign';
+
 export interface DashboardStats {
   total_appointments_today: number;
   total_appointments_week: number;
@@ -53,3 +55,5 @@ export interface UpcomingAppointment {
   status: string;
   provider_name: string | null;
 }
+
+export type { CampaignPerformance };

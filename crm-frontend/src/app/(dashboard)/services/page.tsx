@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Plus, PowerOff, Clock, Tag, Pencil, X, Check, ChevronDown, ChevronUp } from 'lucide-react';
+import { Plus, PowerOff, Clock, Tag, Pencil, X, Check, ChevronDown, ChevronUp, IndianRupee } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useServicesList, useCreateService, useDeleteService, useUpdateService, useServiceHistory } from '@/hooks/useServices';
 import { Card, CardHeader, CardTitle } from '@/components/ui/Card';
@@ -37,11 +37,19 @@ function getErrorMessage(error: unknown, fallback: string) {
   return fallback;
 }
 
+function formatCost(value: number | string) {
+  const amount = Number(value);
+  if (!Number.isFinite(amount)) {
+    return 'Rs 0.00';
+  }
+  return `Rs ${amount.toFixed(2)}`;
+}
+
 function ServiceHistoryRow({ serviceId }: { serviceId: string }) {
   const { data: history = [], isLoading } = useServiceHistory(serviceId);
   return (
     <tr>
-      <td colSpan={6} className="px-4 pb-4 dashboard-page-table-head">
+      <td colSpan={7} className="px-4 pb-4 dashboard-page-table-head">
         <ChangeHistoryPanel history={history} isLoading={isLoading} />
       </td>
     </tr>
@@ -62,6 +70,7 @@ function ServiceRow({
   const [editName, setEditName] = useState('');
   const [editDesc, setEditDesc] = useState('');
   const [editDuration, setEditDuration] = useState('');
+  const [editCost, setEditCost] = useState('');
   const [pendingChanges, setPendingChanges] = useState<FieldChange[]>([]);
   const [showConfirm, setShowConfirm] = useState(false);
   const { mutate: update, isPending: saving } = useUpdateService();
@@ -70,6 +79,7 @@ function ServiceRow({
     setEditName(s.name);
     setEditDesc(s.description ?? '');
     setEditDuration(String(s.duration_minutes));
+    setEditCost(String(s.cost));
     setEditing(true);
   };
 
@@ -83,6 +93,8 @@ function ServiceRow({
       changes.push({ field: 'description', label: 'Description', oldValue: s.description, newValue: editDesc });
     if (editDuration !== String(s.duration_minutes))
       changes.push({ field: 'duration_minutes', label: 'Duration (min)', oldValue: String(s.duration_minutes), newValue: editDuration });
+    if (editCost !== String(s.cost))
+      changes.push({ field: 'cost', label: 'Cost', oldValue: String(s.cost), newValue: editCost });
 
     if (!changes.length) { setEditing(false); return; }
     setPendingChanges(changes);
@@ -90,11 +102,12 @@ function ServiceRow({
   };
 
   const confirmSave = () => {
-    const payload: { name?: string; description?: string; duration_minutes?: number } = {};
+    const payload: { name?: string; description?: string; duration_minutes?: number; cost?: number } = {};
     pendingChanges.forEach((c) => {
       if (c.field === 'name') payload.name = c.newValue ?? '';
       if (c.field === 'description') payload.description = c.newValue || undefined;
       if (c.field === 'duration_minutes') payload.duration_minutes = parseInt(c.newValue ?? '0');
+      if (c.field === 'cost') payload.cost = parseFloat(c.newValue ?? '0');
     });
     update(
       { id: s.id, ...payload },
@@ -141,6 +154,16 @@ function ServiceRow({
             <div className="flex items-center gap-2">
               <Clock size={14} className="text-slate-400" />
               <span className="text-sm text-slate-700">{s.duration_minutes} min</span>
+            </div>
+          )}
+        </TableCell>
+        <TableCell className="py-4">
+          {editing ? (
+            <Input type="number" step="0.01" value={editCost} onChange={(e) => setEditCost(e.target.value)} className="dashboard-surface-input max-w-[110px] rounded-2xl border shadow-none ring-1 ring-transparent focus:ring-2 focus:ring-primary-200" />
+          ) : (
+            <div className="flex items-center gap-2">
+              <IndianRupee size={14} className="text-slate-400" />
+              <span className="text-sm text-slate-700">{formatCost(s.cost)}</span>
             </div>
           )}
         </TableCell>
@@ -207,6 +230,7 @@ export default function ServicesPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [newName, setNewName] = useState('');
   const [newDuration, setNewDuration] = useState('30');
+  const [newCost, setNewCost] = useState('0');
   const [newDesc, setNewDesc] = useState('');
 
   const { data: services, isLoading } = useServicesList(true);
@@ -217,12 +241,17 @@ export default function ServicesPage() {
   const handleCreate = () => {
     if (!newName || !newDuration) return;
     create(
-      { name: newName, description: newDesc || undefined, duration_minutes: parseInt(newDuration) },
+      {
+        name: newName,
+        description: newDesc || undefined,
+        duration_minutes: parseInt(newDuration),
+        cost: parseFloat(newCost || '0'),
+      },
       {
         onSuccess: () => {
           toast.success('Service created successfully');
           setShowCreate(false);
-          setNewName(''); setNewDuration('30'); setNewDesc('');
+          setNewName(''); setNewDuration('30'); setNewCost('0'); setNewDesc('');
         },
         onError: (err: unknown) => toast.error(getErrorMessage(err, 'Failed to create service')),
       }
@@ -252,9 +281,10 @@ export default function ServicesPage() {
           <CardHeader className="pb-4 border-0">
             <CardTitle className="text-lg font-bold tracking-[-0.02em] text-slate-900">Create New Service</CardTitle>
           </CardHeader>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <Input placeholder="Service Name" value={newName} onChange={(e) => setNewName(e.target.value)} leftIcon={<Tag size={16} />} className="dashboard-surface-input h-12 rounded-2xl border shadow-none ring-1 ring-transparent focus:ring-2 focus:ring-primary-200" />
             <Input placeholder="Duration (minutes)" type="number" value={newDuration} onChange={(e) => setNewDuration(e.target.value)} leftIcon={<Clock size={16} />} className="dashboard-surface-input h-12 rounded-2xl border shadow-none ring-1 ring-transparent focus:ring-2 focus:ring-primary-200" />
+            <Input placeholder="Cost" type="number" step="0.01" value={newCost} onChange={(e) => setNewCost(e.target.value)} leftIcon={<IndianRupee size={16} />} className="dashboard-surface-input h-12 rounded-2xl border shadow-none ring-1 ring-transparent focus:ring-2 focus:ring-primary-200" />
             <Textarea placeholder="Description (optional)" value={newDesc} onChange={(e) => setNewDesc(e.target.value)} resize="none" rows={1} className="dashboard-surface-input rounded-2xl border shadow-none ring-1 ring-transparent focus:ring-2 focus:ring-primary-200" />
           </div>
           <div className="mt-4 flex gap-3 border-t pt-4" style={{ borderColor: 'var(--border-light)' }}>
@@ -297,6 +327,7 @@ export default function ServicesPage() {
                 <TableHead className="py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Name</TableHead>
                 <TableHead className="py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Description</TableHead>
                 <TableHead className="py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Duration</TableHead>
+                <TableHead className="py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Cost</TableHead>
                 <TableHead className="py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Status</TableHead>
                 <TableHead align="right" className="py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Actions</TableHead>
               </TableRow>

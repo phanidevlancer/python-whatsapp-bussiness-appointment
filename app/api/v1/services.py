@@ -39,6 +39,7 @@ async def create_service(
         name=payload.name,
         description=payload.description,
         duration_minutes=payload.duration_minutes,
+        cost=payload.cost,
     )
     db.add(service)
     await db.flush()

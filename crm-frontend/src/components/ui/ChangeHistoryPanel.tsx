@@ -21,6 +21,7 @@ const FIELD_LABELS: Record<string, string> = {
   notes: 'Notes',
   description: 'Description',
   duration_minutes: 'Duration (min)',
+  cost: 'Cost',
   is_active: 'Status',
 };
 

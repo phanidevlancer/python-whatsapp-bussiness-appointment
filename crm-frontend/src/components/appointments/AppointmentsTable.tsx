@@ -116,6 +116,9 @@ export default function AppointmentsTable({ appointments, isLoading }: Props) {
             </TableCell>
             <TableCell className="py-4">
               <SourceBadge source={appt.source} size="sm" />
+              {appt.campaign_name_snapshot && (
+                <p className="mt-1 text-xs font-medium text-amber-700">{appt.campaign_name_snapshot}</p>
+              )}
             </TableCell>
             <TableCell className="py-4">
               <StatusBadge status={appt.status} size="sm" />

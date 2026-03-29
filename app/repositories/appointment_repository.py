@@ -1,5 +1,6 @@
 import uuid
 from datetime import datetime, timezone
+from decimal import Decimal
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -15,6 +16,13 @@ async def create_appointment(
     slot_id: uuid.UUID,
     customer_id: uuid.UUID | None = None,
     source: AppointmentSource = AppointmentSource.WHATSAPP,
+    campaign_id: uuid.UUID | None = None,
+    campaign_code_snapshot: str | None = None,
+    campaign_name_snapshot: str | None = None,
+    discount_type_snapshot: str | None = None,
+    discount_value_snapshot: Decimal | int | None = None,
+    service_cost_snapshot: Decimal | None = None,
+    final_cost_snapshot: Decimal | None = None,
 ) -> Appointment:
     """
     Create a new confirmed appointment.
@@ -30,6 +38,13 @@ async def create_appointment(
         customer_id=customer_id,
         status=AppointmentStatus.CONFIRMED,
         source=source,
+        campaign_id=campaign_id,
+        campaign_code_snapshot=campaign_code_snapshot,
+        campaign_name_snapshot=campaign_name_snapshot,
+        discount_type_snapshot=discount_type_snapshot,
+        discount_value_snapshot=discount_value_snapshot,
+        service_cost_snapshot=service_cost_snapshot,
+        final_cost_snapshot=final_cost_snapshot,
     )
     db.add(appointment)
     await db.flush()  # Get the generated ID before commit
@@ -177,6 +192,8 @@ async def create_appointment_crm(
     customer_id: uuid.UUID | None = None,
     notes: str | None = None,
     source: AppointmentSource = AppointmentSource.ADMIN_DASHBOARD,
+    service_cost_snapshot: Decimal | None = None,
+    final_cost_snapshot: Decimal | None = None,
 ) -> Appointment:
     # Normalize phone number: remove '+' prefix for consistency
     normalized_phone = user_phone.lstrip('+').lstrip('0')
@@ -189,6 +206,8 @@ async def create_appointment_crm(
         notes=notes,
         status=AppointmentStatus.CONFIRMED,
         source=source,
+        service_cost_snapshot=service_cost_snapshot,
+        final_cost_snapshot=final_cost_snapshot,
     )
     db.add(appointment)
     await db.flush()

@@ -6,6 +6,7 @@ export interface Service {
   name: string;
   description: string | null;
   duration_minutes: number;
+  cost: number | string;
   is_active: boolean;
 }
 
@@ -44,6 +45,13 @@ export interface Appointment {
   status: AppointmentStatus;
   provider_id: string | null;
   customer_id: string | null;
+  campaign_id: string | null;
+  campaign_code_snapshot: string | null;
+  campaign_name_snapshot: string | null;
+  discount_type_snapshot: string | null;
+  discount_value_snapshot: number | string | null;
+  service_cost_snapshot: number | string | null;
+  final_cost_snapshot: number | string | null;
   notes: string | null;
   cancellation_reason: string | null;
   rescheduled_from_slot_id: string | null;

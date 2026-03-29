@@ -45,6 +45,14 @@ async def create_campaign(
         per_user_booking_limit=payload.per_user_booking_limit,
         discount_type=payload.discount_type,
         discount_value=payload.discount_value,
+        audience_type=payload.audience_type,
+        audience_filters=payload.audience_filters,
+        message_body=payload.message_body,
+        message_footer=payload.message_footer,
+        button_label=payload.button_label,
+        image_path=payload.image_path,
+        batch_size=payload.batch_size,
+        batch_delay_seconds=payload.batch_delay_seconds,
     )
     db.add(campaign)
     await db.flush()

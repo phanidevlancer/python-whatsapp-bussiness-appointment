@@ -143,10 +143,10 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [appearancePreference, setAppearancePreference] = useState<ThemeAppearancePreference>(() =>
     getStoredAppearancePreference(),
   );
-  const systemAppearance = useSyncExternalStore(
+  const systemAppearance = useSyncExternalStore<ThemeAppearance>(
     appearancePreference === 'system' ? subscribeToSystemAppearance : () => () => {},
     getSystemAppearance,
-    () => 'light',
+    (): ThemeAppearance => 'light',
   );
   const resolvedAppearance = appearancePreference === 'system' ? systemAppearance : appearancePreference;
 

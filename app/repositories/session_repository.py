@@ -1,9 +1,10 @@
 import uuid
+from datetime import datetime, timezone
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.user_session import SessionStep, UserSession
+from app.models.user_session import JourneyType, SessionStep, UserSession
 
 # Module-level cache: phone -> UserSession within a single request lifecycle
 # We use db's info dict to scope it to the session
@@ -67,4 +68,22 @@ async def reset_session(db: AsyncSession, user_phone: str) -> UserSession:
     session.selected_service_id = None
     session.selected_slot_id = None
     session.selected_appointment_id = None
+    return session
+
+
+async def mark_journey(
+    db: AsyncSession,
+    user_phone: str,
+    *,
+    journey_type: JourneyType | str,
+    campaign_id: uuid.UUID | None,
+    entry_point: str | None,
+    entry_message_id: str | None,
+) -> UserSession:
+    session = await get_or_create_session(db, user_phone)
+    session.active_journey_type = JourneyType(journey_type)
+    session.active_campaign_id = campaign_id
+    session.journey_entry_point = entry_point
+    session.journey_entry_message_id = entry_message_id
+    session.journey_started_at = datetime.now(timezone.utc)
     return session

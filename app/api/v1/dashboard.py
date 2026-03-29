@@ -13,6 +13,7 @@ from app.schemas.dashboard import (
     ChannelCancellationStats,
     ChannelRescheduleStats,
 )
+from app.schemas.campaign import CampaignPerformance
 from app.services import dashboard_service
 
 router = APIRouter()
@@ -66,3 +67,11 @@ async def get_reschedule_stats(
     _=Depends(require_permission("dashboard.view")),
 ):
     return await dashboard_service.get_channel_reschedule_stats(db)
+
+
+@router.get("/campaigns", response_model=list[CampaignPerformance])
+async def get_campaign_performance(
+    db: AsyncSession = Depends(get_db),
+    _=Depends(require_permission("dashboard.view")),
+):
+    return await dashboard_service.get_campaign_performance(db)

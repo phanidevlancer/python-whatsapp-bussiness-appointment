@@ -18,7 +18,7 @@ export function useServicesList(includeInactive = false) {
 export function useCreateService() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (data: { name: string; description?: string; duration_minutes: number }) => {
+    mutationFn: async (data: { name: string; description?: string; duration_minutes: number; cost: number }) => {
       const res = await api.post<Service>('/api/v1/services', data);
       return res.data;
     },
@@ -29,7 +29,7 @@ export function useCreateService() {
 export function useUpdateService() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, ...data }: { id: string; name?: string; description?: string; duration_minutes?: number; is_active?: boolean }) => {
+    mutationFn: async ({ id, ...data }: { id: string; name?: string; description?: string; duration_minutes?: number; cost?: number; is_active?: boolean }) => {
       const res = await api.patch<Service>(`/api/v1/services/${id}`, data);
       return res.data;
     },

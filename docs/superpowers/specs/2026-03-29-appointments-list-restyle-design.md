@@ -30,7 +30,7 @@ The component will move from the current generic shared-table presentation to a 
 - Compact source badge styling.
 - Pill-style status badge styling.
 - Minimal actions column that preserves the current controls and links.
-
+    
 
 ## Behavior Preservation
 

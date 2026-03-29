@@ -161,6 +161,21 @@ async def test_customers_inactive_for_days_includes_customer_at_cutoff_boundary(
 
 
 @pytest.mark.asyncio
+async def test_customers_inactive_for_days_accepts_inactivity_days_alias() -> None:
+    boundary_customer = _customer(phone="+919333333333", name="Alias")
+    fake_db = _FakeInactiveDB(boundary_customer)
+    campaign = SimpleNamespace(
+        audience_type=CampaignAudienceType.CUSTOMERS_INACTIVE_FOR_DAYS,
+        audience_filters={"inactivity_days": 45},
+    )
+
+    drafts = await svc.resolve_campaign_audience(fake_db, campaign)
+
+    assert len(drafts) == 1
+    assert drafts[0].phone == "919333333333"
+
+
+@pytest.mark.asyncio
 async def test_previous_bookings_query_uses_repository_normalization_helpers() -> None:
     db = _QueryInspectDB()
 
