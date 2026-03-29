@@ -66,12 +66,22 @@ class AppointmentStatusHistoryRead(BaseModel):
     old_status: str | None
     new_status: str
     changed_by_id: uuid.UUID | None
+    changed_by_name: str | None = None
+    changed_by_email: str | None = None
     reason: str | None
     source: AppointmentSource | None
     reschedule_source: AppointmentSource | None
     slot_start_time: datetime | None
     old_slot_start_time: datetime | None
     created_at: datetime
+
+    @classmethod
+    def from_orm_with_user(cls, record) -> "AppointmentStatusHistoryRead":
+        obj = cls.model_validate(record)
+        if getattr(record, "changed_by", None):
+            obj.changed_by_name = record.changed_by.name
+            obj.changed_by_email = record.changed_by.email
+        return obj
 
 
 class PaginatedAppointmentResponse(BaseModel):

@@ -62,6 +62,8 @@ export interface AppointmentStatusHistory {
   old_status: string | null;
   new_status: string;
   changed_by_id: string | null;
+  changed_by_name: string | null;
+  changed_by_email: string | null;
   reason: string | null;
   source: string | null;
   reschedule_source: string | null;

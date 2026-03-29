@@ -35,6 +35,19 @@ const TYPE_CONFIG = {
 
 type TimelineView = 'flat' | 'grouped';
 
+function getActorLabel(name: string | null, email: string | null) {
+  if (name && email) return `${name} <${email}>`;
+  if (email) return email;
+  if (name) return name;
+  return null;
+}
+
+function getSourceLabel(source: string | null) {
+  if (source === 'whatsapp') return 'WhatsApp';
+  if (source === 'admin_dashboard') return 'Admin Dashboard';
+  return 'System';
+}
+
 function getAppointmentRef(appointmentId: string | null) {
   return appointmentId ? appointmentId.split('-')[0].toUpperCase() : null;
 }
@@ -48,7 +61,10 @@ function getGroupCardItems(events: ActivityEvent[]) {
   return events.map((event) => ({
     id: `${event.created_at}-${event.event}`,
     activity: event.event,
-    location: event.detail ?? (event.source === 'whatsapp' ? 'WhatsApp activity' : 'CRM activity'),
+    location:
+      event.detail ??
+      getActorLabel(event.changed_by_name, event.changed_by_email) ??
+      `${getSourceLabel(event.source)} activity`,
     date: format(new Date(event.created_at), 'MMM d'),
     href: event.appointment_id ? `/appointments/${event.appointment_id}` : undefined,
     color:
@@ -115,6 +131,7 @@ export default function ActivityTimeline({ events, isLoading }: Props) {
     const Icon = cfg.icon;
     const appointmentRef = getAppointmentRef(event.appointment_id);
     const isAppointmentLink = !!event.appointment_id;
+    const actorLabel = getActorLabel(event.changed_by_name, event.changed_by_email);
     const content = (
       <div
         className={`flex min-h-[68px] min-w-0 items-center rounded-[22px] border border-slate-200 bg-white px-3 py-2.5 shadow-[0_8px_22px_rgba(15,23,42,0.10)] transition-all duration-300 ease-out ${
@@ -137,9 +154,14 @@ export default function ActivityTimeline({ events, isLoading }: Props) {
             {format(new Date(event.created_at), 'MMM d, h:mm a')}
           </span>
           <div className="col-span-1 flex flex-wrap items-center gap-1.5">
+            {actorLabel && (
+              <span className="inline-block rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600">
+                {actorLabel}
+              </span>
+            )}
             {event.source && (
               <span className="inline-block rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-500">
-                {event.source === 'whatsapp' ? 'WhatsApp' : 'CRM'}
+                {getSourceLabel(event.source)}
               </span>
             )}
             {showAppointmentRef && appointmentRef && (

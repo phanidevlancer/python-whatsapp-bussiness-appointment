@@ -115,6 +115,7 @@ async def get_customer_appointments(
             selectinload(Appointment.service),
             selectinload(Appointment.slot),
             selectinload(Appointment.provider),
+            selectinload(Appointment.customer),
         )
         .order_by(Appointment.created_at.desc())
         .offset((page - 1) * page_size)

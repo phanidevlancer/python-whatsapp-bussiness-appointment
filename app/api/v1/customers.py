@@ -197,6 +197,7 @@ async def get_customer_activity(
         from sqlalchemy.orm import selectinload
         hist_result = await db.execute(
             select(AppointmentStatusHistory)
+            .options(selectinload(AppointmentStatusHistory.changed_by))
             .where(AppointmentStatusHistory.appointment_id.in_(appt_ids))
             .order_by(AppointmentStatusHistory.created_at.desc())
             .limit(limit)
@@ -207,6 +208,8 @@ async def get_customer_activity(
                 "event": _status_label(h.old_status, h.new_status),
                 "detail": h.reason,
                 "source": h.source.value if h.source else None,
+                "changed_by_name": h.changed_by.name if h.changed_by else None,
+                "changed_by_email": h.changed_by.email if h.changed_by else None,
                 "appointment_id": str(h.appointment_id),
                 "created_at": h.created_at.isoformat(),
             })
@@ -214,11 +217,14 @@ async def get_customer_activity(
     # 2. Profile change history
     history_records = await history_repo.get_entity_history(db, "customer", str(customer_id))
     for h in history_records:
+        history_entry = EntityChangeHistoryRead.from_orm_with_user(h)
         events.append({
             "type": "profile_change",
             "event": f"{h.field_name} updated",
             "detail": f'"{h.old_value or "—"}" → "{h.new_value or "—"}"',
             "source": "admin_dashboard",
+            "changed_by_name": history_entry.changed_by_name,
+            "changed_by_email": history_entry.changed_by_email,
             "appointment_id": None,
             "created_at": h.created_at.isoformat(),
         })
@@ -236,6 +242,8 @@ async def get_customer_activity(
             "event": m.message_type.replace("_", " ").title(),
             "detail": f"Status: {m.status.value if hasattr(m.status, 'value') else m.status}",
             "source": "whatsapp",
+            "changed_by_name": None,
+            "changed_by_email": None,
             "appointment_id": str(m.appointment_id) if m.appointment_id else None,
             "created_at": m.created_at.isoformat(),
         })

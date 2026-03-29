@@ -89,6 +89,8 @@ export interface ActivityEvent {
   event: string;
   detail: string | null;
   source: string | null;
+  changed_by_name: string | null;
+  changed_by_email: string | null;
   appointment_id: string | null;
   created_at: string;
 }

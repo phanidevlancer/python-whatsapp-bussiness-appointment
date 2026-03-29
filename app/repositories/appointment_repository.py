@@ -200,6 +200,7 @@ async def get_appointment_history(db: AsyncSession, appointment_id: uuid.UUID) -
     # Get all history for the appointment, ordered by time
     history_result = await db.execute(
         select(AppointmentStatusHistory)
+        .options(selectinload(AppointmentStatusHistory.changed_by))
         .where(AppointmentStatusHistory.appointment_id == appointment_id)
         .order_by(AppointmentStatusHistory.created_at)
     )

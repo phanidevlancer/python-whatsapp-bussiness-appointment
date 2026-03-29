@@ -11,6 +11,19 @@ const statusConfig: Record<string, { color: string; icon: React.ReactNode; label
   pending: { color: 'bg-amber-500', icon: <Clock size={14} />, label: 'Pending' },
 };
 
+function getSourceName(src: string | null) {
+  if (src === 'whatsapp') return 'WhatsApp';
+  if (src === 'admin_dashboard') return 'Admin Dashboard';
+  return null;
+}
+
+function getActorLabel(name: string | null, email: string | null) {
+  if (name && email) return `${name} <${email}>`;
+  if (email) return email;
+  if (name) return name;
+  return null;
+}
+
 export default function StatusTimeline({ history, appointmentSource }: { history: AppointmentStatusHistory[]; appointmentSource?: string }) {
   if (!history.length) {
     return (
@@ -22,15 +35,9 @@ export default function StatusTimeline({ history, appointmentSource }: { history
   }
 
   const getEventDescription = (entry: AppointmentStatusHistory) => {
-    // Get source display name - prefer entry source, fallback to appointment source
-    const getSourceName = (src: string | null) => {
-      if (src === 'whatsapp') return 'WhatsApp';
-      if (src === 'admin_dashboard') return 'Admin';
-      return null;
-    };
-
     // Try to get source from entry first, then fallback to appointment source
     const entrySource = entry.source ?? appointmentSource ?? null;
+    const actorLabel = getActorLabel(entry.changed_by_name, entry.changed_by_email);
 
     // Check if this is a cancellation due to rescheduling
     const isRescheduleCancel = entry.new_status === 'cancelled' &&
@@ -41,7 +48,11 @@ export default function StatusTimeline({ history, appointmentSource }: { history
       const rescheduleSource = getSourceName(entry.reschedule_source);
       return {
         title: 'Rescheduled',
-        description: rescheduleSource ? `Rescheduled via ${rescheduleSource}` : 'Rescheduled',
+        description: actorLabel
+          ? `Rescheduled by ${actorLabel}${rescheduleSource ? ` via ${rescheduleSource}` : ''}`
+          : rescheduleSource
+            ? `Rescheduled via ${rescheduleSource}`
+            : 'Rescheduled',
         icon: <RotateCcw size={14} className="text-indigo-600" />,
         color: 'border-indigo-500',
       };
@@ -52,7 +63,11 @@ export default function StatusTimeline({ history, appointmentSource }: { history
       const bookingSource = getSourceName(entrySource);
       return {
         title: 'Booked',
-        description: bookingSource ? `Appointment created via ${bookingSource}` : 'Appointment created',
+        description: actorLabel
+          ? `Appointment created by ${actorLabel}${bookingSource ? ` via ${bookingSource}` : ''}`
+          : bookingSource
+            ? `Appointment created via ${bookingSource}`
+            : 'Appointment created',
         icon: <Calendar size={14} className="text-blue-600" />,
         color: 'border-blue-500',
       };
@@ -74,7 +89,13 @@ export default function StatusTimeline({ history, appointmentSource }: { history
 
     return {
       title: config.label,
-      description: entry.reason || (eventSource ? `Status changed via ${eventSource}` : `Status changed to ${entry.new_status}`),
+      description:
+        entry.reason ||
+        (actorLabel
+          ? `${config.label} by ${actorLabel}${eventSource ? ` via ${eventSource}` : ''}`
+          : eventSource
+            ? `Status changed via ${eventSource}`
+            : `Status changed to ${entry.new_status}`),
       icon: config.icon,
       color: config.color.replace('bg-', 'border-'),
     };

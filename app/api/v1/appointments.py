@@ -93,7 +93,7 @@ async def get_appointment_history(
     _=Depends(require_permission("appointments.view")),
 ):
     history = await appt_repo.get_appointment_history(db, appointment_id)
-    return [AppointmentStatusHistoryRead.model_validate(h) for h in history]
+    return [AppointmentStatusHistoryRead.from_orm_with_user(h) for h in history]
 
 
 @router.patch("/{appointment_id}", response_model=AppointmentCRMRead)

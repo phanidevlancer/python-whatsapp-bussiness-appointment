@@ -9,6 +9,7 @@ export interface ChangeHistoryEntry {
   old_value: string | null;
   new_value: string | null;
   changed_by_name: string | null;
+  changed_by_email: string | null;
   changed_by_id: string | null;
   created_at: string;
 }
@@ -26,6 +27,13 @@ const FIELD_LABELS: Record<string, string> = {
 interface ChangeHistoryPanelProps {
   history: ChangeHistoryEntry[];
   isLoading?: boolean;
+}
+
+function formatActorLabel(name: string | null, email: string | null) {
+  if (name && email) return `${name} <${email}>`;
+  if (email) return email;
+  if (name) return name;
+  return 'Unknown';
 }
 
 export function ChangeHistoryPanel({ history, isLoading }: ChangeHistoryPanelProps) {
@@ -64,7 +72,7 @@ export function ChangeHistoryPanel({ history, isLoading }: ChangeHistoryPanelPro
               </div>
               <div className="text-right flex-shrink-0">
                 <p className="text-xs text-gray-500">
-                  {entry.changed_by_name ?? 'Unknown'}
+                  {formatActorLabel(entry.changed_by_name, entry.changed_by_email)}
                 </p>
                 <p className="text-xs text-gray-400">
                   {format(new Date(entry.created_at), 'MMM d, h:mm a')}

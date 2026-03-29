@@ -9,6 +9,7 @@ from fastapi.params import Depends as DependsParam
 from pydantic import ValidationError
 
 from app.api.v1 import appointments as appointments_api
+from app.api.v1 import customers as customers_api
 from app.api.v1 import dashboard as dashboard_api
 from app.api.v1 import leads_analytics as leads_analytics_api
 from app.api.v1 import notifications as notifications_api
@@ -20,11 +21,15 @@ from app.core import permissions as permissions_module
 from app.core.security import create_access_token, decode_access_token, hash_password
 from app.db.base import Base
 from app.models.admin_user import AdminUser, AdminRole
+from app.models.appointment import Appointment
 from app.models.permission import Permission
 from app.models.role_template import RoleTemplate, role_template_permissions
 from app.models.user_audit_log import UserAuditLog
+from app.repositories import customer_repository
 from app.schemas.admin_user import AdminUserCreate, CurrentUserResponse, TokenResponse
+from app.schemas.appointment_crm import AppointmentStatusHistoryRead
 from app.schemas.customer import CustomerContactUpdate
+from app.schemas.entity_change_history import EntityChangeHistoryRead
 from app.schemas.user_management import validate_password_strength
 from app.services import auth_service
 
@@ -448,3 +453,60 @@ async def test_require_manager_or_above_accepts_complete_manager_bundle(monkeypa
     )
 
     assert result.role == AdminRole.MANAGER
+
+
+def test_appointment_status_history_schema_exposes_actor_identity() -> None:
+    actor = SimpleNamespace(name="Phanindra Durga", email="phanindra@example.com")
+    record = SimpleNamespace(
+        id=uuid.uuid4(),
+        appointment_id=uuid.uuid4(),
+        old_status="confirmed",
+        new_status="cancelled",
+        changed_by_id=uuid.uuid4(),
+        changed_by=actor,
+        reason="Customer unavailable",
+        source=None,
+        reschedule_source=None,
+        slot_start_time=None,
+        old_slot_start_time=None,
+        created_at=datetime.now(timezone.utc),
+    )
+
+    payload = AppointmentStatusHistoryRead.from_orm_with_user(record)
+
+    assert payload.changed_by_name == "Phanindra Durga"
+    assert payload.changed_by_email == "phanindra@example.com"
+
+
+def test_entity_change_history_schema_exposes_actor_email() -> None:
+    actor = SimpleNamespace(name="Phanindra Durga", email="phanindra@example.com")
+    record = SimpleNamespace(
+        id=uuid.uuid4(),
+        entity_type="customer",
+        entity_id=str(uuid.uuid4()),
+        field_name="email",
+        old_value="old@example.com",
+        new_value="new@example.com",
+        changed_by_id=uuid.uuid4(),
+        changed_by=actor,
+        created_at=datetime.now(timezone.utc),
+    )
+
+    payload = EntityChangeHistoryRead.from_orm_with_user(record)
+
+    assert payload.changed_by_name == "Phanindra Durga"
+    assert payload.changed_by_email == "phanindra@example.com"
+
+
+def test_customer_activity_uses_serialized_history_actor_fields() -> None:
+    source = inspect.getsource(customers_api.get_customer_activity)
+
+    assert "EntityChangeHistoryRead.from_orm_with_user(h)" in source
+    assert '"changed_by_name": history_entry.changed_by_name' in source
+    assert '"changed_by_email": history_entry.changed_by_email' in source
+
+
+def test_customer_appointments_repository_eager_loads_customer_relation() -> None:
+    source = inspect.getsource(customer_repository.get_customer_appointments)
+
+    assert "selectinload(Appointment.customer)" in source
