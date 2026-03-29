@@ -64,20 +64,21 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 
 Button.displayName = 'Button';
 
-interface Category {
-  id: AppointmentStatus | 'all';
+export interface FluidDropdownOption<T extends string> {
+  id: T;
   label: string;
   icon: React.ElementType;
   color: string;
 }
 
-interface FluidDropdownProps {
-  value?: AppointmentStatus;
-  onChange: (value: AppointmentStatus | undefined) => void;
+interface FluidDropdownProps<T extends string> {
+  value: T;
+  options: Array<FluidDropdownOption<T>>;
+  onChange: (value: T) => void;
   className?: string;
 }
 
-const categories: Category[] = [
+export const appointmentStatusDropdownOptions: Array<FluidDropdownOption<AppointmentStatus | 'all'>> = [
   { id: 'all', label: 'All', icon: Layers, color: '#64748b' },
   { id: 'pending', label: 'Pending', icon: Clock3, color: '#f59e0b' },
   { id: 'confirmed', label: 'Confirmed', icon: CalendarCheck2, color: '#10b981' },
@@ -138,13 +139,18 @@ const itemVariants = {
   },
 };
 
-export function FluidDropdown({ value, onChange, className }: FluidDropdownProps) {
+export function FluidDropdown<T extends string>({
+  value,
+  options,
+  onChange,
+  className,
+}: FluidDropdownProps<T>) {
   const [isOpen, setIsOpen] = React.useState(false);
   const [hoveredCategory, setHoveredCategory] = React.useState<string | null>(null);
   const dropdownRef = React.useRef<HTMLDivElement>(null);
-  const selectedCategory = categories.find((category) => category.id === (value ?? 'all')) ?? categories[0];
+  const selectedCategory = options.find((category) => category.id === value) ?? options[0];
   const activeCategoryId = hoveredCategory || selectedCategory.id;
-  const highlightIndex = categories.findIndex((category) => category.id === activeCategoryId);
+  const highlightIndex = options.findIndex((category) => category.id === activeCategoryId);
 
   useClickAway(dropdownRef, () => setIsOpen(false));
 
@@ -250,7 +256,7 @@ export function FluidDropdown({ value, onChange, className }: FluidDropdownProps
                       duration: 0.5,
                     }}
                   />
-                  {categories.map((category, index) => (
+                  {options.map((category, index) => (
                     <React.Fragment key={category.id}>
                       {index === 1 && (
                         <motion.div
@@ -262,7 +268,7 @@ export function FluidDropdown({ value, onChange, className }: FluidDropdownProps
                       <motion.button
                         type="button"
                         onClick={() => {
-                          onChange(category.id === 'all' ? undefined : category.id);
+                          onChange(category.id);
                           setIsOpen(false);
                         }}
                         onHoverStart={() => setHoveredCategory(category.id)}
@@ -302,6 +308,6 @@ export function FluidDropdown({ value, onChange, className }: FluidDropdownProps
   );
 }
 
-export function Component(props: FluidDropdownProps) {
+export function Component<T extends string>(props: FluidDropdownProps<T>) {
   return <FluidDropdown {...props} />;
 }

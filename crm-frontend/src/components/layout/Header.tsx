@@ -1,10 +1,11 @@
 'use client';
 
-import { HelpCircle, LogOut, Plus, Search } from 'lucide-react';
+import { HelpCircle, LogOut, Plus, Search, Palette, Sun, Moon, Monitor } from 'lucide-react';
 import { useLogout } from '@/hooks/useAuth';
 import { useTheme } from '@/components/theme/ThemeProvider';
 import { useAuthStore } from '@/store/authStore';
 import type { AppThemeId, ThemeAppearancePreference } from '@/lib/theme/themes';
+import { FluidDropdown, type FluidDropdownOption } from '@/components/ui/fluid-dropdown';
 
 function isThemeId(value: string, themes: Array<{ id: AppThemeId }>): value is AppThemeId {
   return themes.some((theme) => theme.id === value);
@@ -17,12 +18,18 @@ function isAppearancePreference(value: string): value is ThemeAppearancePreferen
 export default function Header() {
   const logout = useLogout();
   const user = useAuthStore((s) => s.user);
-  const { themeId, setThemeId, themes, appearancePreference, setAppearancePreference, resolvedAppearance } =
+  const { themeId, setThemeId, themes, appearancePreference, setAppearancePreference } =
     useTheme();
-  const appearanceOptions: Array<{ value: typeof appearancePreference; label: string }> = [
-    { value: 'light', label: 'Light' },
-    { value: 'dark', label: 'Dark' },
-    { value: 'system', label: 'System' },
+  const themeOptions: Array<FluidDropdownOption<AppThemeId>> = themes.map((theme) => ({
+    id: theme.id,
+    label: theme.label,
+    icon: Palette,
+    color: 'var(--primary-600)',
+  }));
+  const appearanceOptions: Array<FluidDropdownOption<ThemeAppearancePreference>> = [
+    { id: 'light', label: 'Light', icon: Sun, color: '#f59e0b' },
+    { id: 'dark', label: 'Dark', icon: Moon, color: '#6366f1' },
+    { id: 'system', label: 'System', icon: Monitor, color: '#14b8a6' },
   ];
   const initials = user?.name
     ?.split(' ')
@@ -57,74 +64,37 @@ export default function Header() {
         </div>
 
         <div className="hidden items-center gap-3 xl:flex">
-          <label
-            className="flex items-center gap-2 rounded-2xl border px-3 py-2 text-sm"
-            style={{
-              borderColor: 'var(--panel-border)',
-              background: 'var(--panel-background)',
-              boxShadow: 'var(--shadow-md)',
-              color: 'var(--text-secondary)',
-            }}
-          >
-            <span className="text-xs font-semibold uppercase tracking-[0.18em]" style={{ color: 'var(--text-tertiary)' }}>
+          <div className="flex min-w-[210px] flex-col gap-1">
+            <span className="px-1 text-[11px] font-semibold uppercase tracking-[0.18em]" style={{ color: 'var(--text-tertiary)' }}>
               Theme
             </span>
-            <select
+            <FluidDropdown
               value={themeId}
-              onChange={(event) => {
-                const nextThemeId = event.currentTarget.value;
-                if (isThemeId(nextThemeId, themes)) {
-                  setThemeId(nextThemeId);
+              options={themeOptions}
+              onChange={(value) => {
+                if (isThemeId(value, themes)) {
+                  setThemeId(value);
                 }
               }}
-              className="bg-transparent text-sm font-medium outline-none"
-              style={{ color: 'var(--text-primary)' }}
-              aria-label="Theme selector"
-            >
-              {themes.map((theme) => (
-                <option key={theme.id} value={theme.id}>
-                  {theme.label}
-                </option>
-              ))}
-            </select>
-          </label>
+              className="dashboard-surface-input h-12 w-full rounded-2xl border px-1 text-sm font-medium shadow-none"
+            />
+          </div>
 
-          <label
-            className="flex items-center gap-2 rounded-2xl border px-3 py-2 text-sm"
-            style={{
-              borderColor: 'var(--panel-border)',
-              background: 'var(--panel-background)',
-              boxShadow: 'var(--shadow-md)',
-              color: 'var(--text-secondary)',
-            }}
-          >
-            <span className="text-xs font-semibold uppercase tracking-[0.18em]" style={{ color: 'var(--text-tertiary)' }}>
+          <div className="flex min-w-[210px] flex-col gap-1">
+            <div className="px-1 text-[11px] font-semibold uppercase tracking-[0.18em]" style={{ color: 'var(--text-tertiary)' }}>
               Appearance
-            </span>
-            <select
+            </div>
+            <FluidDropdown
               value={appearancePreference}
-              onChange={(event) => {
-                const nextAppearancePreference = event.currentTarget.value;
-                if (isAppearancePreference(nextAppearancePreference)) {
-                  setAppearancePreference(nextAppearancePreference);
+              options={appearanceOptions}
+              onChange={(value) => {
+                if (isAppearancePreference(value)) {
+                  setAppearancePreference(value);
                 }
               }}
-              className="bg-transparent text-sm font-medium outline-none"
-              style={{ color: 'var(--text-primary)' }}
-              aria-label="Appearance selector"
-              title={
-                appearancePreference === 'system'
-                  ? `System appearance (${resolvedAppearance})`
-                  : `Appearance (${resolvedAppearance})`
-              }
-            >
-              {appearanceOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </label>
+              className="dashboard-surface-input h-12 w-full rounded-2xl border px-1 text-sm font-medium shadow-none"
+            />
+          </div>
         </div>
 
         <button

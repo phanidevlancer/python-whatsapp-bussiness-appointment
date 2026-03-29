@@ -10,7 +10,7 @@ import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Badge } from '@/components/ui/Badge';
-import { FluidDropdown } from '@/components/ui/fluid-dropdown';
+import { FluidDropdown, appointmentStatusDropdownOptions } from '@/components/ui/fluid-dropdown';
 import { DropdownRangeDatePicker } from '@/components/ui/dropdown-range-date-picker';
 
 export default function AppointmentsPage() {
@@ -63,8 +63,9 @@ export default function AppointmentsPage() {
 
           {/* Status Filter */}
           <FluidDropdown
-            value={filters.status}
-            onChange={(value) => setFilter('status', value)}
+            value={filters.status ?? 'all'}
+            options={appointmentStatusDropdownOptions}
+            onChange={(value) => setFilter('status', value === 'all' ? undefined : value)}
             className="dashboard-surface-input h-12 w-full rounded-2xl border px-1 text-sm font-medium shadow-none md:w-44"
           />
 
