@@ -15,16 +15,8 @@ depends_on = None
 
 
 def upgrade() -> None:
-    # Create adminrole enum (skip if already exists)
-    conn = op.get_bind()
-    adminrole_exists = conn.execute(sa.text("SELECT 1 FROM pg_type WHERE typname = 'adminrole'")).scalar()
-    if not adminrole_exists:
-        op.execute(sa.text("CREATE TYPE adminrole AS ENUM ('admin', 'manager', 'receptionist')"))
-
-    # Create messagelogstatus enum (skip if already exists)
-    msglog_exists = conn.execute(sa.text("SELECT 1 FROM pg_type WHERE typname = 'messagelogstatus'")).scalar()
-    if not msglog_exists:
-        op.execute(sa.text("CREATE TYPE messagelogstatus AS ENUM ('pending', 'sent', 'failed')"))
+    op.execute(sa.text("CREATE TYPE IF NOT EXISTS adminrole AS ENUM ('admin', 'manager', 'receptionist')"))
+    op.execute(sa.text("CREATE TYPE IF NOT EXISTS messagelogstatus AS ENUM ('pending', 'sent', 'failed')"))
 
     # Create customers table
     op.create_table('customers',
