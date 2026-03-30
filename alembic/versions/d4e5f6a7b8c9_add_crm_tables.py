@@ -15,8 +15,11 @@ depends_on = None
 
 
 def upgrade() -> None:
-    op.execute(sa.text("CREATE TYPE IF NOT EXISTS adminrole AS ENUM ('admin', 'manager', 'receptionist')"))
-    op.execute(sa.text("CREATE TYPE IF NOT EXISTS messagelogstatus AS ENUM ('pending', 'sent', 'failed')"))
+    conn = op.get_bind()
+    if not conn.execute(sa.text("SELECT 1 FROM pg_type WHERE typname = 'adminrole'")).scalar():
+        conn.execute(sa.text("CREATE TYPE adminrole AS ENUM ('admin', 'manager', 'receptionist')"))
+    if not conn.execute(sa.text("SELECT 1 FROM pg_type WHERE typname = 'messagelogstatus'")).scalar():
+        conn.execute(sa.text("CREATE TYPE messagelogstatus AS ENUM ('pending', 'sent', 'failed')"))
 
     # Create customers table
     op.create_table('customers',
@@ -57,7 +60,7 @@ def upgrade() -> None:
         sa.Column('email', sa.String(255), nullable=False),
         sa.Column('hashed_password', sa.String(255), nullable=False),
         sa.Column('name', sa.String(200), nullable=False),
-        sa.Column('role', sa.Enum('admin', 'manager', 'receptionist', name='adminrole', create_type=False), nullable=False, server_default='receptionist'),
+        sa.Column('role', postgresql.ENUM('admin', 'manager', 'receptionist', name='adminrole', create_type=False), nullable=False, server_default='receptionist'),
         sa.Column('is_active', sa.Boolean(), nullable=False, server_default=sa.text('true')),
         sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
         sa.PrimaryKeyConstraint('id')
@@ -98,7 +101,7 @@ def upgrade() -> None:
         sa.Column('message_type', sa.String(100), nullable=False),
         sa.Column('template_name', sa.String(200), nullable=True),
         sa.Column('payload_json', sa.Text(), nullable=True),
-        sa.Column('status', sa.Enum('pending', 'sent', 'failed', name='messagelogstatus', create_type=False), nullable=False, server_default='pending'),
+        sa.Column('status', postgresql.ENUM('pending', 'sent', 'failed', name='messagelogstatus', create_type=False), nullable=False, server_default='pending'),
         sa.Column('sent_at', sa.DateTime(timezone=True), nullable=True),
         sa.Column('error_message', sa.Text(), nullable=True),
         sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
