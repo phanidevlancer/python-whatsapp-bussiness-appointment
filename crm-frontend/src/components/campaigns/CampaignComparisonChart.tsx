@@ -103,7 +103,9 @@ export default function CampaignComparisonChart({ campaigns, metrics }: Campaign
             tickFormatter={usesRevenueMetric ? undefined : (value: number) => Math.round(value).toString()}
           />
           <Tooltip
-            formatter={(value: number | string, name: string) => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            formatter={(value: any, name: any) => {
+              if (value === undefined || value === null) return '';
               const config = activeMetrics.find((item) => item.key === name);
               return config?.formatter ? config.formatter(value) : value;
             }}
@@ -133,7 +135,8 @@ export default function CampaignComparisonChart({ campaigns, metrics }: Campaign
                 <LabelList
                   dataKey={metric.key}
                   position="top"
-                  formatter={(value: number | string) =>
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  formatter={(value: any) =>
                     metric.formatter ? metric.formatter(value) : value
                   }
                   style={{ fill: 'var(--text-primary)', fontSize: 11, fontWeight: 700 }}

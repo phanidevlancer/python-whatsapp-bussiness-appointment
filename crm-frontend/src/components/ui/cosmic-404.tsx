@@ -8,10 +8,9 @@ import { ArrowLeftIcon } from 'lucide-react';
 import { buttonVariants } from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
 
-const GLOBE_CONFIG: COBEOptions = {
+const GLOBE_CONFIG: Omit<COBEOptions, 'onRender'> = {
   width: 600,
   height: 600,
-  onRender: () => {},
   devicePixelRatio: 2,
   phi: 0,
   theta: 0.3,
@@ -56,7 +55,7 @@ const globeVariants = {
 
 export interface GlobeProps {
   className?: string;
-  config?: COBEOptions;
+  config?: Omit<COBEOptions, 'onRender'>;
 }
 
 export function Globe({ className, config = GLOBE_CONFIG }: GlobeProps) {
@@ -87,7 +86,7 @@ export function Globe({ className, config = GLOBE_CONFIG }: GlobeProps) {
       width: widthRef.current * 2,
       height: widthRef.current * 2,
       onRender,
-    });
+    } as COBEOptions);
 
     return () => {
       globe.destroy();
