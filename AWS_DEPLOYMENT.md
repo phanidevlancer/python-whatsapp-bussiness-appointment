@@ -501,15 +501,35 @@ The backend will now start automatically on every server reboot.
 
 pm2 is a process manager for Node.js apps.
 
+> **Important:** You must run `npm run build` before starting the frontend with pm2. Starting without a build will cause a "Could not find a production build" error and the frontend will keep crashing.
+
 ```bash
 sudo npm install -g pm2
 cd ~/python-whatsapp-bussiness-appointment/crm-frontend
+
+# Build first — this takes 5-10 minutes, wait for it to complete
+npm run build
+
+# Start with pm2 only after build succeeds
 pm2 start npm --name "frontend" -- start
 pm2 save
 pm2 startup
 ```
 
-The last command (`pm2 startup`) will print another command — **copy and run it** to enable auto-start on reboot.
+The last command (`pm2 startup`) will print another command — **copy and run it** to enable auto-start on reboot. It will look like:
+
+```bash
+sudo env PATH=$PATH:/usr/bin /usr/lib/node_modules/pm2/bin/pm2 startup systemd -u ec2-user --hp /home/ec2-user
+```
+
+> **After a server reboot:** pm2 will auto-start the frontend using the saved build. No need to rebuild unless you deployed new code.
+
+> **After deploying new code:** Always rebuild before restarting:
+> ```bash
+> cd ~/python-whatsapp-bussiness-appointment/crm-frontend
+> npm run build
+> pm2 restart frontend
+> ```
 
 ---
 
