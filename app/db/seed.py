@@ -12,6 +12,7 @@ import app.db.base  # noqa: F401
 from app.db.session import AsyncSessionLocal
 from app.models.admin_user import AdminUser, AdminRole
 from app.models.campaign import Campaign, CampaignDiscountType, CampaignStatus
+from app.models.service import Service
 from app.repositories import permission_repository as perm_repo
 from app.repositories import role_template_repository as template_repo
 

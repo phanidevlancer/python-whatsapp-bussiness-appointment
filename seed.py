@@ -11,6 +11,7 @@ Creates:
 import asyncio
 from datetime import datetime, timedelta, timezone
 
+import app.db.base  # noqa: F401 — registers all models for SQLAlchemy
 from app.db.session import AsyncSessionLocal
 from app.models.service import Service
 from app.models.time_slot import TimeSlot
