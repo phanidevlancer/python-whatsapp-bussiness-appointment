@@ -186,8 +186,8 @@ async def _process_message(
     
     # Check if session has expired (idle for more than SESSION_TTL_SECONDS)
     # Use created_at as fallback if updated_at is not reliable
-    session_updated = user_session.updated_at or user_session.created_at
-    if session_updated is None or session_updated.tzinfo is None:
+    session_updated = user_session.updated_at or user_session.created_at or datetime.now(timezone.utc)
+    if session_updated.tzinfo is None:
         session_updated = session_updated.replace(tzinfo=timezone.utc)
     
     session_age = (datetime.now(timezone.utc) - session_updated).total_seconds()
