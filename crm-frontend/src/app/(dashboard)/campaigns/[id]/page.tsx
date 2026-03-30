@@ -104,10 +104,18 @@ export default function CampaignDetailPage() {
               {campaign.description ?? 'No internal description added for this campaign.'}
             </p>
           </div>
-          <div className="rounded-[24px] bg-white/80 p-4 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Campaign Code</p>
-            <p className="mt-2 text-lg font-black tracking-[-0.03em] text-slate-900">{campaign.code}</p>
-            <p className="mt-1 text-xs text-slate-500">Updated {formatDateTime(campaign.updated_at)}</p>
+          <div className="space-y-3">
+            <div className="rounded-[24px] bg-white/80 p-4 shadow-sm">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Campaign Code</p>
+              <p className="mt-2 text-lg font-black tracking-[-0.03em] text-slate-900">{campaign.code}</p>
+              <p className="mt-1 text-xs text-slate-500">Updated {formatDateTime(campaign.updated_at)}</p>
+            </div>
+            <Link
+              href={`/campaigns/new?campaignId=${campaign.id}`}
+              className={cn(buttonVariants({ variant: 'outline', size: 'md' }))}
+            >
+              Edit campaign
+            </Link>
           </div>
         </div>
       </div>

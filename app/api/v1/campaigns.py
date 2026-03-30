@@ -20,7 +20,63 @@ async def list_campaigns(
     _=Depends(require_permission("services.manage")),
 ):
     campaigns = await campaign_repo.list_campaigns(db)
-    return [CampaignRead.model_validate(campaign) for campaign in campaigns]
+    payloads: list[CampaignRead] = []
+    for campaign in campaigns:
+        recipients_payload = await campaign_repo.list_campaign_recipients(db, campaign_id=campaign.id)
+        if recipients_payload is None:
+            continue
+        metrics = recipients_payload["metrics"]
+        payloads.append(
+            CampaignRead.model_validate(
+                {
+                    "id": str(campaign.id),
+                    "code": campaign.code,
+                    "name": campaign.name,
+                    "description": getattr(campaign, "description", None),
+                    "status": campaign.status,
+                    "audience_type": getattr(campaign, "audience_type", None),
+                    "audience_filters": getattr(campaign, "audience_filters", None) or {},
+                    "run_status": recipients_payload["run_status"],
+                    "message_body": getattr(campaign, "message_body", None),
+                    "message_footer": getattr(campaign, "message_footer", None),
+                    "button_label": getattr(campaign, "button_label", None),
+                    "image_path": getattr(campaign, "image_path", None),
+                    "image_media_id": getattr(campaign, "image_media_id", None),
+                    "batch_size": getattr(campaign, "batch_size", None),
+                    "batch_delay_seconds": getattr(campaign, "batch_delay_seconds", None),
+                    "started_at": getattr(campaign, "started_at", None),
+                    "completed_at": getattr(campaign, "completed_at", None),
+                    "failed_at": getattr(campaign, "failed_at", None),
+                    "last_error": getattr(campaign, "last_error", None),
+                    "booking_button_id": getattr(campaign, "booking_button_id", None),
+                    "allowed_service_ids": getattr(campaign, "allowed_service_ids", []),
+                    "allowed_weekdays": getattr(campaign, "allowed_weekdays", []),
+                    "valid_from": getattr(campaign, "valid_from", None),
+                    "valid_to": getattr(campaign, "valid_to", None),
+                    "per_user_booking_limit": getattr(campaign, "per_user_booking_limit", None),
+                    "discount_type": getattr(campaign, "discount_type", None),
+                    "discount_value": getattr(campaign, "discount_value", None),
+                    "targeted": metrics["targeted"],
+                    "pending": metrics["pending"],
+                    "sent": metrics["sent"],
+                    "delivered": metrics["delivered"],
+                    "read": metrics["read"],
+                    "clicked": metrics["clicked"],
+                    "failed": metrics["failed"],
+                    "bookings": metrics["bookings"],
+                    "confirmed": metrics["confirmed"],
+                    "cancelled": metrics["cancelled"],
+                    "completed": metrics["completed"],
+                    "no_show": metrics["no_show"],
+                    "total_service_value": metrics["total_service_value"],
+                    "total_final_value": metrics["total_final_value"],
+                    "source_comparison": [],
+                    "created_at": campaign.created_at,
+                    "updated_at": campaign.updated_at,
+                }
+            )
+        )
+    return payloads
 
 
 @router.post("/", response_model=CampaignRead, status_code=status.HTTP_201_CREATED)

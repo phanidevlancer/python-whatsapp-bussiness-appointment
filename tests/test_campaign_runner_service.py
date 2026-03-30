@@ -23,6 +23,7 @@ from app.services import campaign_runner_service as svc
 class FakeDB:
     flush_calls: int = 0
     commit_calls: int = 0
+    refresh_calls: int = 0
     added: list[object] | None = None
 
     def __post_init__(self) -> None:
@@ -53,6 +54,10 @@ class FakeDB:
     async def commit(self) -> None:
         self.commit_calls += 1
 
+    async def refresh(self, obj: object) -> None:
+        del obj
+        self.refresh_calls += 1
+
 
 def _campaign(**overrides):
     now = datetime.now(timezone.utc)
@@ -61,6 +66,9 @@ def _campaign(**overrides):
         "code": "diwali-hydra-50-sun",
         "name": "Diwali Hydra 50",
         "status": CampaignStatus.ACTIVE,
+        "description": None,
+        "audience_type": CampaignAudienceType.ALL_CUSTOMERS,
+        "audience_filters": {},
         "message_body": "Hydra facial at 50% off this Sunday.",
         "message_footer": "ORA Clinic",
         "button_label": "Book now",
@@ -69,6 +77,13 @@ def _campaign(**overrides):
         "image_media_id": None,
         "batch_size": 50,
         "batch_delay_seconds": 0,
+        "allowed_service_ids": [],
+        "allowed_weekdays": [],
+        "valid_from": None,
+        "valid_to": None,
+        "per_user_booking_limit": None,
+        "discount_type": CampaignDiscountType.NONE,
+        "discount_value": None,
         "started_at": None,
         "completed_at": None,
         "failed_at": None,
@@ -297,6 +312,53 @@ async def test_start_campaign_endpoint_commits_before_dispatch(monkeypatch: pyte
 
 
 @pytest.mark.asyncio
+async def test_list_campaigns_endpoint_returns_enriched_metrics(monkeypatch: pytest.MonkeyPatch) -> None:
+    db = FakeDB()
+    campaign = _campaign(started_at=datetime.now(timezone.utc))
+    recipients_payload = {
+        "campaign_id": str(campaign.id),
+        "run_status": CampaignRunStatus.RUNNING.value,
+        "metrics": {
+            "targeted": 4,
+            "pending": 1,
+            "sent": 3,
+            "delivered": 2,
+            "read": 1,
+            "clicked": 1,
+            "failed": 0,
+            "skipped": 0,
+            "bookings": 2,
+            "confirmed": 1,
+            "cancelled": 0,
+            "completed": 1,
+            "no_show": 0,
+            "total_service_value": Decimal("2500.00"),
+            "total_final_value": Decimal("1800.00"),
+        },
+        "items": [],
+    }
+
+    async def fake_list_campaigns(_db):
+        assert _db is db
+        return [campaign]
+
+    async def fake_list_campaign_recipients(_db, *, campaign_id):
+        assert _db is db
+        assert campaign_id == campaign.id
+        return recipients_payload
+
+    monkeypatch.setattr(campaigns_api.campaign_repo, "list_campaigns", fake_list_campaigns)
+    monkeypatch.setattr(campaigns_api.campaign_repo, "list_campaign_recipients", fake_list_campaign_recipients)
+
+    result = await campaigns_api.list_campaigns(db=db)
+
+    assert len(result) == 1
+    assert result[0].sent == 3
+    assert result[0].bookings == 2
+    assert result[0].completed == 1
+
+
+@pytest.mark.asyncio
 async def test_create_campaign_persists_builder_fields(monkeypatch: pytest.MonkeyPatch) -> None:
     db = FakeDB()
     payload = _campaign_create_payload()
@@ -311,6 +373,7 @@ async def test_create_campaign_persists_builder_fields(monkeypatch: pytest.Monke
     created = await campaigns_api.create_campaign(payload, db=db)
 
     assert db.flush_calls == 1
+    assert db.refresh_calls == 1
     assert len(db.added) == 1
     stored = db.added[0]
     assert isinstance(stored, Campaign)
@@ -365,6 +428,7 @@ async def test_update_campaign_persists_builder_fields(monkeypatch: pytest.Monke
     updated = await campaigns_api.update_campaign(campaign.id, update, db=db)
 
     assert db.flush_calls == 1
+    assert db.refresh_calls == 1
     assert campaign.audience_type == CampaignAudienceType.UPLOADED_PHONE_LIST
     assert campaign.audience_filters == {"phones": ["919999999999", "918888888888"]}
     assert campaign.message_body == "Targeted list campaign."
