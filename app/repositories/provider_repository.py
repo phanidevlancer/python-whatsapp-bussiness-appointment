@@ -65,10 +65,11 @@ async def generate_slots_for_provider(
     return created
 
 
-async def get_by_id(db: AsyncSession, provider_id: uuid.UUID) -> Provider | None:
-    result = await db.execute(
-        select(Provider).options(selectinload(Provider.services)).where(Provider.id == provider_id)
-    )
+async def get_by_id(db: AsyncSession, provider_id: uuid.UUID, fresh: bool = False) -> Provider | None:
+    q = select(Provider).options(selectinload(Provider.services)).where(Provider.id == provider_id)
+    if fresh:
+        q = q.execution_options(populate_existing=True)
+    result = await db.execute(q)
     return result.scalar_one_or_none()
 
 
@@ -123,8 +124,7 @@ async def update_provider(db: AsyncSession, provider_id: uuid.UUID, **kwargs) ->
     await db.flush()
     if service_ids is not None:
         await replace_provider_services(db, provider_id, service_ids)
-        await db.expire(provider)
-    return await get_by_id(db, provider_id)
+    return await get_by_id(db, provider_id, fresh=True)
 
 
 async def assign_service(db: AsyncSession, provider_id: uuid.UUID, service_id: uuid.UUID) -> bool:
