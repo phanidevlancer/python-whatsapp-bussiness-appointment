@@ -1,3 +1,4 @@
+import uuid
 from decimal import Decimal
 
 from app.models.service import Service
@@ -26,3 +27,22 @@ def test_service_model_and_schemas_include_cost() -> None:
     assert create_payload.cost == Decimal("2499.00")
     assert update_payload.cost == Decimal("1999.00")
     assert read_payload.cost == Decimal("2499.00")
+
+
+def test_provider_and_service_schemas_expose_assignment_fields() -> None:
+    from app.schemas.provider import ProviderCreate
+
+    provider = ProviderCreate(name="Dr A", role="doctor", service_ids=[])
+    assert provider.role == "doctor"
+    assert provider.service_ids == []
+
+    service = ServiceRead(
+        id=uuid.uuid4(),
+        name="Hydra Facial",
+        description=None,
+        duration_minutes=60,
+        cost=Decimal("1200.00"),
+        is_active=True,
+        provider_count=0,
+    )
+    assert service.provider_count == 0

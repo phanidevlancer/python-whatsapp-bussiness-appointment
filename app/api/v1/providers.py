@@ -41,6 +41,9 @@ async def create_provider(
         name=payload.name,
         email=str(payload.email) if payload.email else None,
         phone=payload.phone,
+        role=payload.role,
+        slot_duration_minutes=payload.slot_duration_minutes,
+        service_ids=payload.service_ids,
     )
     return ProviderRead.model_validate(provider)
 

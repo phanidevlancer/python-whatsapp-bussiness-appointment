@@ -1,6 +1,12 @@
 export type AppointmentStatus = 'pending' | 'confirmed' | 'cancelled' | 'completed' | 'no_show';
 export type AppointmentSource = 'whatsapp' | 'admin_dashboard';
 
+export interface ProviderSummary {
+  id: string;
+  name: string;
+  role: string;
+}
+
 export interface Service {
   id: string;
   name: string;
@@ -8,6 +14,8 @@ export interface Service {
   duration_minutes: number;
   cost: number | string;
   is_active: boolean;
+  provider_count?: number;
+  providers?: ProviderSummary[];
 }
 
 export interface TimeSlot {
@@ -22,10 +30,13 @@ export interface TimeSlot {
 export interface Provider {
   id: string;
   name: string;
+  role: string;
   email: string | null;
   phone: string | null;
   is_active: boolean;
+  slot_duration_minutes: number;
   created_at: string;
+  services?: Service[];
 }
 
 export interface Customer {

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Plus, PowerOff, Clock, Tag, Pencil, X, Check, ChevronDown, ChevronUp, IndianRupee } from 'lucide-react';
+import { Plus, PowerOff, Clock, Tag, Pencil, X, Check, ChevronDown, ChevronUp, IndianRupee, Users } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useServicesList, useCreateService, useDeleteService, useUpdateService, useServiceHistory } from '@/hooks/useServices';
 import { Card, CardHeader, CardTitle } from '@/components/ui/Card';
@@ -45,12 +45,36 @@ function formatCost(value: number | string) {
   return `Rs ${amount.toFixed(2)}`;
 }
 
-function ServiceHistoryRow({ serviceId }: { serviceId: string }) {
-  const { data: history = [], isLoading } = useServiceHistory(serviceId);
+function ServiceDetailsRow({ service, showHistory }: { service: Service; showHistory: boolean }) {
+  const { data: history = [], isLoading } = useServiceHistory(service.id);
+  const providers = service.providers ?? [];
+
   return (
     <tr>
-      <td colSpan={7} className="px-4 pb-4 dashboard-page-table-head">
-        <ChangeHistoryPanel history={history} isLoading={isLoading} />
+      <td colSpan={8} className="px-6 pb-4 pt-0 dashboard-page-table-head">
+        <div className="space-y-4">
+          {providers.length > 0 && (
+            <div>
+              <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.18em]" style={{ color: 'var(--text-tertiary)' }}>
+                Assigned Providers
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {providers.map((p) => (
+                  <span
+                    key={p.id}
+                    className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium"
+                    style={{ background: 'var(--panel-background)', border: '1px solid var(--panel-border)', color: 'var(--text-primary)' }}
+                  >
+                    <span className="h-1.5 w-1.5 rounded-full bg-primary-500" />
+                    {p.name}
+                    <span className="text-[10px] capitalize" style={{ color: 'var(--text-tertiary)' }}>({p.role})</span>
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+          {showHistory && <ChangeHistoryPanel history={history} isLoading={isLoading} />}
+        </div>
       </td>
     </tr>
   );
@@ -168,6 +192,34 @@ function ServiceRow({
           )}
         </TableCell>
         <TableCell className="py-4">
+          {(() => {
+            const providers = s.providers ?? [];
+            const count = providers.length;
+            if (count === 0) {
+              return (
+                <div className="flex items-center gap-1.5">
+                  <Users size={13} className="text-amber-400" />
+                  <span className="text-sm font-medium text-amber-500">None</span>
+                </div>
+              );
+            }
+            const shown = providers.slice(0, 2);
+            const extra = count - 2;
+            return (
+              <div className="flex flex-wrap items-center gap-1">
+                {shown.map((p) => (
+                  <span key={p.id} className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                    {p.name}
+                  </span>
+                ))}
+                {extra > 0 && (
+                  <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>+{extra} more</span>
+                )}
+              </div>
+            );
+          })()}
+        </TableCell>
+        <TableCell className="py-4">
           <Badge
             variant={s.is_active ? 'success' : 'default'}
             size="sm"
@@ -212,7 +264,7 @@ function ServiceRow({
         </TableCell>
       </TableRow>
 
-      {showHistory && <ServiceHistoryRow serviceId={s.id} />}
+      {showHistory && <ServiceDetailsRow service={s} showHistory={showHistory} />}
 
       <ConfirmChangeDialog
         isOpen={showConfirm}
@@ -328,6 +380,7 @@ export default function ServicesPage() {
                 <TableHead className="py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Description</TableHead>
                 <TableHead className="py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Duration</TableHead>
                 <TableHead className="py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Cost</TableHead>
+                <TableHead className="py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Providers</TableHead>
                 <TableHead className="py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Status</TableHead>
                 <TableHead align="right" className="py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Actions</TableHead>
               </TableRow>

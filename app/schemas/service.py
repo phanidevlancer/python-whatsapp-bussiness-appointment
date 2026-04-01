@@ -4,6 +4,14 @@ from decimal import Decimal
 from pydantic import BaseModel, ConfigDict
 
 
+class ProviderSummary(BaseModel):
+    id: uuid.UUID
+    name: str
+    role: str
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 class ServiceRead(BaseModel):
     id: uuid.UUID
     name: str
@@ -11,6 +19,8 @@ class ServiceRead(BaseModel):
     duration_minutes: int
     cost: Decimal
     is_active: bool
+    provider_count: int = 0
+    providers: list[ProviderSummary] = []
 
     model_config = ConfigDict(from_attributes=True)
 

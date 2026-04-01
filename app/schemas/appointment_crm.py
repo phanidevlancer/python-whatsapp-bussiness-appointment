@@ -4,9 +4,20 @@ from decimal import Decimal
 from pydantic import BaseModel, ConfigDict
 from app.models.appointment import AppointmentStatus, AppointmentSource
 from app.schemas.customer import CustomerRead
-from app.schemas.provider import ProviderRead
 from app.schemas.slot_crm import SlotRead
 from app.schemas.service import ServiceRead
+
+
+class ProviderSlim(BaseModel):
+    """Slim provider shape used inside appointment responses — no lazy-loaded relationships."""
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    name: str
+    role: str
+    email: str | None = None
+    phone: str | None = None
+    is_active: bool
 
 
 class AppointmentCRMCreate(BaseModel):
@@ -51,7 +62,7 @@ class AppointmentCRMRead(BaseModel):
     created_at: datetime
     service: ServiceRead | None = None
     slot: SlotRead | None = None
-    provider: ProviderRead | None = None
+    provider: ProviderSlim | None = None
     customer: CustomerRead | None = None
 
 

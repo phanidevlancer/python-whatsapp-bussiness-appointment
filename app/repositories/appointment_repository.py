@@ -14,6 +14,7 @@ async def create_appointment(
     user_phone: str,
     service_id: uuid.UUID,
     slot_id: uuid.UUID,
+    provider_id: uuid.UUID | None = None,
     customer_id: uuid.UUID | None = None,
     source: AppointmentSource = AppointmentSource.WHATSAPP,
     campaign_id: uuid.UUID | None = None,
@@ -35,6 +36,7 @@ async def create_appointment(
         user_phone=normalized_phone,
         service_id=service_id,
         slot_id=slot_id,
+        provider_id=provider_id,
         customer_id=customer_id,
         status=AppointmentStatus.CONFIRMED,
         source=source,
@@ -122,7 +124,9 @@ async def cancel_appointment(
 
     appointment.status = AppointmentStatus.CANCELLED
 
-    # Free the slot so others can book it
+    # Free this provider's slot so that seat becomes available again.
+    # With provider-specific slots, each provider has their own row — only
+    # release the slot belonging to the cancelled appointment's provider.
     slot = appointment.slot
     if slot is not None:
         slot.is_booked = False

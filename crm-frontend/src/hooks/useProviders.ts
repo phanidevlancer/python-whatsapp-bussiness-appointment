@@ -18,7 +18,7 @@ export function useProvidersList(activeOnly = true) {
 export function useCreateProvider() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (data: { name: string; email?: string; phone?: string }) => {
+    mutationFn: async (data: { name: string; role?: string; email?: string; phone?: string; slot_duration_minutes?: number; service_ids?: string[] }) => {
       const res = await api.post<Provider>('/api/v1/providers', data);
       return res.data;
     },
@@ -29,7 +29,7 @@ export function useCreateProvider() {
 export function useUpdateProvider() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, ...data }: { id: string; name?: string; email?: string; phone?: string; is_active?: boolean }) => {
+    mutationFn: async ({ id, ...data }: { id: string; name?: string; role?: string; email?: string; phone?: string; is_active?: boolean; slot_duration_minutes?: number; service_ids?: string[] }) => {
       const res = await api.patch<Provider>(`/api/v1/providers/${id}`, data);
       return res.data;
     },

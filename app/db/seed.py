@@ -12,6 +12,7 @@ import app.db.base  # noqa: F401
 from app.db.session import AsyncSessionLocal
 from app.models.admin_user import AdminUser, AdminRole
 from app.models.campaign import Campaign, CampaignDiscountType, CampaignStatus
+from app.models.provider import Provider, provider_service_map
 from app.models.service import Service
 from app.repositories import permission_repository as perm_repo
 from app.repositories import role_template_repository as template_repo
@@ -293,6 +294,39 @@ async def seed_test_campaigns(db: AsyncSession) -> None:
     await db.flush()
 
 
+async def seed_default_providers(db: AsyncSession) -> None:
+    """Seed a default provider for each service so WhatsApp booking works out of the box."""
+    service_result = await db.execute(select(Service.id, Service.name).where(Service.is_active == True))  # noqa: E712
+    services = service_result.all()
+    if not services:
+        return
+
+    # One default doctor provider that covers all active services
+    existing = await db.execute(select(Provider).where(Provider.email == "default.doctor@clinic.com"))
+    provider = existing.scalar_one_or_none()
+    if provider is None:
+        provider = Provider(
+            name="Default Doctor",
+            role="doctor",
+            email="default.doctor@clinic.com",
+            is_active=True,
+        )
+        db.add(provider)
+        await db.flush()
+
+    # Assign all active services to this provider (idempotent)
+    existing_map = await db.execute(
+        provider_service_map.select().where(provider_service_map.c.provider_id == provider.id)
+    )
+    already_assigned = {row.service_id for row in existing_map.fetchall()}
+    for service_id, _ in services:
+        if service_id not in already_assigned:
+            await db.execute(
+                provider_service_map.insert().values(provider_id=provider.id, service_id=service_id)
+            )
+    await db.flush()
+
+
 async def run_seed(db: AsyncSession | None = None) -> None:
     if db is None:
         async with AsyncSessionLocal() as session:
@@ -307,6 +341,7 @@ async def _run_seed(db: AsyncSession) -> None:
     await seed_system_templates(db)
     updated = await backfill_legacy_admin_templates(db)
     await seed_test_campaigns(db)
+    await seed_default_providers(db)
     await db.commit()
     logger.info("RBAC seed complete; backfilled %s legacy admin users", updated)
 

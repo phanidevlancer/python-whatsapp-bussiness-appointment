@@ -67,6 +67,18 @@ logger = logging.getLogger(__name__)
 
 _SEP = "─" * 60
 
+# IST = UTC+05:30
+from datetime import timezone as _tz, timedelta as _td
+_IST = _tz(_td(hours=5, minutes=30), name="IST")
+
+
+def _to_ist(dt) -> "datetime":
+    """Convert a datetime to IST (UTC+05:30) for display."""
+    from datetime import datetime
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=_tz.utc)
+    return dt.astimezone(_IST)
+
 
 _FLOW_LABEL = {
     "START":                "New Booking",
@@ -449,7 +461,7 @@ async def _handle_greeting(
     sender: str, db: AsyncSession, wa_client: WhatsAppClient, uname: str | None = None
 ) -> None:
     """Show the service selection list (called when user taps 'Book an appointment')."""
-    services = await svc_repo.get_active_services(db)
+    services = await svc_repo.get_active_services_with_providers(db)
     user_session = await sess_repo.get_or_create_session(db, sender)
     active_campaign = await campaign_service.resolve_active_campaign(db, user_session)
 
@@ -535,11 +547,13 @@ async def _handle_service_selection(
             if campaign_service.is_slot_eligible(active_campaign, slot.start_time)
         ]
     if not slots:
+        # Keep session at SERVICE_SELECTED and re-show the service list
+        # so user can pick a different service
         await wa_client.send_text(
             sender,
-            f"No available slots for *{service.name}* at *ORA Clinic* right now. "
-            "Please try again later or choose a different service.",
+            f"Sorry, *{service.name}* has no available slots right now. Please choose another service.",
         )
+        await _handle_greeting(sender, db, wa_client, uname)
         return
 
     await sess_repo.update_session(db, sender, SessionStep.SLOT_SELECTED, service_id=service_id)
@@ -552,8 +566,8 @@ async def _handle_service_selection(
             "rows": [
                 {
                     "id": str(slot.id),
-                    "title": slot.start_time.strftime("%b %d, %I:%M %p"),
-                    "description": f"Until {slot.end_time.strftime('%I:%M %p')}",
+                    "title": _to_ist(slot.start_time).strftime("%b %d, %I:%M %p"),
+                    "description": f"Until {_to_ist(slot.end_time).strftime('%I:%M %p')}",
                 }
                 for slot in slots
             ],
@@ -586,7 +600,21 @@ async def _handle_slot_selection(
         return
 
     slot = await slot_repo.get_slot_by_id(db, slot_id)
-    if slot is None or slot.is_booked:
+    if slot is None:
+        await wa_client.send_text(
+            sender,
+            "That slot is no longer available. Please choose another time.",
+        )
+        return
+
+    # Check there is still at least one open provider slot at this start_time
+    user_session = await sess_repo.get_or_create_session(db, sender)
+    if user_session.selected_service_id is None:
+        await wa_client.send_text(sender, "Session expired. Please send 'hi' to start over.")
+        return
+    available_check = await slot_repo.get_available_slots(db, user_session.selected_service_id, limit=50)
+    still_available = any(s.start_time == slot.start_time for s in available_check)
+    if not still_available:
         await wa_client.send_text(
             sender,
             "That slot is no longer available. Please choose another time.",
@@ -605,8 +633,8 @@ async def _handle_slot_selection(
     # Update session to record the selected slot
     await sess_repo.update_session(db, sender, SessionStep.SLOT_SELECTED, slot_id=slot_id)
 
-    time_display = slot.start_time.strftime("%A, %B %d at %I:%M %p")
-    end_display = slot.end_time.strftime("%I:%M %p")
+    time_display = _to_ist(slot.start_time).strftime("%A, %B %d at %I:%M %p")
+    end_display = _to_ist(slot.end_time).strftime("%I:%M %p")
 
     _log_action(sender, f'Slot selected: {time_display} — sent confirmation prompt')
 
@@ -655,19 +683,36 @@ async def _handle_booking_confirmation(
         return
 
     try:
-        # Attempt to lock the slot row in the DB (raises OperationalError if taken)
-        slot = await slot_repo.mark_slot_booked(db, slot_id)
-
-        if slot is None:
-            # Slot already booked (another transaction completed first)
+        # Resolve the representative slot to get the start_time for this selection
+        representative_slot = await slot_repo.get_slot_by_id(db, slot_id)
+        if representative_slot is None:
             await session_svc.release_slot_lock(slot_id_str)
             await sess_repo.update_session(db, sender, SessionStep.SERVICE_SELECTED)
             await wa_client.send_text(
                 sender,
-                "Sorry, that slot was just booked by someone else. "
+                "Sorry, that slot is no longer available. Please choose a different time.",
+            )
+            return
+
+        # Reserve one provider's slot for this service/time (least-loaded provider wins)
+        reservation = await slot_repo.reserve_provider_slot(
+            db,
+            service_id=user_session.selected_service_id,
+            start_time=representative_slot.start_time,
+        )
+
+        if reservation is None:
+            # All providers for this service are occupied at this time
+            await session_svc.release_slot_lock(slot_id_str)
+            await sess_repo.update_session(db, sender, SessionStep.SERVICE_SELECTED)
+            await wa_client.send_text(
+                sender,
+                "Sorry, that slot was just fully booked. "
                 "Please choose a different time.",
             )
             return
+
+        slot, assigned_provider_id = reservation
 
         customer, _ = await customer_repo.get_or_create_by_phone(db, sender)
         service = await svc_repo.get_service_by_id(db, user_session.selected_service_id)
@@ -711,12 +756,13 @@ async def _handle_booking_confirmation(
             if service_cost is not None:
                 final_cost = campaign_service.calculate_final_cost(service_cost, active_campaign)
 
-        # Create the appointment record
+        # Create the appointment record with the auto-assigned provider
         appointment = await appt_repo.create_appointment(
             db,
             user_phone=sender,
             service_id=user_session.selected_service_id,
-            slot_id=slot_id,
+            slot_id=slot.id,
+            provider_id=assigned_provider_id,
             customer_id=customer.id,
             campaign_id=booking_snapshot["campaign_id"],
             campaign_code_snapshot=booking_snapshot["campaign_code_snapshot"],
@@ -750,7 +796,7 @@ async def _handle_booking_confirmation(
         # Fetch service name for the confirmation message
         service_name = service.name if service else "your service"
 
-        time_display = slot.start_time.strftime("%A, %B %d at %I:%M %p")
+        time_display = _to_ist(slot.start_time).strftime("%A, %B %d at %I:%M %p")
         booking_ref = str(appointment.id).split("-")[0].upper()  # Short human-readable ID
 
         _log_action(sender, f'BOOKED: {service_name} on {time_display} (ref: {booking_ref})')
@@ -920,7 +966,7 @@ async def _handle_manage_menu(
     for appt in appointments:
         service_name = appt.service.name if appt.service else "Service"
         slot_display = (
-            appt.slot.start_time.strftime("%b %d, %I:%M %p") if appt.slot else "—"
+            _to_ist(appt.slot.start_time).strftime("%b %d, %I:%M %p") if appt.slot else "—"
         )
         ref = str(appt.id).split("-")[0].upper()
         # Row title max 24 chars — truncate service name if needed
@@ -966,12 +1012,12 @@ async def _handle_appointment_selection(
 
     service_name = appointment.service.name if appointment.service else "Service"
     time_display = (
-        appointment.slot.start_time.strftime("%A, %B %d at %I:%M %p")
+        _to_ist(appointment.slot.start_time).strftime("%A, %B %d at %I:%M %p")
         if appointment.slot
         else "—"
     )
     end_display = (
-        appointment.slot.end_time.strftime("%I:%M %p") if appointment.slot else ""
+        _to_ist(appointment.slot.end_time).strftime("%I:%M %p") if appointment.slot else ""
     )
 
     await sess_repo.update_session(
@@ -1040,7 +1086,7 @@ async def _handle_appointment_cancel(
     from app.api.v1.events import broadcast as sse_broadcast
     sse_broadcast("appointment_updated", {"appointment_id": str(appointment_id)})
 
-    time_display = slot.start_time.strftime("%A, %B %d at %I:%M %p") if slot else "—"
+    time_display = _to_ist(slot.start_time).strftime("%A, %B %d at %I:%M %p") if slot else "—"
 
     # Release any Redis lock for that slot (in case it was somehow still held)
     if slot:
@@ -1112,8 +1158,8 @@ async def _handle_reschedule_start(
             "rows": [
                 {
                     "id": str(slot.id),
-                    "title": slot.start_time.strftime("%b %d, %I:%M %p"),
-                    "description": f"Until {slot.end_time.strftime('%I:%M %p')}",
+                    "title": _to_ist(slot.start_time).strftime("%b %d, %I:%M %p"),
+                    "description": f"Until {_to_ist(slot.end_time).strftime('%I:%M %p')}",
                 }
                 for slot in slots
             ],
@@ -1145,7 +1191,18 @@ async def _handle_reschedule_slot_selection(
         return
 
     slot = await slot_repo.get_slot_by_id(db, slot_id)
-    if slot is None or slot.is_booked:
+    if slot is None:
+        await wa_client.send_text(sender, "That slot is no longer available. Please choose another time.")
+        return
+
+    # Check there is still at least one open provider slot at this start_time
+    user_session = await sess_repo.get_or_create_session(db, sender)
+    if user_session.selected_service_id is None:
+        await wa_client.send_text(sender, "Session expired. Send *my appointments* to try again.")
+        return
+    available_check = await slot_repo.get_available_slots(db, user_session.selected_service_id, limit=50)
+    still_available = any(s.start_time == slot.start_time for s in available_check)
+    if not still_available:
         await wa_client.send_text(sender, "That slot is no longer available. Please choose another time.")
         return
 
@@ -1159,8 +1216,8 @@ async def _handle_reschedule_slot_selection(
 
     await sess_repo.update_session(db, sender, SessionStep.RESCHEDULE_SLOT, slot_id=slot_id)
 
-    time_display = slot.start_time.strftime("%A, %B %d at %I:%M %p")
-    end_display = slot.end_time.strftime("%I:%M %p")
+    time_display = _to_ist(slot.start_time).strftime("%A, %B %d at %I:%M %p")
+    end_display = _to_ist(slot.end_time).strftime("%I:%M %p")
     _log_action(sender, f'New slot selected: {time_display} — sent reschedule confirmation')
 
     name_part = f", *{uname}*" if uname else ""
@@ -1208,33 +1265,47 @@ async def _handle_reschedule_confirmation(
     appointment_id = user_session.selected_appointment_id
 
     try:
-        # Book the new slot first (raises OperationalError if taken)
-        new_slot = await slot_repo.mark_slot_booked(db, new_slot_id)
-
-        if new_slot is None:
+        # Resolve the representative slot to get start_time
+        representative_new_slot = await slot_repo.get_slot_by_id(db, new_slot_id)
+        if representative_new_slot is None:
             await session_svc.release_slot_lock(new_slot_id_str)
-            await wa_client.send_text(
-                sender,
-                "Sorry, that slot was just taken. Please choose a different time.",
-            )
+            await wa_client.send_text(sender, "Sorry, that slot is no longer available. Please choose a different time.")
             return
 
-        # Get the old slot_id before updating
+        # Get old appointment first so we know the old slot
         old_appointment = await appt_repo.get_appointment_crm_by_id(db, appointment_id)
         if not old_appointment:
             await session_svc.release_slot_lock(new_slot_id_str)
             await wa_client.send_text(sender, "Appointment not found.")
             return
-        
+
         old_slot_id = old_appointment.slot_id
 
-        # Update the existing appointment with new slot (don't create new record)
+        # Reserve a provider slot for the new time (least-loaded)
+        reservation = await slot_repo.reserve_provider_slot(
+            db,
+            service_id=user_session.selected_service_id,
+            start_time=representative_new_slot.start_time,
+        )
+
+        if reservation is None:
+            await session_svc.release_slot_lock(new_slot_id_str)
+            await wa_client.send_text(
+                sender,
+                "Sorry, that slot was just fully booked. Please choose a different time.",
+            )
+            return
+
+        new_slot, new_provider_id = reservation
+
+        # Update the existing appointment with new slot and provider
         updated_appointment = await appt_repo.update_appointment_fields(
             db,
             appointment_id,
-            slot_id=new_slot_id,
-            rescheduled_from_slot_id=old_slot_id,  # Track which slot was rescheduled from
-            status="confirmed",  # Keep it confirmed
+            slot_id=new_slot.id,
+            provider_id=new_provider_id,
+            rescheduled_from_slot_id=old_slot_id,
+            status="confirmed",
         )
 
         # Write status history for the reschedule
@@ -1254,7 +1325,9 @@ async def _handle_reschedule_confirmation(
             old_slot_start_time=old_slot_start,
         )
 
-        # Release the old slot (it was implicitly freed when we updated the appointment)
+        # Free the old provider slot so it becomes available again
+        if old_slot_id:
+            await slot_repo.release_provider_slot(db, old_slot_id)
         await session_svc.release_slot_lock(str(old_slot_id))
 
         # Broadcast SSE event to CRM clients
@@ -1266,7 +1339,7 @@ async def _handle_reschedule_confirmation(
 
         service = await svc_repo.get_service_by_id(db, user_session.selected_service_id)
         service_name = service.name if service else "your service"
-        time_display = new_slot.start_time.strftime("%A, %B %d at %I:%M %p")
+        time_display = _to_ist(new_slot.start_time).strftime("%A, %B %d at %I:%M %p")
         booking_ref = str(appointment_id).split("-")[0].upper()
 
         _log_action(sender, f'RESCHEDULED: {service_name} → {time_display} (ref: {booking_ref})')

@@ -7,7 +7,7 @@ from app.core.deps import require_permission
 from app.db.session import get_db
 from app.repositories import service_repository as svc_repo
 from app.repositories import entity_change_history_repository as history_repo
-from app.schemas.service import ServiceCreate, ServiceRead, ServiceUpdate
+from app.schemas.service import ServiceCreate, ServiceRead, ServiceUpdate, ProviderSummary
 from app.schemas.entity_change_history import EntityChangeHistoryRead
 
 router = APIRouter()
@@ -23,9 +23,18 @@ async def list_services(
         from sqlalchemy import select
         from app.models.service import Service
         result = await db.execute(select(Service).order_by(Service.name))
-        return [ServiceRead.model_validate(s) for s in result.scalars().all()]
-    services = await svc_repo.get_active_services(db)
-    return [ServiceRead.model_validate(s) for s in services]
+        services = list(result.scalars().all())
+    else:
+        services = await svc_repo.get_active_services(db)
+
+    out = []
+    for s in services:
+        providers = await svc_repo.get_providers_for_service(db, s.id)
+        read = ServiceRead.model_validate(s)
+        read.provider_count = len(providers)
+        read.providers = [ProviderSummary.model_validate(p) for p in providers]
+        out.append(read)
+    return out
 
 
 @router.post("/", response_model=ServiceRead, status_code=status.HTTP_201_CREATED)
