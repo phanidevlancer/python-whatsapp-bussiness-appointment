@@ -29,11 +29,16 @@ ADMIN_USERS = [
     {"email": "reception@clinic.com", "password": "reception1234", "name": "Reception",   "role": AdminRole.RECEPTIONIST},
 ]
 
-# Services — name must match exactly what campaigns reference ("General Consultation", "Hydra Facial")
 SERVICES = [
-    {"name": "General Consultation", "description": "General medical consultation",   "duration_minutes": 20, "cost": Decimal("500.00")},
-    {"name": "Dental Checkup",       "description": "Routine dental examination",     "duration_minutes": 20, "cost": Decimal("800.00")},
-    {"name": "Hydra Facial",         "description": "Hydrating facial skin treatment","duration_minutes": 20, "cost": Decimal("1500.00")},
+    {"name": "Hair Transplantation",   "description": "Hair transplantation procedure",       "duration_minutes": 20, "cost": Decimal("0.00")},
+    {"name": "Laser Hair Removal",     "description": "Laser-based hair removal treatment",   "duration_minutes": 20, "cost": Decimal("0.00")},
+    {"name": "Laser Skin Toning",      "description": "Laser skin toning and rejuvenation",   "duration_minutes": 20, "cost": Decimal("0.00")},
+    {"name": "Anti-Ageing Treatment",  "description": "Anti-ageing skin care treatment",      "duration_minutes": 20, "cost": Decimal("0.00")},
+    {"name": "Skin Lightening",        "description": "Skin lightening and brightening",      "duration_minutes": 20, "cost": Decimal("0.00")},
+    {"name": "Dark Circle Treatment",  "description": "Under-eye dark circle treatment",      "duration_minutes": 20, "cost": Decimal("0.00")},
+    {"name": "Hair Loss Treatment",    "description": "Hair loss and thinning treatment",     "duration_minutes": 20, "cost": Decimal("0.00")},
+    {"name": "Skin Rejuvenation",      "description": "Skin rejuvenation and glow therapy",   "duration_minutes": 20, "cost": Decimal("0.00")},
+    {"name": "Hydra Facial",           "description": "Hydrating facial skin treatment",      "duration_minutes": 20, "cost": Decimal("0.00")},
 ]
 
 # Providers — each gets slots auto-generated (90 days, 10am–8pm IST, weekdays)
