@@ -91,6 +91,7 @@ async def replace_provider_services(
         await db.execute(
             provider_service_map.insert().values(provider_id=provider_id, service_id=service_id)
         )
+    await db.flush()
 
 
 async def create_provider(
@@ -122,6 +123,7 @@ async def update_provider(db: AsyncSession, provider_id: uuid.UUID, **kwargs) ->
     await db.flush()
     if service_ids is not None:
         await replace_provider_services(db, provider_id, service_ids)
+        await db.expire(provider)
     return await get_by_id(db, provider_id)
 
 
