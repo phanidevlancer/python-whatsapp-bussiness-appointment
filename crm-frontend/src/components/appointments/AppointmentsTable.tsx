@@ -65,6 +65,31 @@ export default function AppointmentsTable({ appointments, isLoading }: Props) {
 
   return (
     <>
+    <div className="space-y-3 md:hidden">
+      {appointments.map((appt) => (
+        <div key={appt.id} className="dashboard-surface-soft rounded-2xl p-4">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="font-semibold text-slate-900">{appt.customer?.name ?? 'Walk-in Customer'}</p>
+              <p className="text-xs text-slate-500">{appt.user_phone}</p>
+            </div>
+            <StatusBadge status={appt.status} size="sm" />
+          </div>
+          <div className="mt-2 space-y-1 text-sm text-slate-600">
+            <p>{appt.service?.name ?? '—'}{appt.service?.duration_minutes ? ` (${appt.service.duration_minutes} min)` : ''}</p>
+            <p>{appt.slot ? format(new Date(appt.slot.start_time), 'MMM d, h:mm a') : 'No slot assigned'}</p>
+            <p>Provider: {appt.provider?.name ?? '—'}</p>
+          </div>
+          <div className="mt-3 flex items-center gap-2">
+            <SourceBadge source={appt.source} size="sm" />
+            <Link href={`/appointments/${appt.id}`} className="text-sm font-medium text-primary-600">
+              View details
+            </Link>
+          </div>
+        </div>
+      ))}
+    </div>
+    <div className="hidden md:block">
     <Table className="min-w-full">
       <TableHeader className="dashboard-page-table-head border-b">
         <TableRow hoverable={false}>
@@ -170,6 +195,7 @@ export default function AppointmentsTable({ appointments, isLoading }: Props) {
         ))}
       </TableBody>
     </Table>
+    </div>
     {cancellingId && (
       <CancelDialog
         appointmentId={cancellingId}

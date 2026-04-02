@@ -44,6 +44,36 @@ export default function CampaignRecipientsTable({ recipients }: CampaignRecipien
       </div>
 
       <div className="mt-5">
+        <div className="space-y-3 md:hidden">
+          {recipients.map((recipient) => {
+            const lastActivity =
+              recipient.clicked_at ??
+              recipient.read_at ??
+              recipient.delivered_at ??
+              recipient.sent_at ??
+              recipient.failed_at ??
+              recipient.skipped_at;
+            return (
+              <div key={recipient.id} className="dashboard-surface-soft rounded-2xl p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="font-semibold text-slate-900">{recipient.customer_name || 'Unknown recipient'}</p>
+                    <p className="text-xs text-slate-500">{recipient.phone}</p>
+                  </div>
+                  <Badge variant={getStatusVariant(recipient.delivery_status)} size="sm" dot>
+                    {recipient.delivery_status}
+                  </Badge>
+                </div>
+                <div className="mt-2 grid grid-cols-2 gap-2 text-xs text-slate-600">
+                  <p>Bookings: {recipient.booking_metrics.bookings}</p>
+                  <p>Completed: {recipient.booking_metrics.completed}</p>
+                  <p className="col-span-2">Last: {formatDateTime(lastActivity)}</p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        <div className="hidden md:block">
         <Table>
           <TableHeader>
             <TableRow hoverable={false}>
@@ -95,6 +125,7 @@ export default function CampaignRecipientsTable({ recipients }: CampaignRecipien
             })}
           </TableBody>
         </Table>
+        </div>
       </div>
     </Card>
   );

@@ -37,7 +37,7 @@ export default function NotificationsPage() {
   return (
     <div className="dashboard-page-shell space-y-5">
       {/* Page Header */}
-      <div className="dashboard-page-header flex items-center justify-between rounded-[24px] px-6 py-5">
+      <div className="dashboard-page-header flex flex-col gap-4 rounded-[20px] px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:rounded-[24px] sm:px-6 sm:py-5">
         <div>
           <h2 className="text-[1.9rem] font-black tracking-[-0.03em] text-slate-900">Notifications</h2>
           <p className="mt-1 text-sm font-medium text-slate-500">Track WhatsApp message delivery status</p>
@@ -51,7 +51,7 @@ export default function NotificationsPage() {
       </div>
 
       {/* Notifications Table */}
-      <Card className="dashboard-page-panel overflow-hidden rounded-[28px] p-0" variant="elevated">
+      <Card className="dashboard-page-panel overflow-hidden rounded-[20px] p-0 sm:rounded-[28px]" variant="elevated">
         {isLoading ? (
           <div className="p-4 space-y-3">
             {Array.from({ length: 5 }).map((_, i) => (
@@ -73,7 +73,47 @@ export default function NotificationsPage() {
             <p className="text-sm text-slate-500">WhatsApp messages will appear here</p>
           </div>
         ) : (
-          <Table className="min-w-full">
+          <>
+            <div className="space-y-3 p-3 md:hidden">
+              {data.items.map((log) => (
+                <div key={log.id} className="dashboard-surface-soft rounded-2xl p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <p className="text-sm font-semibold text-slate-900">{log.customer_phone}</p>
+                    <Badge
+                      variant={log.status === 'sent' ? 'success' : log.status === 'failed' ? 'error' : 'default'}
+                      size="sm"
+                      className="rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em]"
+                    >
+                      {log.status}
+                    </Badge>
+                  </div>
+                  <div className="mt-2 space-y-1 text-sm text-slate-600">
+                    <p className="capitalize">{log.message_type.replace(/_/g, ' ')}</p>
+                    <p>{log.sent_at ? format(new Date(log.sent_at), 'MMM d, h:mm a') : 'Not sent yet'}</p>
+                    {log.error_message ? <p className="text-xs text-error-600">{log.error_message}</p> : null}
+                  </div>
+                  {log.appointment_id ? (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      leftIcon={<RefreshCw size={14} />}
+                      onClick={() =>
+                        resend(log.appointment_id!, {
+                          onSuccess: () => toast.success('Notification resent successfully'),
+                          onError: () => toast.error('Failed to resend notification'),
+                        })
+                      }
+                      className="mt-2 rounded-2xl px-3 hover:bg-primary-50 hover:text-primary-600"
+                      style={{ color: 'var(--text-tertiary)' }}
+                    >
+                      Resend
+                    </Button>
+                  ) : null}
+                </div>
+              ))}
+            </div>
+            <div className="hidden md:block">
+            <Table className="min-w-full">
             <TableHeader className="dashboard-page-table-head border-b">
               <TableRow hoverable={false}>
                 <TableHead className="py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Phone</TableHead>
@@ -155,14 +195,16 @@ export default function NotificationsPage() {
                 </TableRow>
               ))}
             </TableBody>
-          </Table>
+            </Table>
+            </div>
+          </>
         )}
       </Card>
 
       {/* Pagination */}
       {data && data.total > data.page_size && (
-        <Card className="dashboard-page-panel rounded-[24px] p-4" variant="default">
-          <div className="flex items-center justify-between">
+        <Card className="dashboard-page-panel rounded-[20px] p-4 sm:rounded-[24px]" variant="default">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <span className="text-sm text-slate-500">
               Page <span className="font-semibold text-slate-900">{page}</span> of{' '}
               <span className="font-semibold text-slate-900">{Math.ceil(data.total / data.page_size)}</span>

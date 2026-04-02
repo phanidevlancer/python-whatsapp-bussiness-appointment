@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { format } from 'date-fns';
-import { Phone } from 'lucide-react';
+import { BriefcaseMedical, Phone, UserRound } from 'lucide-react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import {
@@ -15,6 +15,7 @@ import { Modal, ModalHeader, ModalTitle, ModalContent } from '@/components/ui/Mo
 import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
 import { DeliveryScheduler } from '@/components/ui/delivery-scheduler';
+import { FluidDropdown, type FluidDropdownOption } from '@/components/ui/fluid-dropdown';
 
 interface Props {
   isOpen: boolean;
@@ -83,14 +84,37 @@ export default function CreateAppointmentDialog({ isOpen, onClose }: Props) {
   };
 
   const selectedService = services?.find((s) => s.id === selectedServiceId);
+  const initialSchedulerDate = useMemo(() => new Date(`${selectedDate}T00:00:00`), [selectedDate]);
+  const minimumSchedulerDate = useMemo(() => new Date(), []);
   const slotOptions =
     slots?.map((slot) => ({
       value: slot.id,
       label: format(new Date(slot.start_time), 'h:mm a'),
     })) ?? [];
 
-  const selectClassName =
-    'flex h-10 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:cursor-not-allowed disabled:opacity-50';
+  const serviceOptions: Array<FluidDropdownOption<string>> = loadingServices
+    ? [{ id: '', label: 'Loading services...', icon: BriefcaseMedical, color: '#64748b' }]
+    : [
+        { id: '', label: 'Select a service', icon: BriefcaseMedical, color: '#64748b' },
+        ...((services ?? []).map((service) => ({
+          id: service.id,
+          label: `${service.name} (${service.duration_minutes} min)`,
+          icon: BriefcaseMedical,
+          color: '#0d9488',
+        })) satisfies Array<FluidDropdownOption<string>>),
+      ];
+
+  const providerOptions: Array<FluidDropdownOption<string>> = loadingProviders
+    ? [{ id: '', label: 'Loading providers...', icon: UserRound, color: '#64748b' }]
+    : [
+        { id: '', label: 'Any available provider', icon: UserRound, color: '#64748b' },
+        ...((providers ?? []).map((provider) => ({
+          id: provider.id,
+          label: provider.name,
+          icon: UserRound,
+          color: '#3b82f6',
+        })) satisfies Array<FluidDropdownOption<string>>),
+      ];
 
   return (
     <Modal isOpen={isOpen} onClose={handleClose} size="lg">
@@ -111,47 +135,31 @@ export default function CreateAppointmentDialog({ isOpen, onClose }: Props) {
 
           {/* Service Selection */}
           <div className="w-full">
-            <label htmlFor="appointment-service" className="mb-1.5 block text-sm font-medium text-slate-700">
+            <label className="mb-1.5 block text-sm font-medium text-slate-700">
               Service *
             </label>
-            <select
-              id="appointment-service"
+            <FluidDropdown
               value={selectedServiceId}
-              onChange={(e) => {
-                setSelectedServiceId(e.target.value);
+              options={serviceOptions}
+              onChange={(value) => {
+                setSelectedServiceId(value);
                 setSelectedSlotId('');
               }}
-              className={selectClassName}
-              disabled={loadingServices}
-            >
-              <option value="">Select a service</option>
-              {(services ?? []).map((service) => (
-                <option key={service.id} value={service.id}>
-                  {service.name} ({service.duration_minutes} min)
-                </option>
-              ))}
-            </select>
+              className="dashboard-surface-input h-12 w-full rounded-xl border text-base font-medium shadow-sm sm:h-10 sm:text-sm"
+            />
           </div>
 
           {/* Provider Selection (Optional) */}
           <div className="w-full">
-            <label htmlFor="appointment-provider" className="mb-1.5 block text-sm font-medium text-slate-700">
+            <label className="mb-1.5 block text-sm font-medium text-slate-700">
               Provider (Optional)
             </label>
-            <select
-              id="appointment-provider"
+            <FluidDropdown
               value={selectedProviderId}
-              onChange={(e) => setSelectedProviderId(e.target.value)}
-              className={selectClassName}
-              disabled={loadingProviders}
-            >
-              <option value="">Any available provider</option>
-              {(providers ?? []).map((provider) => (
-                <option key={provider.id} value={provider.id}>
-                  {provider.name}
-                </option>
-              ))}
-            </select>
+              options={providerOptions}
+              onChange={(value) => setSelectedProviderId(value)}
+              className="dashboard-surface-input h-12 w-full rounded-xl border text-base font-medium shadow-sm sm:h-10 sm:text-sm"
+            />
           </div>
 
           {selectedServiceId ? (
@@ -167,8 +175,8 @@ export default function CreateAppointmentDialog({ isOpen, onClose }: Props) {
                 </p>
               </div>
               <DeliveryScheduler
-                initialDate={new Date(selectedDate)}
-                minDate={new Date()}
+                initialDate={initialSchedulerDate}
+                minDate={minimumSchedulerDate}
                 timeSlots={slotOptions}
                 timeZone="Clinic local time"
                 selectedTime={selectedSlotId || null}

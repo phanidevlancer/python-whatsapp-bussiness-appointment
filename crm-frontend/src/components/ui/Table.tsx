@@ -1,4 +1,3 @@
-import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { forwardRef, HTMLAttributes, ReactNode } from 'react';
 
@@ -13,7 +12,7 @@ const Table = forwardRef<HTMLTableElement, TableProps>(
     { className, children, variant = 'default', size = 'md', ...props },
     ref
   ) => {
-    const baseStyles = 'w-full text-sm';
+    const baseStyles = 'w-full table-auto text-sm';
 
     const variants = {
       default: '',

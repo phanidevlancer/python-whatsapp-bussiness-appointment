@@ -105,7 +105,7 @@ export default function CampaignsPage() {
 
   return (
     <div className="dashboard-page-shell space-y-6">
-      <div className="dashboard-page-header rounded-[28px] px-6 py-6">
+      <div className="dashboard-page-header rounded-[20px] px-4 py-4 sm:rounded-[28px] sm:px-6 sm:py-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <div className="inline-flex items-center gap-2 rounded-full bg-primary-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-primary-700">
@@ -135,7 +135,7 @@ export default function CampaignsPage() {
       {isLoadingCampaigns ? (
         <div className="space-y-4">
           {Array.from({ length: 4 }).map((_, index) => (
-            <Card key={index} className="rounded-[28px] p-5" variant="elevated">
+            <Card key={index} className="rounded-[20px] p-4 sm:rounded-[28px] sm:p-5" variant="elevated">
               <Skeleton variant="text" className="h-5 w-40" />
               <Skeleton variant="text" className="mt-3 h-4 w-28" />
               <Skeleton variant="rounded" className="mt-4 h-28" />
@@ -143,7 +143,7 @@ export default function CampaignsPage() {
           ))}
         </div>
       ) : campaigns.length === 0 ? (
-        <Card className="rounded-[28px] p-8 text-center" variant="elevated">
+        <Card className="rounded-[20px] p-6 text-center sm:rounded-[28px] sm:p-8" variant="elevated">
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-3xl bg-primary-50 text-primary-700">
             <Megaphone size={22} />
           </div>
@@ -161,7 +161,7 @@ export default function CampaignsPage() {
         </Card>
       ) : (
         <div className="space-y-4">
-          <Card className="rounded-[28px] p-5" variant="elevated">
+          <Card className="rounded-[20px] p-4 sm:rounded-[28px] sm:p-5" variant="elevated">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
                 <h3 className="text-lg font-bold text-slate-900">Compare Campaigns</h3>
@@ -241,7 +241,7 @@ export default function CampaignsPage() {
             )}
           </Card>
 
-          <Card className="dashboard-page-panel relative z-0 overflow-hidden rounded-[28px] p-0" variant="elevated">
+          <Card className="dashboard-page-panel relative z-0 overflow-hidden rounded-[20px] p-0 sm:rounded-[28px]" variant="elevated">
             <CampaignsTable campaigns={campaigns} isLoading={false} />
           </Card>
         </div>

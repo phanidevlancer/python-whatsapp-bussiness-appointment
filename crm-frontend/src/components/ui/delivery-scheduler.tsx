@@ -87,6 +87,7 @@ export function DeliveryScheduler({
   scheduleDisabled = false,
 }: DeliverySchedulerProps) {
   const normalizedInitialDate = normalizeDate(initialDate);
+  const normalizedInitialDateMs = normalizedInitialDate.getTime();
   const minimumDate = minDate ? normalizeDate(minDate) : null;
   const defaultTimeSlot = timeSlots[0] ? normalizeTimeSlot(timeSlots[0]).value : null;
 
@@ -95,9 +96,10 @@ export function DeliveryScheduler({
   const [internalSelectedTime, setInternalSelectedTime] = useState<string | null>(selectedTime ?? defaultTimeSlot);
 
   useEffect(() => {
-    setCurrentDate(normalizedInitialDate);
-    setSelectedDate(normalizedInitialDate);
-  }, [normalizedInitialDate]);
+    const nextDate = new Date(normalizedInitialDateMs);
+    setCurrentDate(nextDate);
+    setSelectedDate(nextDate);
+  }, [normalizedInitialDateMs]);
 
   useEffect(() => {
     if (selectedTime !== undefined) {

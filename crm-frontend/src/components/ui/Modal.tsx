@@ -32,17 +32,17 @@ export function Modal({
   };
 
   const content = (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 pb-[calc(env(safe-area-inset-bottom)+5rem)] sm:pb-4">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity animate-fade-in"
+        className="fixed inset-0 bg-black/45 backdrop-blur-sm transition-opacity animate-fade-in"
         onClick={onClose}
       />
       
       {/* Modal */}
       <div
         className={twMerge(
-          'relative w-full rounded-2xl animate-scale-in',
+          'relative flex max-h-[calc(100dvh-env(safe-area-inset-bottom)-6rem)] w-full flex-col overflow-hidden rounded-2xl animate-scale-in sm:max-h-[90dvh]',
           sizes[size],
           className
         )}
@@ -114,7 +114,7 @@ interface ModalContentProps extends HTMLAttributes<HTMLDivElement> {
 function ModalContent({ className, children, ...props }: ModalContentProps) {
   return (
     <div
-      className={twMerge('p-5', className)}
+      className={twMerge('min-h-0 overflow-y-auto p-5', className)}
       {...props}
     >
       {children}

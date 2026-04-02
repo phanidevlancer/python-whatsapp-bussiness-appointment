@@ -7,6 +7,7 @@ import { useAuthStore } from '@/store/authStore';
 import type { CurrentUserResponse } from '@/types/auth';
 import Sidebar from '@/components/layout/Sidebar';
 import Header from '@/components/layout/Header';
+import MobileBottomNav from '@/components/layout/MobileBottomNav';
 import { useRealtimeEvents } from '@/hooks/useRealtimeEvents';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -91,13 +92,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   if (!hydrated || !token || mustChangePassword || bootstrappingSession) return null;
 
   return (
-    <div className="theme-strong-shell flex h-screen overflow-hidden">
+    <div className="theme-strong-shell flex min-h-screen overflow-hidden lg:h-screen">
       <Sidebar />
-      <div className="flex flex-col flex-1 overflow-hidden relative">
+      <div className="relative flex flex-1 flex-col overflow-hidden">
         <div className="theme-shell-accent pointer-events-none absolute left-0 top-0 -z-10 h-96 w-full rounded-br-[40px]" />
         <Header />
-        <main className="relative z-10 flex-1 overflow-y-auto p-6">{children}</main>
+        <main className="relative z-10 flex-1 overflow-y-auto p-3 pb-24 sm:p-4 sm:pb-24 lg:p-6 lg:pb-6">{children}</main>
       </div>
+      <MobileBottomNav />
     </div>
   );
 }

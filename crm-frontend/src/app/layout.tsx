@@ -51,10 +51,14 @@ const themeBootstrapScript = `(() => {
   });
 })();`;
 
+const faviconHref =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230d9488'/%3E%3Cpath d='M9 9h14v14H9z' fill='none' stroke='white' stroke-width='2.5'/%3E%3C/svg%3E";
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className="h-full" suppressHydrationWarning>
       <head>
+        <link rel="icon" href={faviconHref} />
         <script dangerouslySetInnerHTML={{ __html: themeBootstrapScript }} />
       </head>
       <body className="h-full antialiased">

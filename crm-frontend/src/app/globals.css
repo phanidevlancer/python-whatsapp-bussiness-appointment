@@ -267,6 +267,36 @@ body {
   -webkit-backdrop-filter: blur(10px);
 }
 
+@media (max-width: 1024px) {
+  .dashboard-page-shell {
+    border-radius: 22px;
+    padding: 0.2rem;
+  }
+
+  .dashboard-page-header {
+    border-radius: 20px;
+  }
+
+  .dashboard-page-panel {
+    border-radius: 22px;
+  }
+}
+
+@media (max-width: 640px) {
+  .dashboard-page-shell {
+    border-radius: 16px;
+    padding: 0;
+  }
+
+  .dashboard-page-header {
+    border-radius: 14px;
+  }
+
+  .dashboard-page-panel {
+    border-radius: 16px;
+  }
+}
+
 .dashboard-page-subtle {
   background: color-mix(in srgb, var(--surface-container-low) 84%, transparent);
 }

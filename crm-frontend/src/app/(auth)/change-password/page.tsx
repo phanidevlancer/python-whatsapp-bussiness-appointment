@@ -101,8 +101,8 @@ export default function ChangePasswordPage() {
   if (!mustChangePassword) return null;
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.12),_transparent_40%),linear-gradient(180deg,#f8fafc_0%,#eef2ff_100%)] flex items-center justify-center p-6">
-      <Card className="w-full max-w-xl shadow-2xl border-slate-200" variant="elevated">
+    <div className="flex min-h-screen items-center justify-center bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.12),_transparent_40%),linear-gradient(180deg,#f8fafc_0%,#eef2ff_100%)] p-3 sm:p-6">
+      <Card className="w-full max-w-xl border-slate-200 shadow-2xl" variant="elevated">
         <CardHeader>
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-50 text-primary-600">
@@ -138,7 +138,7 @@ export default function ChangePasswordPage() {
             leftIcon={<Lock size={16} />}
           />
           {formError ? <p className="text-sm font-medium text-error-600">{formError}</p> : null}
-          <div className="flex justify-end gap-3 pt-2">
+          <div className="flex flex-col justify-end gap-3 pt-2 sm:flex-row">
             <Button
               variant="outline"
               size="md"

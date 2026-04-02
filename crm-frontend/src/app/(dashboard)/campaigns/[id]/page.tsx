@@ -82,7 +82,7 @@ export default function CampaignDetailPage() {
 
   return (
     <div className="dashboard-page-shell space-y-6">
-      <div className="dashboard-page-header rounded-[28px] px-6 py-6">
+      <div className="dashboard-page-header rounded-[20px] px-4 py-4 sm:rounded-[28px] sm:px-6 sm:py-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <Link href="/campaigns" className="inline-flex items-center gap-2 text-sm font-semibold text-primary-700">
@@ -105,7 +105,7 @@ export default function CampaignDetailPage() {
             </p>
           </div>
           <div className="space-y-3">
-            <div className="rounded-[24px] bg-white/80 p-4 shadow-sm">
+            <div className="rounded-[20px] bg-white/80 p-4 shadow-sm sm:rounded-[24px]">
               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Campaign Code</p>
               <p className="mt-2 text-lg font-black tracking-[-0.03em] text-slate-900">{campaign.code}</p>
               <p className="mt-1 text-xs text-slate-500">Updated {formatDateTime(campaign.updated_at)}</p>
@@ -123,7 +123,7 @@ export default function CampaignDetailPage() {
       <CampaignMetricsCards metrics={campaign.metrics} />
 
       <div className="grid gap-6 xl:grid-cols-[0.95fr,1.05fr]">
-        <Card className="rounded-[28px] p-5" variant="elevated">
+        <Card className="rounded-[20px] p-4 sm:rounded-[28px] sm:p-5" variant="elevated">
           <div className="flex items-center gap-3">
             <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary-50 text-primary-700">
               <Layers3 size={18} />
@@ -183,7 +183,7 @@ export default function CampaignDetailPage() {
           ) : null}
         </Card>
 
-        <Card className="rounded-[28px] p-5" variant="elevated">
+        <Card className="rounded-[20px] p-4 sm:rounded-[28px] sm:p-5" variant="elevated">
           <div className="flex items-center gap-3">
             <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700">
               <Send size={18} />
@@ -235,7 +235,7 @@ export default function CampaignDetailPage() {
 
       <CampaignRecipientsTable recipients={campaign.recipients} />
 
-      <Card className="rounded-[28px] p-5" variant="elevated">
+      <Card className="rounded-[20px] p-4 sm:rounded-[28px] sm:p-5" variant="elevated">
         <div className="flex items-center gap-3">
           <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-sky-50 text-sky-700">
             <Users2 size={18} />

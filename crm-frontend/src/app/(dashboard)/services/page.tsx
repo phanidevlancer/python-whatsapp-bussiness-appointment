@@ -51,7 +51,7 @@ function ServiceDetailsRow({ service, showHistory }: { service: Service; showHis
 
   return (
     <tr>
-      <td colSpan={8} className="px-6 pb-4 pt-0 dashboard-page-table-head">
+      <td colSpan={8} className="dashboard-page-table-head px-4 pb-4 pt-0 sm:px-6">
         <div className="space-y-4">
           {providers.length > 0 && (
             <div>
@@ -164,7 +164,7 @@ function ServiceRow({
             <span className="font-semibold text-slate-900">{s.name}</span>
           )}
         </TableCell>
-        <TableCell className="py-4">
+        <TableCell className="hidden py-4 md:table-cell">
           {editing ? (
             <Textarea value={editDesc} onChange={(e) => setEditDesc(e.target.value)} rows={1} resize="none" className="dashboard-surface-input max-w-[220px] rounded-2xl border text-sm shadow-none ring-1 ring-transparent focus:ring-2 focus:ring-primary-200" />
           ) : (
@@ -191,7 +191,7 @@ function ServiceRow({
             </div>
           )}
         </TableCell>
-        <TableCell className="py-4">
+        <TableCell className="hidden py-4 lg:table-cell">
           {(() => {
             const providers = s.providers ?? [];
             const count = providers.length;
@@ -230,7 +230,7 @@ function ServiceRow({
           </Badge>
         </TableCell>
         <TableCell align="right" className="py-4">
-          <div className="flex items-center justify-end gap-1">
+          <div className="flex flex-wrap items-center justify-end gap-1">
             {editing ? (
               <>
                 <Button variant="ghost" size="sm" leftIcon={<X size={14} />} onClick={cancelEdit} className="rounded-2xl px-3" style={{ color: 'var(--text-secondary)' }}>Cancel</Button>
@@ -238,24 +238,28 @@ function ServiceRow({
               </>
             ) : (
               <>
-                <Button variant="ghost" size="sm" leftIcon={<Pencil size={14} />} onClick={startEdit} className="rounded-2xl px-3" style={{ color: 'var(--text-tertiary)' }}>Edit</Button>
+                <Button variant="ghost" size="sm" leftIcon={<Pencil size={14} />} onClick={startEdit} className="rounded-2xl px-2 sm:px-3" style={{ color: 'var(--text-tertiary)' }}>
+                  <span className="hidden sm:inline">Edit</span>
+                </Button>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => setShowHistory((v) => !v)}
-                  className="rounded-2xl px-3"
+                  className="rounded-2xl px-2 sm:px-3"
                   style={{ color: 'var(--text-tertiary)' }}
                   title="Show history"
                 >
                   {showHistory ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                 </Button>
                 {s.is_active ? (
-                  <Button variant="ghost" size="sm" leftIcon={<PowerOff size={14} />} onClick={() => onDeactivate(s.id)} className="rounded-2xl px-3 text-slate-400 hover:bg-red-50 hover:text-error-600">
-                    Deactivate
+                  <Button variant="ghost" size="sm" leftIcon={<PowerOff size={14} />} onClick={() => onDeactivate(s.id)} className="rounded-2xl px-2 sm:px-3 text-slate-400 hover:bg-red-50 hover:text-error-600">
+                    <span className="hidden sm:inline">Deactivate</span>
+                    <span className="sm:hidden">Off</span>
                   </Button>
                 ) : (
-                  <Button variant="ghost" size="sm" onClick={() => onActivate(s.id)} className="rounded-2xl px-3 text-slate-400 hover:bg-emerald-50 hover:text-success-600">
-                    Activate
+                  <Button variant="ghost" size="sm" onClick={() => onActivate(s.id)} className="rounded-2xl px-2 sm:px-3 text-slate-400 hover:bg-emerald-50 hover:text-success-600">
+                    <span className="hidden sm:inline">Activate</span>
+                    <span className="sm:hidden">On</span>
                   </Button>
                 )}
               </>
@@ -312,7 +316,7 @@ export default function ServicesPage() {
 
   return (
     <div className="dashboard-page-shell space-y-5">
-      <div className="dashboard-page-header flex items-center justify-between rounded-[24px] px-6 py-5">
+      <div className="dashboard-page-header flex flex-col gap-4 rounded-[20px] px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:rounded-[24px] sm:px-6 sm:py-5">
         <div>
           <h2 className="text-[1.9rem] font-black tracking-[-0.03em] text-slate-900">Services</h2>
           <p className="mt-1 text-sm font-medium text-slate-500">Manage your clinic services and pricing</p>
@@ -322,14 +326,14 @@ export default function ServicesPage() {
           size="md"
           leftIcon={<Plus size={18} />}
           onClick={() => setShowCreate(true)}
-          className="h-11 rounded-2xl border border-primary-500/20 px-5 font-semibold shadow-[0_14px_28px_rgba(13,148,136,0.18)]"
+          className="h-11 w-full rounded-2xl border border-primary-500/20 px-5 font-semibold shadow-[0_14px_28px_rgba(13,148,136,0.18)] sm:w-auto"
         >
           New Service
         </Button>
       </div>
 
       {showCreate && (
-        <Card className="dashboard-page-panel rounded-[24px] p-5" variant="elevated">
+        <Card className="dashboard-page-panel rounded-[20px] p-4 sm:rounded-[24px] sm:p-5" variant="elevated">
           <CardHeader className="pb-4 border-0">
             <CardTitle className="text-lg font-bold tracking-[-0.02em] text-slate-900">Create New Service</CardTitle>
           </CardHeader>
@@ -339,7 +343,7 @@ export default function ServicesPage() {
             <Input placeholder="Cost" type="number" step="0.01" value={newCost} onChange={(e) => setNewCost(e.target.value)} leftIcon={<IndianRupee size={16} />} className="dashboard-surface-input h-12 rounded-2xl border shadow-none ring-1 ring-transparent focus:ring-2 focus:ring-primary-200" />
             <Textarea placeholder="Description (optional)" value={newDesc} onChange={(e) => setNewDesc(e.target.value)} resize="none" rows={1} className="dashboard-surface-input rounded-2xl border shadow-none ring-1 ring-transparent focus:ring-2 focus:ring-primary-200" />
           </div>
-          <div className="mt-4 flex gap-3 border-t pt-4" style={{ borderColor: 'var(--border-light)' }}>
+          <div className="mt-4 flex flex-col gap-3 border-t pt-4 sm:flex-row" style={{ borderColor: 'var(--border-light)' }}>
             <Button variant="primary" size="md" onClick={handleCreate} isLoading={creating} className="rounded-2xl px-5 shadow-[0_14px_28px_rgba(13,148,136,0.18)]">
               {creating ? 'Creating...' : 'Create Service'}
             </Button>
@@ -348,7 +352,7 @@ export default function ServicesPage() {
         </Card>
       )}
 
-      <Card className="dashboard-page-panel overflow-hidden rounded-[28px] p-0" variant="elevated">
+      <Card className="dashboard-page-panel overflow-hidden rounded-[20px] p-0 sm:rounded-[28px]" variant="elevated">
         {isLoading ? (
           <div className="p-4 space-y-3">
             {Array.from({ length: 5 }).map((_, i) => (
@@ -372,30 +376,86 @@ export default function ServicesPage() {
             <p className="text-sm text-slate-500">Create your first service to get started</p>
           </div>
         ) : (
-          <Table className="min-w-full">
-            <TableHeader className="dashboard-page-table-head border-b">
-              <TableRow hoverable={false}>
-                <TableHead className="w-12 py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400"><span className="sr-only">Icon</span></TableHead>
-                <TableHead className="py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Name</TableHead>
-                <TableHead className="py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Description</TableHead>
-                <TableHead className="py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Duration</TableHead>
-                <TableHead className="py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Cost</TableHead>
-                <TableHead className="py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Providers</TableHead>
-                <TableHead className="py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Status</TableHead>
-                <TableHead align="right" className="py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody className="divide-y" style={{ borderColor: 'var(--border-light)' }}>
+          <>
+            <div className="space-y-3 p-3 md:hidden">
               {services.map((s) => (
-                <ServiceRow
-                  key={s.id}
-                  s={s}
-                  onDeactivate={(id) => deactivate(id, { onSuccess: () => toast.success('Service deactivated') })}
-                  onActivate={(id) => update({ id, is_active: true }, { onSuccess: () => toast.success('Service activated') })}
-                />
+                <div key={s.id} className="dashboard-surface-soft rounded-2xl p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <p className="font-semibold text-slate-900">{s.name}</p>
+                      <p className="mt-1 line-clamp-2 text-xs text-slate-500">{s.description ?? 'No description'}</p>
+                    </div>
+                    <Badge
+                      variant={s.is_active ? 'success' : 'default'}
+                      size="sm"
+                      dot
+                      className="rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em]"
+                    >
+                      {s.is_active ? 'Active' : 'Inactive'}
+                    </Badge>
+                  </div>
+
+                  <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-slate-600">
+                    <p>Duration: {s.duration_minutes} min</p>
+                    <p>Cost: {formatCost(s.cost)}</p>
+                    <p className="col-span-2">
+                      Providers: {(s.providers ?? []).length ? (s.providers ?? []).map((p) => p.name).join(', ') : 'None'}
+                    </p>
+                  </div>
+
+                  <div className="mt-3 flex items-center gap-2">
+                    {s.is_active ? (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        leftIcon={<PowerOff size={14} />}
+                        onClick={() => deactivate(s.id, { onSuccess: () => toast.success('Service deactivated') })}
+                        className="rounded-2xl px-3 text-slate-400 hover:bg-red-50 hover:text-error-600"
+                      >
+                        Deactivate
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => update({ id: s.id, is_active: true }, { onSuccess: () => toast.success('Service activated') })}
+                        className="rounded-2xl px-3 text-slate-400 hover:bg-emerald-50 hover:text-success-600"
+                      >
+                        Activate
+                      </Button>
+                    )}
+                  </div>
+                </div>
               ))}
-            </TableBody>
-          </Table>
+            </div>
+
+            <div className="hidden md:block">
+            <Table className="min-w-full">
+              <TableHeader className="dashboard-page-table-head border-b">
+                <TableRow hoverable={false}>
+                  <TableHead className="w-12 py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400"><span className="sr-only">Icon</span></TableHead>
+                  <TableHead className="py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Name</TableHead>
+                  <TableHead className="hidden py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400 md:table-cell">Description</TableHead>
+                  <TableHead className="py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Duration</TableHead>
+                  <TableHead className="py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Cost</TableHead>
+                  <TableHead className="hidden py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400 lg:table-cell">Providers</TableHead>
+                  <TableHead className="py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Status</TableHead>
+                  <TableHead align="right" className="py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody className="divide-y" style={{ borderColor: 'var(--border-light)' }}>
+                {services.map((s) => (
+                  <ServiceRow
+                    key={s.id}
+                    s={s}
+                    onDeactivate={(id) => deactivate(id, { onSuccess: () => toast.success('Service deactivated') })}
+                    onActivate={(id) => update({ id, is_active: true }, { onSuccess: () => toast.success('Service activated') })}
+                  />
+                ))}
+              </TableBody>
+            </Table>
+            </div>
+          </>
         )}
       </Card>
     </div>

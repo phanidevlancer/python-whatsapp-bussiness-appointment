@@ -44,7 +44,7 @@ export default function UsersPage() {
 
   return (
     <div className="dashboard-page-shell space-y-5">
-      <div className="dashboard-page-header flex items-center justify-between gap-4 rounded-[24px] px-6 py-5">
+      <div className="dashboard-page-header flex flex-col gap-4 rounded-[20px] px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:rounded-[24px] sm:px-6 sm:py-5">
         <div>
           <h2 className="text-[1.9rem] font-black tracking-[-0.03em] text-slate-900">Users</h2>
           <p className="mt-1 text-sm font-medium text-slate-500">Manage clinic staff, templates, and access.</p>
@@ -55,7 +55,7 @@ export default function UsersPage() {
         </Badge>
       </div>
 
-      <Card className="dashboard-page-panel rounded-[24px] p-5" variant="elevated">
+      <Card className="dashboard-page-panel rounded-[20px] p-4 sm:rounded-[24px] sm:p-5" variant="elevated">
         <div className="flex flex-col gap-3 md:flex-row md:items-center">
           <div className="flex-1">
             <Input
@@ -83,7 +83,7 @@ export default function UsersPage() {
         </div>
       </Card>
 
-      <Card className="dashboard-page-panel overflow-hidden rounded-[28px] p-0" variant="elevated">
+      <Card className="dashboard-page-panel overflow-hidden rounded-[20px] p-0 sm:rounded-[28px]" variant="elevated">
         {isLoading ? (
           <div className="p-4 space-y-3">
             {Array.from({ length: 6 }).map((_, i) => (
@@ -107,7 +107,35 @@ export default function UsersPage() {
             <p className="text-sm text-slate-500">Try adjusting your search</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
+          <>
+            <div className="space-y-3 p-3 md:hidden">
+              {data.items.map((user) => (
+                <div key={user.id} className="dashboard-surface-soft rounded-2xl p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <Avatar name={user.name} size="sm" />
+                      <div>
+                        <p className="font-medium text-slate-900">{user.name}</p>
+                        <p className="text-xs text-slate-500">{user.employee_code ?? 'No employee code'}</p>
+                      </div>
+                    </div>
+                    <Badge variant={user.is_active ? 'success' : 'error'} size="sm" dot className="rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em]">
+                      {user.is_active ? 'Active' : 'Inactive'}
+                    </Badge>
+                  </div>
+                  <div className="mt-3 space-y-1 text-sm text-slate-700">
+                    <p>{user.email}</p>
+                    <p className="text-xs text-slate-500">{user.phone ?? 'No phone'}</p>
+                    <p>Template: {user.template_name ?? 'Unassigned'}</p>
+                    <p>Created: {format(new Date(user.created_at), 'MMM d, yyyy')}</p>
+                  </div>
+                  <Link href={`/users/${user.id}`} className="mt-3 inline-flex text-sm font-medium text-primary-600 hover:text-primary-700">
+                    View details
+                  </Link>
+                </div>
+              ))}
+            </div>
+            <div className="hidden overflow-x-auto md:block">
             <table className="min-w-full divide-y" style={{ borderColor: 'var(--border-light)' }}>
               <thead className="dashboard-page-table-head">
                 <tr>
@@ -161,11 +189,12 @@ export default function UsersPage() {
               </tbody>
             </table>
           </div>
+          </>
         )}
       </Card>
 
       {data && data.total > data.page_size && (
-        <Card className="dashboard-page-panel rounded-[24px] p-4" variant="default">
+        <Card className="dashboard-page-panel rounded-[20px] p-4 sm:rounded-[24px]" variant="default">
           <div className="flex items-center justify-between gap-3">
             <span className="text-sm text-slate-500">
               Page <span className="font-semibold text-slate-900">{page}</span> of{' '}

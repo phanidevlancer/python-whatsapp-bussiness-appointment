@@ -240,7 +240,7 @@ export default function RoleTemplateDetailPage() {
         <ArrowLeft size={15} /> Back
       </button>
 
-      <div className="dashboard-page-header flex flex-wrap items-start justify-between gap-4 rounded-[24px] px-6 py-5">
+      <div className="dashboard-page-header flex flex-wrap items-start justify-between gap-4 rounded-[20px] px-4 py-4 sm:rounded-[24px] sm:px-6 sm:py-5">
         <div className="space-y-2">
           <div className="flex flex-wrap items-center gap-2">
             <h2 className="text-[1.9rem] font-black tracking-[-0.03em] text-slate-900">{template.name}</h2>
@@ -308,13 +308,13 @@ export default function RoleTemplateDetailPage() {
       </div>
 
       {isReadOnly ? (
-        <Card className="dashboard-page-panel rounded-[24px] border-amber-200 p-4 text-sm text-amber-900" variant="outlined" style={{ background: 'color-mix(in srgb, var(--warning-50) 88%, transparent)' }}>
+        <Card className="dashboard-page-panel rounded-[20px] border-amber-200 p-4 text-sm text-amber-900 sm:rounded-[24px]" variant="outlined" style={{ background: 'color-mix(in srgb, var(--warning-50) 88%, transparent)' }}>
           System templates are read-only. You can copy this template, but edits and deletes are blocked.
         </Card>
       ) : null}
 
       <div className="grid gap-6 xl:grid-cols-[1fr_1.25fr]">
-        <Card className="dashboard-page-panel rounded-[28px] p-6" variant="elevated">
+        <Card className="dashboard-page-panel rounded-[20px] p-4 sm:rounded-[28px] sm:p-6" variant="elevated">
           <CardHeader className="border-0 pb-4">
             <div>
               <CardTitle className="text-lg font-bold tracking-[-0.02em] text-slate-900">Template details</CardTitle>

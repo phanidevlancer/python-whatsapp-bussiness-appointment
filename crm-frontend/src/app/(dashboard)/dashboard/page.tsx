@@ -53,8 +53,8 @@ export default function DashboardPage() {
   return (
     <div>
       {/* Greeting Row */}
-      <div className="flex justify-end items-center mb-6">
-        <h2 className="mr-3 text-lg" style={{ color: 'var(--text-secondary)' }}>
+      <div className="mb-6 flex flex-wrap items-center justify-end gap-2">
+        <h2 className="text-base sm:mr-3 sm:text-lg" style={{ color: 'var(--text-secondary)' }}>
           {getGreeting()}, <span className="font-bold" style={{ color: 'var(--text-primary)' }}>{displayName}</span>
         </h2>
         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-blue-400 to-blue-600 text-sm font-semibold text-white shadow-sm" style={{ border: '2px solid var(--panel-border)' }}>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { format } from 'date-fns';
 import toast from 'react-hot-toast';
 import { useQuery } from '@tanstack/react-query';
@@ -32,6 +32,22 @@ export default function RescheduleDialog({ appointmentId, serviceId, onClose }: 
 
   const { mutate: reschedule, isPending } = useRescheduleAppointment();
 
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow;
+    const previousPaddingRight = document.body.style.paddingRight;
+    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+
+    document.body.style.overflow = 'hidden';
+    if (scrollbarWidth > 0) {
+      document.body.style.paddingRight = `${scrollbarWidth}px`;
+    }
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.body.style.paddingRight = previousPaddingRight;
+    };
+  }, []);
+
   const handleSubmit = () => {
     if (!selectedSlotId) {
       toast.error('Please select a time slot');
@@ -49,16 +65,28 @@ export default function RescheduleDialog({ appointmentId, serviceId, onClose }: 
           toast.success('Appointment rescheduled. WhatsApp notification sent to customer.');
           onClose();
         },
-        onError: (err: any) => toast.error(err?.response?.data?.detail ?? 'Failed to reschedule'),
+        onError: (err: unknown) => {
+          const message =
+            typeof err === 'object' &&
+            err !== null &&
+            'response' in err &&
+            typeof (err as { response?: { data?: { detail?: unknown } } }).response?.data?.detail === 'string'
+              ? ((err as { response?: { data?: { detail?: string } } }).response?.data?.detail ?? 'Failed to reschedule')
+              : 'Failed to reschedule';
+          toast.error(message);
+        },
       }
     );
   };
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Reschedule Appointment</h2>
+    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/40 p-4 pb-[calc(env(safe-area-inset-bottom)+5rem)] sm:pb-4">
+      <div className="flex max-h-[calc(100dvh-env(safe-area-inset-bottom)-6rem)] w-full max-w-md flex-col overflow-hidden rounded-xl bg-white shadow-xl sm:max-h-[90dvh]">
+        <div className="border-b px-5 py-4 sm:px-6" style={{ borderColor: 'var(--border-light)' }}>
+          <h2 className="text-lg font-semibold text-gray-900">Reschedule Appointment</h2>
+        </div>
 
+        <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4 sm:px-6 sm:py-5">
         <div className="mb-4">
           <label className="block text-sm font-medium text-gray-700 mb-1">New Date</label>
           <input
@@ -109,8 +137,9 @@ export default function RescheduleDialog({ appointmentId, serviceId, onClose }: 
             placeholder="Reason for rescheduling"
           />
         </div>
+        </div>
 
-        <div className="flex gap-3 justify-end">
+        <div className="flex justify-end gap-3 border-t bg-white px-5 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] pt-3 sm:px-6 sm:pb-4" style={{ borderColor: 'var(--border-light)' }}>
           <button onClick={onClose} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900 transition-colors">
             Cancel
           </button>

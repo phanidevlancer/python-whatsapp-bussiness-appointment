@@ -28,7 +28,7 @@ export default function AppointmentsPage() {
   return (
     <div className="dashboard-page-shell space-y-5">
       {/* Page Header */}
-      <div className="dashboard-page-header flex items-center justify-between rounded-[24px] px-6 py-5">
+      <div className="dashboard-page-header flex flex-col gap-4 rounded-[20px] px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:rounded-[24px] sm:px-6 sm:py-5">
         <div>
           <h2 className="text-[1.9rem] font-black tracking-[-0.03em] text-slate-900">Appointments</h2>
           <p className="mt-1 text-sm font-medium text-slate-500">Manage and track all clinic appointments</p>
@@ -38,7 +38,7 @@ export default function AppointmentsPage() {
           size="md"
           leftIcon={<Plus size={18} />}
           onClick={() => setShowCreateDialog(true)}
-          className="h-11 rounded-2xl border border-primary-500/20 px-5 font-semibold shadow-[0_14px_28px_rgba(13,148,136,0.18)]"
+          className="h-11 w-full rounded-2xl border border-primary-500/20 px-5 font-semibold shadow-[0_14px_28px_rgba(13,148,136,0.18)] sm:w-auto"
         >
           New Appointment
         </Button>
@@ -46,12 +46,12 @@ export default function AppointmentsPage() {
 
       {/* Filters Card */}
       <Card
-        className="dashboard-page-panel relative z-20 rounded-[24px] p-5"
+        className="dashboard-page-panel relative z-20 rounded-[20px] p-4 sm:rounded-[24px] sm:p-5"
         variant="elevated"
       >
         <div className="flex flex-wrap items-center gap-3">
           {/* Search */}
-          <div className="flex-1 min-w-64">
+          <div className="w-full flex-1 md:min-w-64">
             <Input
               placeholder="Search by name or phone..."
               value={search}
@@ -96,7 +96,7 @@ export default function AppointmentsPage() {
             </Button>
           )}
 
-          <div className="ml-auto flex items-center gap-2">
+          <div className="flex items-center gap-2 md:ml-auto">
             <Badge variant="primary" size="md" className="rounded-full bg-primary-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-primary-700">
               {data?.total ?? 0} results
             </Badge>
@@ -106,7 +106,7 @@ export default function AppointmentsPage() {
 
       {/* Table Card */}
       <Card
-        className="dashboard-page-panel relative z-0 overflow-hidden rounded-[28px] p-0"
+        className="dashboard-page-panel relative z-0 overflow-hidden rounded-[20px] p-0 sm:rounded-[28px]"
         variant="elevated"
       >
         <AppointmentsTable appointments={data?.items ?? []} isLoading={isLoading} />
@@ -114,8 +114,8 @@ export default function AppointmentsPage() {
 
       {/* Pagination */}
       {data && data.total > data.page_size && (
-        <Card className="dashboard-page-panel rounded-[24px] p-4" variant="default">
-          <div className="flex items-center justify-between">
+        <Card className="dashboard-page-panel rounded-[20px] p-4 sm:rounded-[24px]" variant="default">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-4">
               <span className="text-sm text-slate-500">
                 Showing <span className="font-semibold text-slate-900">{((filters.page ?? 1) - 1) * (filters.page_size ?? 20) + 1}</span> to{' '}

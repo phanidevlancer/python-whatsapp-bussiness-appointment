@@ -138,8 +138,8 @@ export default function CalendarPage() {
     const labelDate = getLabel();
 
     return (
-      <div className="dashboard-surface-strong mb-0 flex items-center justify-between border-b p-4">
-        <div className="flex items-center gap-3">
+      <div className="dashboard-surface-strong mb-0 flex flex-col gap-3 border-b p-3 sm:flex-row sm:items-center sm:justify-between sm:p-4">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           <button
             onClick={goToToday}
             className="dashboard-action-outline rounded border px-4 py-2 text-sm font-medium"
@@ -158,11 +158,11 @@ export default function CalendarPage() {
               </svg>
             </button>
           </div>
-          <h2 className="ml-2 text-xl font-semibold" style={{ color: 'var(--text-primary)' }}>
+          <h2 className="ml-0 text-lg font-semibold sm:ml-2 sm:text-xl" style={{ color: 'var(--text-primary)' }}>
             {isValid(labelDate) ? format(labelDate, 'MMMM yyyy') : 'Calendar'}
           </h2>
         </div>
-        <div className="flex gap-1">
+        <div className="flex w-full flex-wrap gap-1 sm:w-auto">
           {([Views.DAY, Views.WEEK, Views.MONTH] as View[]).map((v) => (
             <button
               key={v}
@@ -200,7 +200,7 @@ export default function CalendarPage() {
   return (
     <div className="dashboard-page-shell space-y-5">
       {/* Page Header */}
-      <div className="dashboard-page-header flex items-center justify-between rounded-[24px] px-6 py-5">
+      <div className="dashboard-page-header flex flex-col gap-4 rounded-[20px] px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:rounded-[24px] sm:px-6 sm:py-5">
         <div>
           <h2 className="text-2xl font-bold text-slate-900">Calendar</h2>
           <p className="text-sm text-slate-500 mt-1">View and manage your appointments</p>
@@ -212,11 +212,11 @@ export default function CalendarPage() {
       </div>
 
       {/* Calendar Card */}
-      <Card className="dashboard-page-panel overflow-hidden rounded-[28px] p-0" variant="elevated">
+      <Card className="dashboard-page-panel overflow-hidden rounded-[20px] p-0 sm:rounded-[28px]" variant="elevated">
         <style jsx global>{`
           .rbc-calendar {
             font-family: 'Roboto', 'Segoe UI', sans-serif;
-            height: 800px;
+            height: clamp(520px, 72vh, 800px);
           }
           
           .rbc-header {

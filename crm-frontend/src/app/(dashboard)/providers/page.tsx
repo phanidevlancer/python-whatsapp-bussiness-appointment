@@ -83,7 +83,7 @@ function ProviderHistoryRow({ providerId }: { providerId: string }) {
   const { data: history = [], isLoading } = useProviderHistory(providerId);
   return (
     <tr>
-      <td colSpan={7} className="dashboard-page-table-head px-4 pb-4">
+      <td colSpan={8} className="dashboard-page-table-head px-4 pb-4">
         <ChangeHistoryPanel history={history} isLoading={isLoading} />
       </td>
     </tr>
@@ -178,7 +178,7 @@ function ProviderRow({ p }: { p: Provider }) {
             <span className="font-semibold text-slate-900">{p.name}</span>
           )}
         </TableCell>
-        <TableCell className="py-4">
+        <TableCell className="hidden py-4 sm:table-cell">
           {editing ? (
             <select
               value={editRole}
@@ -195,7 +195,7 @@ function ProviderRow({ p }: { p: Provider }) {
             </Badge>
           )}
         </TableCell>
-        <TableCell className="py-4">
+        <TableCell className="hidden py-4 md:table-cell">
           {editing ? (
             <Input
               type="number"
@@ -209,7 +209,7 @@ function ProviderRow({ p }: { p: Provider }) {
             <span className="text-sm text-slate-600">{p.slot_duration_minutes ?? 20} min</span>
           )}
         </TableCell>
-        <TableCell className="py-4 max-w-[220px]">
+        <TableCell className="hidden max-w-[220px] py-4 lg:table-cell">
           {editing ? (
             <ServiceMultiSelect value={editServiceIds} onChange={setEditServiceIds} />
           ) : (
@@ -223,7 +223,7 @@ function ProviderRow({ p }: { p: Provider }) {
             </div>
           )}
         </TableCell>
-        <TableCell className="py-4">
+        <TableCell className="hidden py-4 xl:table-cell">
           {editing ? (
             <Input type="email" value={editEmail} onChange={(e) => setEditEmail(e.target.value)} className="dashboard-surface-input max-w-[200px] rounded-2xl border shadow-none ring-1 ring-transparent focus:ring-2 focus:ring-primary-200" />
           ) : (
@@ -239,7 +239,7 @@ function ProviderRow({ p }: { p: Provider }) {
           </Badge>
         </TableCell>
         <TableCell align="right" className="py-4">
-          <div className="flex items-center justify-end gap-1">
+          <div className="flex flex-wrap items-center justify-end gap-1">
             {editing ? (
               <>
                 <Button variant="ghost" size="sm" leftIcon={<X size={14} />} onClick={cancelEdit} className="rounded-2xl px-3" style={{ color: 'var(--text-secondary)' }}>Cancel</Button>
@@ -247,12 +247,14 @@ function ProviderRow({ p }: { p: Provider }) {
               </>
             ) : (
               <>
-                <Button variant="ghost" size="sm" leftIcon={<Pencil size={14} />} onClick={startEdit} className="rounded-2xl px-3" style={{ color: 'var(--text-tertiary)' }}>Edit</Button>
+                <Button variant="ghost" size="sm" leftIcon={<Pencil size={14} />} onClick={startEdit} className="rounded-2xl px-2 sm:px-3" style={{ color: 'var(--text-tertiary)' }}>
+                  <span className="hidden sm:inline">Edit</span>
+                </Button>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => setShowHistory((v) => !v)}
-                  className="rounded-2xl px-3"
+                  className="rounded-2xl px-2 sm:px-3"
                   style={{ color: 'var(--text-tertiary)' }}
                   title="Show history"
                 >
@@ -267,9 +269,10 @@ function ProviderRow({ p }: { p: Provider }) {
                       { onSuccess: () => toast.success(`Provider ${p.is_active ? 'deactivated' : 'activated'}`) }
                     )
                   }
-                  className={p.is_active ? 'rounded-2xl px-3 text-slate-400 hover:bg-red-50 hover:text-error-600' : 'rounded-2xl px-3 text-slate-400 hover:bg-emerald-50 hover:text-success-600'}
+                  className={p.is_active ? 'rounded-2xl px-2 sm:px-3 text-slate-400 hover:bg-red-50 hover:text-error-600' : 'rounded-2xl px-2 sm:px-3 text-slate-400 hover:bg-emerald-50 hover:text-success-600'}
                 >
-                  {p.is_active ? 'Deactivate' : 'Activate'}
+                  <span className="hidden sm:inline">{p.is_active ? 'Deactivate' : 'Activate'}</span>
+                  <span className="sm:hidden">{p.is_active ? 'Off' : 'On'}</span>
                 </Button>
               </>
             )}
@@ -320,18 +323,18 @@ export default function ProvidersPage() {
 
   return (
     <div className="dashboard-page-shell space-y-5">
-      <div className="dashboard-page-header flex items-center justify-between rounded-[24px] px-6 py-5">
+      <div className="dashboard-page-header flex flex-col gap-4 rounded-[20px] px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:rounded-[24px] sm:px-6 sm:py-5">
         <div>
           <h2 className="text-[1.9rem] font-black tracking-[-0.03em] text-slate-900">Providers</h2>
           <p className="mt-1 text-sm font-medium text-slate-500">Manage your clinic staff and providers</p>
         </div>
-        <Button variant="primary" size="md" leftIcon={<Plus size={18} />} onClick={() => setShowCreate(true)} className="h-11 rounded-2xl border border-primary-500/20 px-5 font-semibold shadow-[0_14px_28px_rgba(13,148,136,0.18)]">
+        <Button variant="primary" size="md" leftIcon={<Plus size={18} />} onClick={() => setShowCreate(true)} className="h-11 w-full rounded-2xl border border-primary-500/20 px-5 font-semibold shadow-[0_14px_28px_rgba(13,148,136,0.18)] sm:w-auto">
           Add Provider
         </Button>
       </div>
 
       {showCreate && (
-        <Card className="dashboard-page-panel rounded-[24px] p-5" variant="elevated">
+        <Card className="dashboard-page-panel rounded-[20px] p-4 sm:rounded-[24px] sm:p-5" variant="elevated">
           <CardHeader className="pb-4 border-0">
             <CardTitle className="text-lg font-bold tracking-[-0.02em] text-slate-900">Add New Provider</CardTitle>
           </CardHeader>
@@ -367,7 +370,7 @@ export default function ProvidersPage() {
             <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-slate-400">Assign Services</p>
             <ServiceMultiSelect value={newServiceIds} onChange={setNewServiceIds} />
           </div>
-          <div className="mt-4 flex gap-3 border-t pt-4" style={{ borderColor: 'var(--border-light)' }}>
+          <div className="mt-4 flex flex-col gap-3 border-t pt-4 sm:flex-row" style={{ borderColor: 'var(--border-light)' }}>
             <Button variant="primary" size="md" onClick={handleCreate} isLoading={creating} className="rounded-2xl px-5 shadow-[0_14px_28px_rgba(13,148,136,0.18)]">
               {creating ? 'Creating...' : 'Add Provider'}
             </Button>
@@ -376,7 +379,7 @@ export default function ProvidersPage() {
         </Card>
       )}
 
-      <Card className="dashboard-page-panel overflow-hidden rounded-[28px] p-0" variant="elevated">
+      <Card className="dashboard-page-panel overflow-hidden rounded-[20px] p-0 sm:rounded-[28px]" variant="elevated">
         {isLoading ? (
           <div className="p-4 space-y-3">
             {Array.from({ length: 5 }).map((_, i) => (
@@ -400,25 +403,70 @@ export default function ProvidersPage() {
             <p className="text-sm text-slate-500">Add your first provider to get started</p>
           </div>
         ) : (
-          <Table className="min-w-full">
-            <TableHeader className="dashboard-page-table-head border-b">
-              <TableRow hoverable={false}>
-                <TableHead className="w-12 py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400"><span className="sr-only">Avatar</span></TableHead>
-                <TableHead className="py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Name</TableHead>
-                <TableHead className="py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Role</TableHead>
-                <TableHead className="py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Slot Duration</TableHead>
-                <TableHead className="py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Services</TableHead>
-                <TableHead className="py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Email</TableHead>
-                <TableHead className="py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Status</TableHead>
-                <TableHead align="right" className="py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody className="divide-y" style={{ borderColor: 'var(--border-light)' }}>
+          <>
+            <div className="space-y-3 p-3 md:hidden">
               {providers.map((p) => (
-                <ProviderRow key={p.id} p={p} />
+                <div key={p.id} className="dashboard-surface-soft rounded-2xl p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <Avatar name={p.name} size="sm" />
+                      <div className="min-w-0">
+                        <p className="truncate font-semibold text-slate-900">{p.name}</p>
+                        <p className="truncate text-xs text-slate-500">{p.email ?? p.phone ?? 'No contact info'}</p>
+                      </div>
+                    </div>
+                    <Badge variant={p.is_active ? 'success' : 'default'} size="sm" dot className="rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em]">
+                      {p.is_active ? 'Active' : 'Inactive'}
+                    </Badge>
+                  </div>
+                  <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-slate-600">
+                    <p>Role: {p.role ?? 'doctor'}</p>
+                    <p>Slot: {p.slot_duration_minutes ?? 20} min</p>
+                    <p className="col-span-2">
+                      Services: {(p.services ?? []).length ? (p.services ?? []).map((s) => s.name).join(', ') : 'None assigned'}
+                    </p>
+                  </div>
+                  <div className="mt-3">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() =>
+                        update(
+                          { id: p.id, is_active: !p.is_active },
+                          { onSuccess: () => toast.success(`Provider ${p.is_active ? 'deactivated' : 'activated'}`) }
+                        )
+                      }
+                      className={p.is_active ? 'rounded-2xl px-3 text-slate-400 hover:bg-red-50 hover:text-error-600' : 'rounded-2xl px-3 text-slate-400 hover:bg-emerald-50 hover:text-success-600'}
+                    >
+                      {p.is_active ? 'Deactivate' : 'Activate'}
+                    </Button>
+                  </div>
+                </div>
               ))}
-            </TableBody>
-          </Table>
+            </div>
+
+            <div className="hidden md:block">
+            <Table className="min-w-full">
+              <TableHeader className="dashboard-page-table-head border-b">
+                <TableRow hoverable={false}>
+                  <TableHead className="w-12 py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400"><span className="sr-only">Avatar</span></TableHead>
+                  <TableHead className="py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Name</TableHead>
+                  <TableHead className="hidden py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400 sm:table-cell">Role</TableHead>
+                  <TableHead className="hidden py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400 md:table-cell">Slot Duration</TableHead>
+                  <TableHead className="hidden py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400 lg:table-cell">Services</TableHead>
+                  <TableHead className="hidden py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400 xl:table-cell">Email</TableHead>
+                  <TableHead className="py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Status</TableHead>
+                  <TableHead align="right" className="py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody className="divide-y" style={{ borderColor: 'var(--border-light)' }}>
+                {providers.map((p) => (
+                  <ProviderRow key={p.id} p={p} />
+                ))}
+              </TableBody>
+            </Table>
+            </div>
+          </>
         )}
       </Card>
     </div>

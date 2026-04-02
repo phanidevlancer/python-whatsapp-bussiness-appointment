@@ -471,7 +471,7 @@ export default function AnimatedCharactersLoginPage() {
         </div>
       </div>
 
-      <div className="relative flex items-center justify-center px-5 py-10 sm:px-8">
+      <div className="relative flex items-center justify-center px-4 py-8 sm:px-8 sm:py-10">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(20,184,166,0.12),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(59,130,246,0.1),transparent_30%)]" />
         <div className="relative w-full max-w-[460px]">
           <div className="mb-10 flex items-center justify-center gap-3 lg:hidden">
@@ -484,19 +484,19 @@ export default function AnimatedCharactersLoginPage() {
             </div>
           </div>
 
-          <div className="overflow-hidden rounded-[28px] border border-white/80 bg-white/90 shadow-[0_24px_80px_rgba(15,23,42,0.12)] backdrop-blur-xl">
-            <div className="border-b border-slate-100 bg-[linear-gradient(135deg,rgba(240,253,250,0.95),rgba(239,246,255,0.95))] px-8 py-7">
+          <div className="overflow-hidden rounded-[20px] border border-white/80 bg-white/90 shadow-[0_24px_80px_rgba(15,23,42,0.12)] backdrop-blur-xl sm:rounded-[28px]">
+            <div className="border-b border-slate-100 bg-[linear-gradient(135deg,rgba(240,253,250,0.95),rgba(239,246,255,0.95))] px-5 py-6 sm:px-8 sm:py-7">
               <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary-100 bg-white/80 px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-primary-700">
                 <Sparkles className="size-3.5" />
                 Welcome Back
               </div>
-              <h1 className="text-3xl font-bold tracking-tight text-slate-900">Sign in to ORA</h1>
+              <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">Sign in to ORA</h1>
               <p className="mt-2 text-sm leading-6 text-slate-500">
                 Use your clinic admin credentials to access appointments, contacts, leads, and live updates.
               </p>
             </div>
 
-            <div className="px-8 py-8">
+            <div className="px-5 py-6 sm:px-8 sm:py-8">
               <form onSubmit={handleSubmit} className="space-y-5">
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>

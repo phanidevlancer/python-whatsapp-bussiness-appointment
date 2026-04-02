@@ -82,6 +82,38 @@ export default function CampaignsTable({ campaigns, isLoading }: CampaignsTableP
   }
 
   return (
+    <>
+    <div className="space-y-3 md:hidden">
+      {campaigns.map((campaign) => (
+        <div key={campaign.id} className="dashboard-surface-soft rounded-2xl p-4">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="font-semibold text-slate-900">{campaign.name}</p>
+              <p className="text-xs uppercase tracking-[0.14em] text-slate-400">{campaign.code}</p>
+            </div>
+            <Badge variant={campaign.status === 'active' ? 'success' : 'warning'} size="sm" dot>
+              {campaign.status}
+            </Badge>
+          </div>
+          <p className="mt-2 text-xs text-slate-500">{truncate(campaign.description, 100)}</p>
+          <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-slate-600">
+            <p>Targeted: {campaign.targeted}</p>
+            <p>Sent: {campaign.sent}</p>
+            <p>Bookings: {campaign.bookings}</p>
+            <p>Value: {formatMoney(campaign.total_final_value)}</p>
+          </div>
+          <div className="mt-3 flex items-center gap-2">
+            <Link href={`/campaigns/new?campaignId=${campaign.id}`} className="text-sm font-medium text-primary-600">
+              Edit
+            </Link>
+            <Link href={`/campaigns/${campaign.id}`} className="text-sm font-medium text-primary-600">
+              Open
+            </Link>
+          </div>
+        </div>
+      ))}
+    </div>
+    <div className="hidden md:block">
     <Table className="min-w-full">
       <TableHeader className="dashboard-page-table-head border-b">
         <TableRow hoverable={false}>
@@ -177,5 +209,7 @@ export default function CampaignsTable({ campaigns, isLoading }: CampaignsTableP
         ))}
       </TableBody>
     </Table>
+    </div>
+    </>
   );
 }

@@ -28,7 +28,7 @@ export default function PatientsPage() {
   return (
     <div className="dashboard-page-shell space-y-5">
       {/* Page Header */}
-      <div className="dashboard-page-header flex items-center justify-between rounded-[24px] px-6 py-5">
+      <div className="dashboard-page-header flex flex-col gap-4 rounded-[20px] px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:rounded-[24px] sm:px-6 sm:py-5">
         <div>
           <h2 className="text-[1.9rem] font-black tracking-[-0.03em] text-slate-900">Patients</h2>
           <p className="mt-1 text-sm font-medium text-slate-500">Manage your patient relationships</p>
@@ -37,15 +37,15 @@ export default function PatientsPage() {
             variant="primary"
             size="md"
             leftIcon={<Plus size={18} />}
-            className="h-11 rounded-2xl border border-primary-500/20 px-5 font-semibold shadow-[0_14px_28px_rgba(13,148,136,0.18)]"
+            className="h-11 w-full rounded-2xl border border-primary-500/20 px-5 font-semibold shadow-[0_14px_28px_rgba(13,148,136,0.18)] sm:w-auto"
           >
             Add Patient
           </Button>
       </div>
 
       {/* Search & Stats */}
-      <Card className="dashboard-page-panel rounded-[24px] p-5" variant="elevated">
-        <div className="flex items-center gap-3">
+      <Card className="dashboard-page-panel rounded-[20px] p-4 sm:rounded-[24px] sm:p-5" variant="elevated">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           <div className="flex-1">
             <Input
               placeholder="Search by name, phone, or email..."
@@ -55,7 +55,7 @@ export default function PatientsPage() {
               className="dashboard-surface-input h-12 w-full rounded-2xl border shadow-none ring-1 ring-transparent focus:ring-2 focus:ring-primary-200"
             />
           </div>
-            <Badge variant="primary" size="lg" className="rounded-full bg-primary-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-primary-700">
+            <Badge variant="primary" size="lg" className="w-fit rounded-full bg-primary-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-primary-700">
               <Users size={16} />
               {data?.total ?? 0} patients
             </Badge>
@@ -63,7 +63,7 @@ export default function PatientsPage() {
       </Card>
 
       {/* Table */}
-      <Card className="dashboard-page-panel overflow-hidden rounded-[28px] p-0" variant="elevated">
+      <Card className="dashboard-page-panel overflow-hidden rounded-[20px] p-0 sm:rounded-[28px]" variant="elevated">
         {isLoading ? (
           <div className="p-4 space-y-3">
             {Array.from({ length: 5 }).map((_, i) => (
@@ -87,7 +87,26 @@ export default function PatientsPage() {
             <p className="text-sm text-slate-500">Try adjusting your search</p>
           </div>
         ) : (
-          <Table className="min-w-full">
+          <>
+            <div className="space-y-3 p-3 md:hidden">
+              {data.items.map((c) => (
+                <div key={c.id} className="dashboard-surface-soft rounded-2xl p-4">
+                  <div className="flex items-start gap-3">
+                    <Avatar name={c.name ?? c.phone} size="sm" />
+                    <div className="min-w-0 flex-1">
+                      <Link href={`/customers/${c.id}`} className="font-semibold text-slate-900 transition-colors hover:text-primary-600">
+                        {c.name ?? '—'}
+                      </Link>
+                      <p className="text-xs text-slate-500">{c.phone}</p>
+                      <p className="mt-1 text-sm text-slate-700">{c.email ?? '—'}</p>
+                      <p className="text-xs text-slate-500">{format(new Date(c.created_at), 'MMM d, yyyy')}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="hidden md:block">
+            <Table className="min-w-full">
             <TableHeader className="dashboard-page-table-head border-b">
               <TableRow hoverable={false}>
                 <TableHead className="w-12 py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400"><span className="sr-only">Avatar</span></TableHead>
@@ -131,14 +150,16 @@ export default function PatientsPage() {
                 </TableRow>
               ))}
             </TableBody>
-          </Table>
+            </Table>
+            </div>
+          </>
         )}
       </Card>
 
       {/* Pagination */}
       {data && data.total > 20 && (
-        <Card className="dashboard-page-panel rounded-[24px] p-4" variant="default">
-          <div className="flex items-center justify-between">
+        <Card className="dashboard-page-panel rounded-[20px] p-4 sm:rounded-[24px]" variant="default">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <span className="text-sm text-slate-500">
               Page <span className="font-semibold text-slate-900">{page}</span> of{' '}
               <span className="font-semibold text-slate-900">{Math.ceil(data.total / 20)}</span>

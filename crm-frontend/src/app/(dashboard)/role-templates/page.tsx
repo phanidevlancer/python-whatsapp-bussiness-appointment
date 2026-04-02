@@ -128,7 +128,7 @@ export default function RoleTemplatesPage() {
 
   return (
     <div className="dashboard-page-shell space-y-5">
-      <div className="dashboard-page-header flex flex-wrap items-start justify-between gap-4 rounded-[24px] px-6 py-5">
+      <div className="dashboard-page-header flex flex-wrap items-start justify-between gap-4 rounded-[20px] px-4 py-4 sm:rounded-[24px] sm:px-6 sm:py-5">
         <div>
           <h2 className="text-[1.9rem] font-black tracking-[-0.03em] text-slate-900">Role Templates</h2>
           <p className="mt-1 text-sm font-medium text-slate-500">
@@ -152,7 +152,7 @@ export default function RoleTemplatesPage() {
         </div>
       </div>
 
-      <Card className="dashboard-page-panel overflow-hidden rounded-[28px] p-0" variant="elevated">
+      <Card className="dashboard-page-panel overflow-hidden rounded-[20px] p-0 sm:rounded-[28px]" variant="elevated">
         {isLoading ? (
           <div className="space-y-3 p-5">
             {Array.from({ length: 5 }).map((_, index) => (
@@ -172,15 +172,59 @@ export default function RoleTemplatesPage() {
             <p className="mt-1 text-sm text-slate-500">Create a template or copy one of the system defaults.</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
+          <>
+            <div className="space-y-3 p-3 md:hidden">
+              {templates.map((template) => (
+                <div key={template.id} className="dashboard-surface-soft rounded-2xl p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-50 text-primary-600">
+                        <Shield size={18} />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="truncate font-semibold text-slate-900">{template.name}</p>
+                        <p className="truncate text-xs text-slate-500">{template.description ?? 'No description provided'}</p>
+                      </div>
+                    </div>
+                    <Badge variant={template.is_active ? 'success' : 'error'} size="sm" dot className="rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em]">
+                      {template.is_active ? 'Active' : 'Inactive'}
+                    </Badge>
+                  </div>
+
+                  <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-slate-600">
+                    <p>Users: {template.assigned_user_count}</p>
+                    <p>Permissions: {template.permission_count ?? template.permission_ids?.length ?? template.permission_codes?.length ?? template.permissions?.length ?? 0}</p>
+                    <p className="col-span-2">Type: {template.is_system ? 'System' : 'Custom'}</p>
+                  </div>
+
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <Button variant="outline" size="sm" onClick={() => router.push(`/role-templates/${template.id}`)} className="dashboard-action-outline rounded-2xl border px-4">
+                      View
+                    </Button>
+                    <PermissionGuard permission={PERMISSIONS.roles.create}>
+                      <Button variant="outline" size="sm" leftIcon={<Copy size={14} />} onClick={() => openCopyModal(template)} className="dashboard-action-outline rounded-2xl border px-4">
+                        Copy
+                      </Button>
+                    </PermissionGuard>
+                    {canDeleteRoles && !template.is_system ? (
+                      <Button variant="danger" size="sm" onClick={() => setDeleteTarget(template)} disabled={deletingTemplate} className="rounded-2xl px-4">
+                        Delete
+                      </Button>
+                    ) : null}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="hidden overflow-x-auto md:block">
             <table className="min-w-full divide-y" style={{ borderColor: 'var(--border-light)' }}>
               <thead className="dashboard-page-table-head">
                 <tr>
                   <th className="px-4 py-4 text-left text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Template</th>
-                  <th className="px-4 py-4 text-left text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Users</th>
-                  <th className="px-4 py-4 text-left text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Permissions</th>
+                  <th className="hidden px-4 py-4 text-left text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400 sm:table-cell">Users</th>
+                  <th className="hidden px-4 py-4 text-left text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400 md:table-cell">Permissions</th>
                   <th className="px-4 py-4 text-left text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">State</th>
-                  <th className="px-4 py-4 text-left text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Updated</th>
+                  <th className="hidden px-4 py-4 text-left text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400 lg:table-cell">Updated</th>
                   <th className="px-4 py-4 text-right text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Actions</th>
                 </tr>
               </thead>
@@ -198,8 +242,8 @@ export default function RoleTemplatesPage() {
                         </div>
                       </div>
                     </td>
-                    <td className="px-4 py-4 text-sm text-slate-700">{template.assigned_user_count}</td>
-                    <td className="px-4 py-4 text-sm text-slate-700">{template.permission_count ?? template.permission_ids?.length ?? template.permission_codes?.length ?? template.permissions?.length ?? 0}</td>
+                    <td className="hidden px-4 py-4 text-sm text-slate-700 sm:table-cell">{template.assigned_user_count}</td>
+                    <td className="hidden px-4 py-4 text-sm text-slate-700 md:table-cell">{template.permission_count ?? template.permission_ids?.length ?? template.permission_codes?.length ?? template.permissions?.length ?? 0}</td>
                     <td className="px-4 py-4">
                       <div className="flex flex-wrap gap-2">
                         <Badge variant={template.is_system ? 'warning' : 'default'} size="sm" className="rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em]">
@@ -210,7 +254,7 @@ export default function RoleTemplatesPage() {
                         </Badge>
                       </div>
                     </td>
-                    <td className="px-4 py-4 text-sm text-slate-700">
+                    <td className="hidden px-4 py-4 text-sm text-slate-700 lg:table-cell">
                       {template.updated_at ? format(new Date(template.updated_at), 'MMM d, yyyy') : '—'}
                     </td>
                     <td className="px-4 py-4">
@@ -234,7 +278,8 @@ export default function RoleTemplatesPage() {
                 ))}
               </tbody>
             </table>
-          </div>
+            </div>
+          </>
         )}
       </Card>
 
