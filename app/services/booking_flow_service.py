@@ -492,9 +492,8 @@ async def _handle_greeting(
             "rows": [
                 {
                     "id": str(svc.id),
-                    "title": svc.name,
-                    "description": f"{svc.duration_minutes} min"
-                    + (f" — {svc.description}" if svc.description else ""),
+                    "title": svc.name[:24],
+                    "description": f"{svc.duration_minutes} min",
                 }
                 for svc in services
             ],
