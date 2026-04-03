@@ -486,6 +486,8 @@ async def _handle_greeting(
     await db.commit()
     _log_action(sender, f"Sent service list ({len(services)} services)")
 
+    # WhatsApp list messages support max 10 rows total — cap to first 10 services
+    capped_services = services[:10]
     sections = [
         {
             "title": "Our Services",
@@ -495,7 +497,7 @@ async def _handle_greeting(
                     "title": svc.name[:24],
                     "description": f"{svc.duration_minutes} min",
                 }
-                for svc in services
+                for svc in capped_services
             ],
         }
     ]
